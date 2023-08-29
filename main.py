@@ -92,9 +92,18 @@ class Calculations:
 
         # Draw the simulation graph:
         for i in range(self.num_of_simulations):
-            plt.plot(monte2[i], alpha=0.5)
+            #plt.plot(monte2[i], alpha=0.5)
+            x_axis = pd.date_range(start=self.history_data.index[-1],
+                                   end=self.user_end_date,
+                                   freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
+            plt.plot(x_axis, monte2[i], alpha=0.5)
+        plt.ylabel('Price in USD')
+        plt.xlabel('Prediction Days')
+        plt.xticks(fontsize=9)
+        plt.xticks(rotation=340)
 
         plt.axhline(y=self.s_0[ticker], color='r', linestyle='-')
+        # plt.figure(figsize=(6.4, 10))
         plt.show()
 
     def getDailyReturns(self, ticker):
