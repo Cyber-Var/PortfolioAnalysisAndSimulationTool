@@ -7,7 +7,6 @@ from scipy.stats import norm
 
 
 class Calculations:
-
     trading_year = 252
 
     def __init__(self, tickers, values, num_of_simulations, start_date, end_date, user_end_date, time_increment):
@@ -21,6 +20,7 @@ class Calculations:
 
         self.prediction_length = None
         self.close_prices = None
+        self.labels = None
 
         # Retrieve historical data from Yahoo! Finance:
         self.history_data = self.downloadData()
@@ -92,7 +92,7 @@ class Calculations:
 
         # Draw the simulation graph:
         for i in range(self.num_of_simulations):
-            #plt.plot(monte2[i], alpha=0.5)
+            # plt.plot(monte2[i], alpha=0.5)
             x_axis = pd.date_range(start=self.history_data.index[-1],
                                    end=self.user_end_date,
                                    freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
@@ -104,7 +104,40 @@ class Calculations:
 
         plt.axhline(y=self.s_0[ticker], color='r', linestyle='-')
         # plt.figure(figsize=(6.4, 10))
+
+        _, labels = plt.yticks()
         plt.show()
+
+        prices = []
+        for label in labels:
+            prices.append(int(label.get_text()))
+
+        return prices
+
+    def printProbabilities(self, ticker, labels, monte):
+        start_price = self.s_0[ticker]
+
+        difference = int((labels[1] - labels[0]) / 2)
+        for i in range(0, len(labels) - 1):
+            labels.append(labels[i] + difference)
+        labels.sort()
+        prices = np.array(labels)
+
+        less = prices[prices < start_price]
+        more = prices[prices > start_price]
+        test_data = [mo[-1] for mo in monte]
+        results = []
+        num = 100 / self.num_of_simulations
+
+        for l in less:
+            percentage = (test_data < l).sum() * num
+            if percentage > 0:
+                results.append("< " + str(l) + ": " + str(percentage))
+        for m in more:
+            percentage = (test_data > m).sum() * num
+            if percentage > 0:
+                results.append("> " + str(m) + ": " + str(percentage))
+        print(results)
 
     def getDailyReturns(self, ticker):
         data = self.history_data[ticker]
@@ -134,7 +167,7 @@ class Calculations:
         weights = self.calculateWeights()
         individual_volatilities = np.array([self.calculateVolatility(ticker)[0] / 100 for ticker in self.tickers])
 
-        variance = np.dot(weights**2, individual_volatilities**2)
+        variance = np.dot(weights ** 2, individual_volatilities ** 2)
         portfolio_volatility = np.sqrt(variance) * 100
 
         if portfolio_volatility < 2:
@@ -176,16 +209,65 @@ class Calculations:
 
 
 calc = Calculations(["AAPL", "TSLA", "MA"], [2000, 10000, 1000], 10000,
-             '2022-02-20', '2022-08-20', "2022-09-20", 1)
+                    '2023-01-01', '2023-08-29', "2023-09-20", 1)
 ticker = "TSLA"
 monte = calc.simulateMonteCarlo(ticker)
-calc.plotSimulation(ticker, monte)
-vol, cat = calc.calculateVolatility(ticker)
+
+'''m275 = 0
+m300 = 0
+m325 = 0
+m350 = 0
+m375 = 0
+
+l250 = 0
+l225 = 0
+l200 = 0
+l175 = 0
+l150 = 0
+
+for i in monte:
+    test = i[-1]
+    if test > 275:
+        m275 += 1
+    if test > 300:
+        m300 += 1
+    if test > 325:
+        m325 += 1
+    if test > 350:
+        m350 += 1
+    if test > 375:
+        m375 += 1
+
+    if test < 250:
+        l250 += 1
+    if test < 225:
+        l225 += 1
+    if test < 200:
+        l200 += 1
+    if test < 175:
+        l175 += 1
+    if test < 150:
+        l150 += 1
+
+print("> 275:", m275 / 100)
+print("> 300:", m300 / 100)
+print("> 325:", m325 / 100)
+print("> 350:", m350 / 100)
+print("> 375:", m375 / 100)
+print()
+print("< 250:", l250 / 100)
+print("< 225:", l225 / 100)
+print("< 200:", l200 / 100)
+print("< 175:", l175 / 100)
+print("< 150:", l150 / 100)'''
+
+labels = calc.plotSimulation(ticker, monte)
+calc.printProbabilities(ticker, labels, monte)
+'''vol, cat = calc.calculateVolatility(ticker)
 print("Volatility:", cat, "(" + str(vol) + ")")
 print(calc.calculatePortfolioVolatility())
 print(calc.calculateSharpeRatio(ticker))
-print("VaR: " + str(calc.calculateVaR(ticker, 0.95)))
-
+print("VaR: " + str(calc.calculateVaR(ticker, 0.95)))'''
 
 # User input:
 '''num_of_simulations = 10000
