@@ -44,6 +44,7 @@ class RiskMetrics:
         weights = self.investments / total
         return weights
 
+    # TODO: fix because it will break as overall data in main is different
     def calculatePortfolioVolatility(self):
         weights = self.calculateWeights()
         individual_volatilities = np.array([self.calculateVolatility(ticker)[0] / 100 for ticker in self.tickers])

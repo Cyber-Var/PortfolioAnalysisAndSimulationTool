@@ -4,7 +4,8 @@ import numpy as np
 
 from MonteCarlo import MonteCarloSimulation
 from RiskMetrics import RiskMetrics
-from RandomForest import RandomForestAlgorithm
+from RandomForest import RandomForestRegressionAlgorithm
+from LinearRegression import LinearRegressionAlgorithm
 
 
 class Calculations:
@@ -26,30 +27,44 @@ class Calculations:
         self.labels = None
 
         # Retrieve historical data from Yahoo! Finance:
-        self.history_data = self.downloadData()
-        self.close_prices = self.getHistoryCloseData()
+        self.data = self.downloadData()
+        self.history_data = self.data[:end_date]
+        # self.close_prices = self.getHistoryCloseData()
 
         # Create a list of dates that includes weekdays only:
         self.weekdays = self.getWeekDays()
 
+        # TODO: re-make it into loop that goes through each share in portfolio
+        apple_data = self.getDataForTicker("AAPL", self.history_data)
+        apple_future_data = self.getDataForTicker("AAPL", self.data)[end_date:]
+
         # Monte Carlo Simulation:
         # monte = MonteCarloSimulation(investments, num_of_simulations, end_date, user_end_date, time_increment,
-        #                              self.close_prices["AAPL"], self.weekdays)
+        #                              apple_data["Adj Close"], self.weekdays)
 
         # Calculate risk metrics:
-        # risk = RiskMetrics(tickers, self.investments, user_end_date, "TSLA", self.close_prices)
+        # risk = RiskMetrics(tickers, self.investments, user_end_date, "TSLA", self.history_data["Adj Close"])
 
-        # Random Forest Algorithm:
-        random_forest = RandomForestAlgorithm(end_date, "AAPL", self.history_data)
+        # Random Forest Regression Algorithm:
+        # random_forest = RandomForestRegressionAlgorithm(end_date, user_end_date, apple_data, apple_future_data)
+
+        # Linear Regression Algorithm:
+        linear = LinearRegressionAlgorithm(end_date, user_end_date, apple_data, apple_future_data)
 
     def downloadData(self):
         data = yf.download(self.tickers, start=self.start_date, end=self.user_end_date)
         return data
 
-    def getHistoryCloseData(self):
-        close_prices = self.history_data["Adj Close"]
-        close_prices = close_prices.loc[self.start_date:self.end_date]
-        return close_prices
+    def getDataForTicker(self, ticker, data):
+        ticker_data = pd.DataFrame()
+        for col, ti in data.columns:
+            ticker_data[col] = data[col][ticker]
+        return ticker_data
+
+    # def getHistoryCloseData(self):
+    #     close_prices = self.history_data["Adj Close"]
+    #     close_prices = close_prices.loc[self.start_date:self.end_date]
+    #     return close_prices
 
     def getWeekDays(self):
         weekdays = pd.bdate_range(start=pd.to_datetime(self.end_date, format="%Y-%m-%d") + pd.Timedelta('1 days'),
