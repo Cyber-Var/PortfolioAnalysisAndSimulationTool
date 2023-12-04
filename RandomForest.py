@@ -1,6 +1,9 @@
+import math
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
@@ -15,10 +18,13 @@ class RandomForestRegressionAlgorithm:
         self.data = data
         self.future_data = future_data
 
-        self.data = self.prepareData(self.data)
+        self.days = len(self.future_data) + 1
+        if self.user_end_date in self.future_data.index:
+            self.days -= 1
 
-        X, y, X_train, X_test, y_train, y_test = self.splitData()
-        mse, rmse, mae, mape, r2 = self.evaluateModel(X_train, X_test, y_train, y_test)
+        X, y = self.prepareData()
+
+        mse, rmse, mae, mape, r2 = self.evaluateModel(X, y)
         print(f'MSE: {mse}')
         print(f'RMSE: {rmse}')
         print(f'MAE: {mae}')
@@ -26,40 +32,29 @@ class RandomForestRegressionAlgorithm:
         print(f'R-squared: {r2}')
 
         rf_predictions = self.runAlgorithm(X, y)
+        print("Prediction:", rf_predictions[0])
 
-    def prepareData(self, data):
-        preparedData = data.copy()
+    def prepareData(self):
+        y = self.data.iloc[(self.days-1)::self.days, :]["Adj Close"].copy()
+        y[self.data.index[self.days - 1]] = self.data.iloc[self.days - 1]["Adj Close"]
 
-        if len(data) <= 7:
-            rolling_value = 2
-        elif len(data) < 20:
-            rolling_value = 3
-        elif len(data) < 30:
-            rolling_value = 4
-        else:
-            rolling_value = 5
+        X_list = self.data.drop(y.index)["Adj Close"].copy()
+        i = self.days - 1
+        X_list = [X_list.iloc[x:x + i] for x in range(0, len(self.data), i)][:len(y)]
+        X = np.array([df.values.flatten() for df in X_list])
+        y = y[:len(X_list)]
 
-        preparedData["Percent-Change"] = data["Adj Close"].pct_change()
-        preparedData["Open-Close-Change"] = (data["Open"] - data["Close"]) / data["Open"]
-        preparedData["High-Low-Change"] = (data["High"] - data["Low"]) / data["Low"]
-        preparedData["Rolling-Standard-Deviation"] = preparedData["Percent-Change"].rolling(rolling_value).std()
-        preparedData["Rolling-Mean"] = preparedData["Percent-Change"].rolling(rolling_value).mean()
-        preparedData.dropna(inplace=True)
+        return X, y
 
-        return preparedData
+    def evaluateModel(self, X, y):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    def splitData(self):
-        X = self.data[["Open-Close-Change", "High-Low-Change", "Rolling-Standard-Deviation", "Rolling-Mean"]]
-        y = self.data['Adj Close']
-
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
-
-        return X, y, X_train, X_test, y_train, y_test
-
-    def evaluateModel(self, X_train, X_test, y_train, y_test):
         rf_reg = RandomForestRegressor(n_estimators=100, random_state=42)
-        rf_reg.fit(X_train.values, y_train)
-        rf_predictions = rf_reg.predict(X_test.values)
+        rf_reg.fit(X_train, y_train)
+        rf_predictions = rf_reg.predict(X_test)
+
+        # print(y_test)
+        # print(rf_predictions)
 
         mse = mean_squared_error(y_test, rf_predictions)
         rmse = np.sqrt(mse)
@@ -69,38 +64,17 @@ class RandomForestRegressionAlgorithm:
 
         return mse, rmse, mae, mape, r2
 
+    # TODO: n_estimators chosen by user
     def runAlgorithm(self, X, y):
-        # TODO: change this
-
-        X = X[:(len(self.data) - 1)]
-        y = y[:(len(self.data) - 1)]
-
         rf_reg = RandomForestRegressor(n_estimators=100, random_state=42)
-        rf_reg.fit(X.values, y)
+        rf_reg.fit(X, y)
 
-        # prediction_dates = pd.date_range(self.end_date, self.user_end_date, freq='B')
-        # future_data = pd.DataFrame(index=prediction_dates, columns=self.data.columns)
+        X_data = self.future_data.tail(self.days)["Adj Close"]
+        X_test = [X_data[X_data.index != self.user_end_date]]
+        # print(X_test)
+        # print(self.future_data.tail(1))
 
-        # prediction_data = self.data.loc['2023-08-30':'2023-09-20']
-        # print(prediction_data)
-
-        # X_test = self.data[["Open-Close-Change", "High-Low-Change", "Rolling-Standard-Deviation", "Rolling-Mean"]].tail(1)
-        # rf_predictions = rf_reg.predict(X_test.values)
-        #
-        # print(rf_predictions)
-        # print(self.data[["Adj Close"]].tail(1).values[0][0])
-        # print(self.data[["Adj Close"]].head(1).values[0][0])
-
-        rf_predictions = []
-        data = self.prepareData(self.future_data)
-        if len(data) > 0:
-            X_test = data[["Open-Close-Change", "High-Low-Change", "Rolling-Standard-Deviation", "Rolling-Mean"]]
-            rf_predictions = rf_reg.predict(X_test.values)
-            print(rf_predictions)
-            print("Actual:", self.future_data[["Adj Close"]].tail(1).values[0][0])
-        else:
-            print("Impossible")
-
+        rf_predictions = rf_reg.predict(X_test)
         return rf_predictions
 
 

@@ -1,6 +1,7 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
+from datetime import datetime, timedelta
 
 from MonteCarlo import MonteCarloSimulation
 from RiskMetrics import RiskMetrics
@@ -36,7 +37,8 @@ class Calculations:
 
         # TODO: re-make it into loop that goes through each share in portfolio
         apple_data = self.getDataForTicker("AAPL", self.history_data)
-        apple_future_data = self.getDataForTicker("AAPL", self.data)[end_date:]
+        end = (datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        apple_future_data = self.getDataForTicker("AAPL", self.data)[end:]
 
         # Monte Carlo Simulation:
         # monte = MonteCarloSimulation(investments, num_of_simulations, end_date, user_end_date, time_increment,
@@ -46,13 +48,15 @@ class Calculations:
         # risk = RiskMetrics(tickers, self.investments, user_end_date, "TSLA", self.history_data["Adj Close"])
 
         # Random Forest Regression Algorithm:
-        # random_forest = RandomForestRegressionAlgorithm(end_date, user_end_date, apple_data, apple_future_data)
+        random_forest = RandomForestRegressionAlgorithm(end_date, user_end_date, apple_data, apple_future_data)
 
         # Linear Regression Algorithm:
-        linear = LinearRegressionAlgorithm(end_date, user_end_date, apple_data, apple_future_data)
+        # linear = LinearRegressionAlgorithm(end_date, user_end_date, apple_data, apple_future_data)
 
     def downloadData(self):
-        data = yf.download(self.tickers, start=self.start_date, end=self.user_end_date)
+        data = yf.download(self.tickers, start=self.start_date,
+                           end=(datetime.strptime(self.user_end_date, "%Y-%m-%d") +
+                                timedelta(days=1)).strftime("%Y-%m-%d"))
         return data
 
     def getDataForTicker(self, ticker, data):
@@ -61,11 +65,6 @@ class Calculations:
             ticker_data[col] = data[col][ticker]
         return ticker_data
 
-    # def getHistoryCloseData(self):
-    #     close_prices = self.history_data["Adj Close"]
-    #     close_prices = close_prices.loc[self.start_date:self.end_date]
-    #     return close_prices
-
     def getWeekDays(self):
         weekdays = pd.bdate_range(start=pd.to_datetime(self.end_date, format="%Y-%m-%d") + pd.Timedelta('1 days'),
                                   end=pd.to_datetime(self.user_end_date, format="%Y-%m-%d"))
@@ -73,4 +72,4 @@ class Calculations:
 
 
 calc = Calculations(["AAPL", "TSLA", "MSFT"], [2000, 10000, 1000], 10000,
-                    '2023-01-01', '2023-08-29', "2023-09-20", 1)
+                    '2023-01-01', '2023-11-25', "2023-12-04", 1)
