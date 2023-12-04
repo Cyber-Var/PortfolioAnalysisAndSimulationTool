@@ -1,9 +1,8 @@
-from sklearn.ensemble import RandomForestRegressor
-
+from sklearn.linear_model import LinearRegression
 from Regression import Regression
 
 
-class RandomForestRegressionAlgorithm(Regression):
+class LinearRegressionAlgorithm(Regression):
 
     def __init__(self, end_date, user_end_date, data, future_data):
         super().__init__(end_date, user_end_date, data, future_data)
@@ -22,11 +21,11 @@ class RandomForestRegressionAlgorithm(Regression):
         print("Prediction:", rf_predictions[0])
 
     def evaluateModel(self, X, y):
-        Regression.reg = RandomForestRegressor(n_estimators=100, random_state=42)
+        Regression.reg = LinearRegression()
         super().evaluateModel(X, y)
         return super().evaluateModel(X, y)
 
     # TODO: n_estimators chosen by user
     def runAlgorithm(self, X, y):
-        Regression.reg = RandomForestRegressor(n_estimators=100, random_state=42)
+        Regression.reg = LinearRegression()
         return super().runAlgorithm(X, y)
