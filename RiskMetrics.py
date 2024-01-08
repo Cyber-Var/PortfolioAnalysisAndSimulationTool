@@ -5,10 +5,9 @@ from scipy.stats import norm
 
 class RiskMetrics:
 
-    def __init__(self, tickers, investments, user_end_date, ticker, close_prices):
+    def __init__(self, tickers, investments, ticker, close_prices):
         self.tickers = tickers
         self.investments = investments
-        self.user_end_date = user_end_date
         self.ticker = ticker
         self.close_prices = close_prices
 
@@ -77,12 +76,7 @@ class RiskMetrics:
     # TODO: can regulate daily/weekly/monthly/annual
     def calculateVaR(self, confidence, volatility):
         today = date.today().strftime("%Y-%m-%d")
-        if self.user_end_date > today:
-            # current = today
-            portfolio_value = self.close_prices[self.ticker].iloc[-1]
-        else:
-            # current = self.end_date
-            portfolio_value = self.close_prices[self.ticker].iloc[-1]
+        portfolio_value = self.close_prices[self.ticker].iloc[-1]
         Z = norm.ppf(1 - confidence)
         VaR = portfolio_value * volatility * Z
         return VaR

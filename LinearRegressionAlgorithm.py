@@ -4,28 +4,23 @@ from Regression import Regression
 
 class LinearRegressionAlgorithm(Regression):
 
-    def __init__(self, end_date, user_end_date, data, future_data):
-        super().__init__(end_date, user_end_date, data, future_data)
+    def __init__(self, hold_duration, data, prediction_date):
+        super().__init__(hold_duration, data, prediction_date)
 
-        X, y = super().prepareData()
+        X_train, y_train, X_test = super().prepareData()
 
-        y_test, rf_predictions = self.evaluateModel(X, y)
-        mse, rmse, mae, mape, r2 = super().calculateMetrics(y_test, rf_predictions)
-        print(f'MSE: {mse}')
-        print(f'RMSE: {rmse}')
-        print(f'MAE: {mae}')
-        print(f'MAPE: {mape}%')
-        print(f'R-squared: {r2}')
-
-        rf_predictions = self.runAlgorithm(X, y)
-        print("Prediction:", rf_predictions[0])
+        mse, rmse, mae, mape, r2 = self.evaluateModel(X_train, y_train)
+        predictions = self.runAlgorithm(X_train, y_train, X_test)
 
     def evaluateModel(self, X, y):
         Regression.reg = LinearRegression()
-        super().evaluateModel(X, y)
+
+        print("Linear Regression Evaluation:")
         return super().evaluateModel(X, y)
 
     # TODO: n_estimators chosen by user
-    def runAlgorithm(self, X, y):
+    def runAlgorithm(self, X_train, y_train, X_test):
         Regression.reg = LinearRegression()
-        return super().runAlgorithm(X, y)
+        predictions = super().runAlgorithm(X_train, y_train, X_test)
+        print("Linear Regression Prediction:", predictions, "\n")
+        return predictions

@@ -1,18 +1,21 @@
+from datetime import date
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.ticker import AutoLocator
 
 
 class MonteCarloSimulation:
 
-    def __init__(self, values, num_of_simulations, end_date, user_end_date, time_increment, data, weekdays):
+    def __init__(self, values, num_of_simulations, prediction_date, time_increment, data, weekdays, hold_duration):
         self.values = np.array(values)
         self.num_of_simulations = num_of_simulations
-        self.end_date = end_date
-        self.user_end_date = user_end_date
+        self.prediction_date = prediction_date
         self.time_increment = time_increment
         self.data = data
         self.weekdays = weekdays
+        self.hold_duration = hold_duration
 
         self.prediction_length = 0
 
@@ -64,9 +67,9 @@ class MonteCarloSimulation:
 
         percentage = (max(more, less) / self.num_of_simulations) * 100
         if more >= less:
-            prediction = str(percentage) + "% growth"
+            prediction = str(percentage) + "% chance of growth"
         else:
-            prediction = str(percentage) + "% fall"
+            prediction = str(percentage) + "% chance of fall"
         print(prediction)
         return monte
 
@@ -74,17 +77,25 @@ class MonteCarloSimulation:
         # Add starting point to each path:
         monte2 = np.hstack((np.array([[self.s_0] for _ in range(self.num_of_simulations)]), monte))
 
+        if self.hold_duration == "1d":
+            x_axis = pd.date_range(start=date.today(), end=self.prediction_date,
+                                   freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
+        else:
+            x_axis = pd.date_range(start=date.today(), end=self.prediction_date,
+                                   freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
+
         # Draw the simulation graph:
         for i in range(self.num_of_simulations):
             # plt.plot(monte2[i], alpha=0.5)
-            x_axis = pd.date_range(start=self.data.index[-1],
-                                   end=self.user_end_date,
-                                   freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
             plt.plot(x_axis, monte2[i], alpha=0.5)
+
         plt.ylabel('Price in USD')
         plt.xlabel('Prediction Days')
         plt.xticks(fontsize=9)
         plt.xticks(rotation=340)
+
+        if self.hold_duration == "1d" or self.hold_duration == "1w":
+            plt.xticks(x_axis)
 
         plt.axhline(y=self.s_0, color='r', linestyle='-')
         # plt.figure(figsize=(6.4, 10))
@@ -94,7 +105,7 @@ class MonteCarloSimulation:
 
         prices = []
         for label in labels:
-            prices.append(int(label.get_text()))
+            prices.append(float(label.get_text()))
 
         return prices
 

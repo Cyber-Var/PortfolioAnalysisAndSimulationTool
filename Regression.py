@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
@@ -6,64 +8,59 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolu
 
 
 class Regression:
-
     reg = None
 
-    def __init__(self, end_date, user_end_date, data, future_data):
-        self.end_date = end_date
-        self.user_end_date = user_end_date
+    def __init__(self, hold_duration, data, prediction_date):
+        self.hold_duration = hold_duration
         self.data = data
-        self.future_data = future_data
-
-        self.days = len(self.future_data) + 1
-        if self.user_end_date in self.future_data.index:
-            self.days -= 1
+        self.prediction_date = prediction_date
 
     def prepareData(self):
-        if self.days > 2:
-            y = self.data.iloc[(self.days-1)::self.days, :]["Adj Close"].copy()
-            y[self.data.index[self.days - 1]] = self.data.iloc[self.days - 1]["Adj Close"]
+        X_test = self.data.tail(1)
+        self.data = self.data.drop(self.data.index[-1])
 
-            X_list = self.data.drop(y.index)["Adj Close"].copy()
-            i = self.days - 1
-            if i > 1:
-                X_list = [X_list.iloc[x:x + i] for x in range(0, len(self.data), i)][:len(y)]
-            X = np.array([df.values.flatten() for df in X_list])
-            y = y[:len(X_list)]
+        if self.hold_duration == "1d":
+            X_train = self.data.drop(self.data.index[-1])
+            y_train = self.data.drop(self.data.index[0])["Adj Close"]
+
         else:
-            X = self.data.iloc[::2]
-            y = self.data.iloc[1::2]["Adj Close"][:len(X)]
-            X = X[:len(y)]
-        return X, y
+            # day_of_week = self.prediction_date.weekday()
+            # data_for_day_of_week = self.data[self.data.index.weekday == 0]
+
+            days = len(pd.date_range(X_test.index[0] + relativedelta(days=1), self.prediction_date,
+                                     freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna())
+
+            X_train = self.data.drop(self.data.index[-days:])
+            y_train = self.data.drop(self.data.index[:days])["Adj Close"]
+
+        return X_train, y_train, X_test
 
     def evaluateModel(self, X, y):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         self.reg.fit(X_train, y_train)
         predictions = self.reg.predict(X_test)
 
-        # print(y_test)
-        # print(rf_predictions)
+        # for true, pred in zip(y_test, predictions):
+        #     print(true, pred, true == pred)
 
-        return y_test, predictions
-
-    def calculateMetrics(self, y_test, predictions):
         mse = mean_squared_error(y_test, predictions)
         rmse = np.sqrt(mse)
         mae = mean_absolute_error(y_test, predictions)
         mape = mean_absolute_percentage_error(y_test, predictions) * 100
         r2 = r2_score(y_test, predictions)
+
+        print(f'MSE: {mse}')
+        print(f'RMSE: {rmse}')
+        print(f'MAE: {mae}')
+        print(f'MAPE: {mape}%')
+        print(f'R-squared: {r2}\n')
+
         return mse, rmse, mae, mape, r2
 
-    def runAlgorithm(self, X, y):
-        self.reg.fit(X, y)
+    def runAlgorithm(self, X_train, y_train, X_test):
+        self.reg.fit(X_train, y_train)
 
-        if self.days > 2:
-            X_data = self.future_data.tail(self.days)["Adj Close"]
-            X_test = [X_data[X_data.index != self.user_end_date]]
-        else:
-            X_test = self.future_data.head(1)
-        # print(X_test)
-        print("Actual:", self.future_data.tail(1)["Adj Close"].values[0])
+        # print("Actual:", self.future_data.tail(1)["Adj Close"].values[0])
 
         predictions = self.reg.predict(X_test)
         return predictions
