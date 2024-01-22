@@ -15,27 +15,30 @@ class Regression:
         self.data = data
         self.prediction_date = prediction_date
 
+    def temp(self, li):
+        print(li)
+        result = li['Adj Close'].values.tolist()
+        result += [li['Adj Close'].mean(), li['Open'].mean(), li['Close'].mean(), li['High'].mean(), li['Low'].mean(),
+                   li['Volume'].mean()]
+        return result
+
     def prepareData(self):
-        X_test = self.data.tail(1)
-        self.data = self.data.drop(self.data.index[-1])
 
-        if self.hold_duration == "1d":
-            X_train = self.data.drop(self.data.index[-1])
-            y_train = self.data.drop(self.data.index[0])["Adj Close"]
+        days = 5
+        if self.hold_duration == "1w":
+            days = 20
+        if self.hold_duration == "1m":
+            days = 80
 
-        else:
-            # day_of_week = self.prediction_date.weekday()
-            # data_for_day_of_week = self.data[self.data.index.weekday == 0]
-
-            days = len(pd.date_range(X_test.index[0] + relativedelta(days=1), self.prediction_date,
-                                     freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna())
-
-            X_train = self.data.drop(self.data.index[-days:])
-            y_train = self.data.drop(self.data.index[:days])["Adj Close"]
+        X_train = [self.temp(self.data[i:i + days]) for i in range(0, len(self.data) - days)]
+        y_train = self.data["Adj Close"].iloc[days:].values.tolist()
+        X_test = [self.temp(self.data[-days:])]
 
         return X_train, y_train, X_test
 
     def evaluateModel(self, X, y):
+        # TODO: change the testing to sliding method (and write it clearly in report)
+        # TODO: use more than 1 year data (maybe 3). COVID
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         self.reg.fit(X_train, y_train)
         predictions = self.reg.predict(X_test)

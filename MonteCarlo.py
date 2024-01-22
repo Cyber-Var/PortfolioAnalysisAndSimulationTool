@@ -8,30 +8,45 @@ from matplotlib.ticker import AutoLocator
 
 class MonteCarloSimulation:
 
-    def __init__(self, values, num_of_simulations, prediction_date, time_increment, data, weekdays, hold_duration):
+    def __init__(self, values, num_of_simulations, prediction_date, time_increment, data, weekdays,
+                 hold_duration, is_flat):
         self.values = np.array(values)
         self.num_of_simulations = num_of_simulations
         self.prediction_date = prediction_date
         self.time_increment = time_increment
-        self.data = data
         self.weekdays = weekdays
         self.hold_duration = hold_duration
 
-        self.prediction_length = 0
+        if is_flat:
+            price = data.iloc[-1]
+            print("Price will stay the same:", price, "\n")
 
-        # S_0:
-        self.s_0 = self.data.iloc[-1]
-        # Daily Returns = R(t) = (P(t) - P(t-1)) / P(t-1) = (P(t) / P(t-1)) - 1
-        returns = self.data.pct_change().dropna()
-        # mu:
-        self.mu = returns.mean()
-        # sigma:
-        self.sigma = returns.std()
+            monte_results = [price, price]
+            x_axis = [data.index[-1], self.prediction_date]
+            for i in range(self.num_of_simulations):
+                plt.plot(x_axis, monte_results, alpha=0.5)
+            plt.ylabel('Price in USD')
+            plt.xlabel('Prediction Days')
+            plt.xticks(fontsize=9)
+            plt.xticks(rotation=340)
+            plt.xticks(x_axis)
+            plt.show()
+        else:
+            self.prediction_length = 0
 
-        # Display Monte Carlo results:
-        monte_results = self.simulateMonteCarlo()
-        plot_labels = self.plotSimulation(monte_results)
-        self.printProbabilities(plot_labels, monte_results)
+            # S_0:
+            self.s_0 = data.iloc[-1]
+            # Daily Returns = R(t) = (P(t) - P(t-1)) / P(t-1) = (P(t) / P(t-1)) - 1
+            returns = data.pct_change().dropna()
+            # mu:
+            self.mu = returns.mean()
+            # sigma:
+            self.sigma = returns.std()
+
+            # Display Monte Carlo results:
+            monte_results = self.simulateMonteCarlo()
+            plot_labels = self.plotSimulation(monte_results, is_flat)
+            self.printProbabilities(plot_labels, monte_results)
 
     def calculateTimePoints(self):
         self.prediction_length = int(len(self.weekdays) / self.time_increment)
@@ -73,20 +88,15 @@ class MonteCarloSimulation:
         print(prediction)
         return monte
 
-    def plotSimulation(self, monte):
+    def plotSimulation(self, monte, is_flat):
         # Add starting point to each path:
         monte2 = np.hstack((np.array([[self.s_0] for _ in range(self.num_of_simulations)]), monte))
 
-        if self.hold_duration == "1d":
-            x_axis = pd.date_range(start=date.today(), end=self.prediction_date,
-                                   freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
-        else:
-            x_axis = pd.date_range(start=date.today(), end=self.prediction_date,
-                                   freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
+        x_axis = pd.date_range(start=date.today(), end=self.prediction_date,
+                               freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
 
         # Draw the simulation graph:
         for i in range(self.num_of_simulations):
-            # plt.plot(monte2[i], alpha=0.5)
             plt.plot(x_axis, monte2[i], alpha=0.5)
 
         plt.ylabel('Price in USD')
@@ -98,7 +108,6 @@ class MonteCarloSimulation:
             plt.xticks(x_axis)
 
         plt.axhline(y=self.s_0, color='r', linestyle='-')
-        # plt.figure(figsize=(6.4, 10))
 
         _, labels = plt.yticks()
         plt.show()
@@ -132,4 +141,4 @@ class MonteCarloSimulation:
             percentage = (test_data > m).sum() * num
             if percentage > 0:
                 results.append("> " + str(m) + ": " + str(percentage))
-        print(results)
+        print(results, "\n")

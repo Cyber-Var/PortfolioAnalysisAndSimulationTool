@@ -10,7 +10,7 @@ class RandomForestRegressionAlgorithm(Regression):
 
         X_train, y_train, X_test = super().prepareData()
 
-        mse, rmse, mae, mape, r2 = self.evaluateModel(X_train, y_train)
+        # mse, rmse, mae, mape, r2 = self.evaluateModel(X_train, y_train)
         predictions = self.runAlgorithm(X_train, y_train, X_test)
 
     def evaluateModel(self, X, y):

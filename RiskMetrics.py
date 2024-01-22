@@ -8,17 +8,16 @@ class RiskMetrics:
     def __init__(self, tickers, investments, ticker, close_prices):
         self.tickers = tickers
         self.investments = investments
-        self.ticker = ticker
         self.close_prices = close_prices
 
         self.daily_returns = self.getDailyReturns()
 
         # Display Risk Metrics results:
-        vol, cat = self.calculateVolatility(self.ticker)
+        vol, cat = self.calculateVolatility(ticker)
         print("Volatility:", cat, "(" + str(vol) + ")")
         print(self.calculatePortfolioVolatility())
-        print(self.calculateSharpeRatio())
-        print("VaR: " + str(self.calculateVaR(0.95, vol)))
+        print(self.calculateSharpeRatio(ticker))
+        print("VaR: " + str(self.calculateVaR(ticker, 0.95, vol)))
 
     def getDailyReturns(self):
         data = self.close_prices
@@ -46,7 +45,7 @@ class RiskMetrics:
     # TODO: fix because it will break as overall data in main is different
     def calculatePortfolioVolatility(self):
         weights = self.calculateWeights()
-        individual_volatilities = np.array([self.calculateVolatility(ticker)[0] / 100 for ticker in self.tickers])
+        individual_volatilities = np.array([self.calculateVolatility(t)[0] / 100 for t in self.tickers])
 
         variance = np.dot(weights ** 2, individual_volatilities ** 2)
         portfolio_volatility = np.sqrt(variance) * 100
@@ -60,9 +59,9 @@ class RiskMetrics:
 
         return "Portfolio volatility: " + daily_category + " (" + str(portfolio_volatility) + ")"
 
-    def calculateSharpeRatio(self):
+    def calculateSharpeRatio(self, ticker):
         risk_free_rate = 1.02 ** (1 / 252) - 1
-        excess = self.daily_returns[self.ticker] - risk_free_rate
+        excess = self.daily_returns[ticker] - risk_free_rate
         sharpe_ratio = excess.mean() / excess.std()
 
         if sharpe_ratio < 0.1:
@@ -74,9 +73,9 @@ class RiskMetrics:
         return "Sharpe Ratio: " + sharpe_category + " (" + str(sharpe_ratio) + ")"
 
     # TODO: can regulate daily/weekly/monthly/annual
-    def calculateVaR(self, confidence, volatility):
+    def calculateVaR(self, ticker, confidence, volatility):
         today = date.today().strftime("%Y-%m-%d")
-        portfolio_value = self.close_prices[self.ticker].iloc[-1]
+        portfolio_value = self.close_prices[ticker].iloc[-1]
         Z = norm.ppf(1 - confidence)
         VaR = portfolio_value * volatility * Z
         return VaR
