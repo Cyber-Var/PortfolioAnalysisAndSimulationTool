@@ -8,6 +8,8 @@ from MonteCarlo import MonteCarloSimulation
 from RiskMetrics import RiskMetrics
 from RandomForest import RandomForestRegressionAlgorithm
 from LinearRegressionAlgorithm import LinearRegressionAlgorithm
+
+
 # from LSTM import LSTMAlgorithm
 
 
@@ -21,25 +23,25 @@ class Model:
         self.time_increment = time_increment
 
         today = date.today()
-        self.end_date = today
+        end_date = today
 
-        # TODO: choose historical date range here:
+        # TODO: choose historical date range here using user's preferred investment behaviour:
         if hold_duration == "1d":
-            self.start_date = today - relativedelta(years=1)
+            start_date = today - relativedelta(months=18)
             self.prediction_date = today + relativedelta(days=1)
         elif hold_duration == "1w":
-            self.start_date = today - relativedelta(years=1)
+            start_date = today - relativedelta(years=2)
             self.prediction_date = today + relativedelta(days=7)
         elif hold_duration == "1m":
-            self.start_date = today - relativedelta(years=3)
+            start_date = today - relativedelta(years=4)
             self.prediction_date = today + relativedelta(months=1)
         # TODO: remove 3 months ???
         elif hold_duration == "3m":
-            self.start_date = today - relativedelta(years=3)
+            start_date = today - relativedelta(years=5)
             self.prediction_date = today + relativedelta(months=3)
 
         # Retrieve historical data from Yahoo! Finance:
-        self.data = self.downloadData()
+        self.data = self.downloadData(start_date, end_date)
 
         is_flat_monte_graph = False
         if hold_duration == "1d" and ((today.weekday() == 4 and self.data.index[-1] == today.strftime('%Y-%m-%d'))
@@ -53,22 +55,23 @@ class Model:
                 raise Exception("Unable to predict - the share was created too recently.")
             else:
                 # Linear Regression Algorithm:
-                # linear = LinearRegressionAlgorithm(hold_duration, apple_data, self.prediction_date)
+                linear = LinearRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
                 # Random Forest Regression Algorithm:
-                # random_forest = RandomForestRegressionAlgorithm(hold_duration, apple_data, self.prediction_date)
+                random_forest = RandomForestRegressionAlgorithm(hold_duration, apple_data, self.prediction_date,
+                                                                start_date)
 
                 # Monte Carlo Simulation:
                 # Create a list of dates that includes weekdays only:
-                self.weekdays = self.getWeekDays()
-                monte = MonteCarloSimulation(investments, num_of_simulations, self.prediction_date, time_increment,
-                                             apple_data["Adj Close"], self.weekdays, hold_duration, is_flat_monte_graph)
+                # self.weekdays = self.getWeekDays()
+                # monte = MonteCarloSimulation(investments, num_of_simulations, self.prediction_date, time_increment,
+                #                              apple_data["Adj Close"], self.weekdays, hold_duration, is_flat_monte_graph)
 
         # Calculate risk metrics:
         # risk = RiskMetrics(tickers, self.investments, "TSLA", self.data["Adj Close"])
 
-    def downloadData(self):
-        data = yf.download(self.tickers, start=self.start_date, end=self.end_date)
+    def downloadData(self, start, end):
+        data = yf.download(self.tickers, start=start, end=end)
         return data
 
     def getDataForTicker(self, ticker, data):
@@ -96,4 +99,4 @@ class Model:
 
 
 calc = Model(["AAPL", "TSLA", "MSFT"], [2000, 10000, 1000], 10000,
-             "1m", 1)
+             "1d", 1)

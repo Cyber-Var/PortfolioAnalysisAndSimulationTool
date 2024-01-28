@@ -5,23 +5,21 @@ from Regression import Regression
 
 class RandomForestRegressionAlgorithm(Regression):
 
-    def __init__(self, hold_duration, data, prediction_date):
-        super().__init__(hold_duration, data, prediction_date)
+    def __init__(self, hold_duration, data, prediction_date, start_date):
+        super().__init__(hold_duration, data, prediction_date, start_date)
 
-        X_train, y_train, X_test = super().prepareData()
+        self.evaluateModel()
+        self.makePrediction()
 
-        # mse, rmse, mae, mape, r2 = self.evaluateModel(X_train, y_train)
-        predictions = self.runAlgorithm(X_train, y_train, X_test)
-
-    def evaluateModel(self, X, y):
+    def evaluateModel(self):
         Regression.reg = RandomForestRegressor()
 
-        print("Random Forest Evaluation:")
-        return super().evaluateModel(X, y)
+        print("Random Forest Regression Evaluation:")
+        return super().evaluateModel()
 
     # TODO: n_estimators chosen by user
-    def runAlgorithm(self, X_train, y_train, X_test):
+    def makePrediction(self):
         Regression.reg = RandomForestRegressor()
-        predictions = super().runAlgorithm(X_train, y_train, X_test)
-        print("Random Forest Prediction:", predictions, "\n")
-        return predictions
+        prediction = super().makePrediction()
+        print("Random Forest Regression Prediction:", prediction, "\n")
+        return prediction
