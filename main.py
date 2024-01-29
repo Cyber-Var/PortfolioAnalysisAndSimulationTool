@@ -8,9 +8,10 @@ from MonteCarlo import MonteCarloSimulation
 from RiskMetrics import RiskMetrics
 from RandomForest import RandomForestRegressionAlgorithm
 from LinearRegressionAlgorithm import LinearRegressionAlgorithm
+from EthicalScore import ESGScores
 
 
-# from LSTM import LSTMAlgorithm
+from LSTM import LSTMAlgorithm
 
 
 class Model:
@@ -54,12 +55,16 @@ class Model:
             if len(apple_data) < 100:
                 raise Exception("Unable to predict - the share was created too recently.")
             else:
+                # esg = ESGScores(self.tickers)
+
+                lstm = LSTMAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
+
                 # Linear Regression Algorithm:
-                linear = LinearRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
+                # linear = LinearRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
                 # Random Forest Regression Algorithm:
-                random_forest = RandomForestRegressionAlgorithm(hold_duration, apple_data, self.prediction_date,
-                                                                start_date)
+                # random_forest = RandomForestRegressionAlgorithm(hold_duration, apple_data, self.prediction_date,
+                #                                                 start_date)
 
                 # Monte Carlo Simulation:
                 # Create a list of dates that includes weekdays only:
@@ -99,4 +104,4 @@ class Model:
 
 
 calc = Model(["AAPL", "TSLA", "MSFT"], [2000, 10000, 1000], 10000,
-             "1d", 1)
+             "1m", 1)

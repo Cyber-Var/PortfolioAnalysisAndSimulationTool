@@ -61,7 +61,7 @@ class Regression:
 
         self.calculateEvalMetrics(all_predictions, all_y_tests)
 
-    def makePrediction(self):
+    def split_prediction_sets(self):
         if self.hold_duration == "1d":
             train_start = date.today() - relativedelta(months=6)
         elif self.hold_duration == "1w":
@@ -71,6 +71,9 @@ class Regression:
         train = self.data[train_start:]
 
         X_train, y_train, X_test, y_test = self.prepareData(train, [], False)
+        return X_train, y_train, X_test
+
+    def makePrediction(self, X_train, y_train, X_test):
         self.reg.fit(X_train, y_train)
         prediction = self.reg.predict(X_test)
         return prediction
@@ -95,6 +98,17 @@ class Regression:
         result = li['Adj Close'].values.tolist()
         result += [li['Adj Close'].mean(), li['Open'].mean(), li['Close'].mean(), li['High'].mean(), li['Low'].mean(),
                    li['Volume'].mean()]
+
+        if self.hold_duration == "1d":
+            percentage_change = li['Adj Close'].pct_change() * 100
+        elif self.hold_duration == "1w":
+            percentage_change = li['Adj Close'].rolling(window=5).apply(
+                lambda x: (x.iloc[-1] / x.iloc[0] - 1) * 100)
+        else:
+            percentage_change = li['Adj Close'].rolling(window=20).apply(
+                lambda x: (x.iloc[-1] / x.iloc[0] - 1) * 100)
+        result += [percentage_change.mean()]
+
         return result
 
     def calculateEvalMetrics(self, predictions, y_test):
