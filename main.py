@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 
 from MonteCarlo import MonteCarloSimulation
 from RiskMetrics import RiskMetrics
-from RandomForest import RandomForestRegressionAlgorithm
+from RandomForest import RandomForestAlgorithm
 from LinearRegressionAlgorithm import LinearRegressionAlgorithm
 from EthicalScore import ESGScores
 
@@ -63,8 +63,7 @@ class Model:
                 # linear = LinearRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
                 # Random Forest Regression Algorithm:
-                # random_forest = RandomForestRegressionAlgorithm(hold_duration, apple_data, self.prediction_date,
-                #                                                 start_date)
+                # random_forest = RandomForestAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
                 # Monte Carlo Simulation:
                 # Create a list of dates that includes weekdays only:
@@ -104,4 +103,4 @@ class Model:
 
 
 calc = Model(["AAPL", "TSLA", "MSFT"], [2000, 10000, 1000], 10000,
-             "1m", 1)
+             "1d", 1)

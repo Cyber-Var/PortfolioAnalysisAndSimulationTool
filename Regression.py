@@ -28,7 +28,10 @@ class Regression:
     def evaluateModel(self):
         # TODO: explain this sliding method clearly in report
 
-        all_predictions = []
+        # all_predictions = []
+        all_X_trains = []
+        all_X_tests = []
+        all_y_trains = []
         all_y_tests = []
 
         train_start = self.start_date
@@ -51,15 +54,16 @@ class Regression:
             test = pd.concat([train.tail(self.days + self.num_days), self.data[test_start:test_end]], axis=0)
 
             X_train, y_train, X_test, y_test = self.prepareData(train, test, True)
-            predictions = self.trainModel(X_train, y_train, X_test)
 
-            all_predictions.extend(predictions)
+            all_X_trains.append(X_train)
+            all_X_tests.append(X_test)
+            all_y_trains.append(y_train)
             all_y_tests.extend(y_test)
 
             train_start += relativedelta(months=1)
             counter += 1
 
-        self.calculateEvalMetrics(all_predictions, all_y_tests)
+        return all_X_trains, all_X_tests, all_y_trains, all_y_tests
 
     def split_prediction_sets(self):
         if self.hold_duration == "1d":
@@ -95,20 +99,26 @@ class Regression:
 
     def process_features(self, li):
         # print(li)
-        result = li['Adj Close'].values.tolist()
-        result += [li['Adj Close'].mean(), li['Open'].mean(), li['Close'].mean(), li['High'].mean(), li['Low'].mean(),
-                   li['Volume'].mean()]
 
         if self.hold_duration == "1d":
-            percentage_change = li['Adj Close'].pct_change() * 100
+            result = li['Adj Close'].values.tolist()
+            # Daily changes (differences):
+            changes = li["Adj Close"].diff().dropna()
         elif self.hold_duration == "1w":
-            percentage_change = li['Adj Close'].rolling(window=5).apply(
-                lambda x: (x.iloc[-1] / x.iloc[0] - 1) * 100)
+            result = np.convolve(li['Adj Close'], np.ones(7) / 7, mode='valid').tolist()
+            # Weekly changes (differences):
+            changes = li['Adj Close'].rolling(window=6).apply(
+                lambda x: (x.iloc[0] - x.iloc[5]))
         else:
-            percentage_change = li['Adj Close'].rolling(window=20).apply(
-                lambda x: (x.iloc[-1] / x.iloc[0] - 1) * 100)
-        result += [percentage_change.mean()]
+            result = np.convolve(li['Adj Close'], np.ones(60) / 60, mode='valid').tolist()
+            # Monthly changes (differences):
+            changes = li['Adj Close'].rolling(window=21).apply(
+                lambda x: (x.iloc[0] - x.iloc[20]))
 
+        result += [changes.mean()]
+
+        result += [li['Adj Close'].mean(), li['Open'].mean(), li['Close'].mean(), li['High'].mean(), li['Low'].mean(),
+                   li['Volume'].mean()]
         return result
 
     def calculateEvalMetrics(self, predictions, y_test):
@@ -126,9 +136,3 @@ class Regression:
         print(f'R-squared: {r2}\n')
 
         return mse, rmse, mae, mape, r2
-
-    def trainModel(self, X_train, y_train, X_test):
-        self.reg.fit(X_train, y_train)
-
-        predictions = self.reg.predict(X_test)
-        return predictions

@@ -8,18 +8,26 @@ class LinearRegressionAlgorithm(Regression):
         super().__init__(hold_duration, data, prediction_date, start_date)
 
         self.evaluateModel()
-        self.split_prediction_sets()
+        self.predict_price()
 
     def evaluateModel(self):
         Regression.reg = LinearRegression()
 
+        all_X_trains, all_X_tests, all_y_trains, all_y_tests = super().evaluateModel()
+
+        all_predictions = []
+        for i in range(len(all_X_trains)):
+            predictions = self.makePrediction(all_X_trains[i], all_y_trains[i], all_X_tests[i])
+            all_predictions.extend(predictions)
+
         print("Linear Regression Evaluation:")
-        return super().evaluateModel()
+        return self.calculateEvalMetrics(all_predictions, all_y_tests)
 
     # TODO: n_estimators chosen by user
-    def split_prediction_sets(self):
+    def predict_price(self):
         Regression.reg = LinearRegression()
         X_train, y_train, X_test = super().split_prediction_sets()
+
         prediction = super().makePrediction(X_train, y_train, X_test)
         print("Linear Regression Prediction:", prediction, "\n")
         return prediction
