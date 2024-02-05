@@ -33,13 +33,9 @@ class Model:
         elif hold_duration == "1w":
             start_date = today - relativedelta(years=2)
             self.prediction_date = today + relativedelta(days=7)
-        elif hold_duration == "1m":
+        else:
             start_date = today - relativedelta(years=4)
             self.prediction_date = today + relativedelta(months=1)
-        # TODO: remove 3 months ???
-        elif hold_duration == "3m":
-            start_date = today - relativedelta(years=5)
-            self.prediction_date = today + relativedelta(months=3)
 
         # Retrieve historical data from Yahoo! Finance:
         self.data = self.downloadData(start_date, end_date)
@@ -57,7 +53,7 @@ class Model:
             else:
                 # esg = ESGScores(self.tickers)
 
-                lstm = LSTMAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
+                # lstm = LSTMAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
                 # Linear Regression Algorithm:
                 # linear = LinearRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
@@ -67,9 +63,9 @@ class Model:
 
                 # Monte Carlo Simulation:
                 # Create a list of dates that includes weekdays only:
-                # self.weekdays = self.getWeekDays()
-                # monte = MonteCarloSimulation(investments, num_of_simulations, self.prediction_date, time_increment,
-                #                              apple_data["Adj Close"], self.weekdays, hold_duration, is_flat_monte_graph)
+                self.weekdays = self.getWeekDays()
+                monte = MonteCarloSimulation(investments, num_of_simulations, self.prediction_date,
+                                             apple_data["Adj Close"], self.weekdays, hold_duration, start_date)
 
         # Calculate risk metrics:
         # risk = RiskMetrics(tickers, self.investments, "TSLA", self.data["Adj Close"])
@@ -91,15 +87,11 @@ class Model:
         elif self.hold_duration == "1w":
             weekdays = pd.date_range(self.prediction_date - relativedelta(days=6), self.prediction_date,
                                      freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
-        elif self.hold_duration == "1m":
+        else:
             weekdays = pd.date_range(self.prediction_date - relativedelta(months=1) + relativedelta(days=1),
                                      self.prediction_date,
                                      freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
-        else:
-            weekdays = pd.date_range(self.prediction_date - relativedelta(months=3) + relativedelta(days=1),
-                                     self.prediction_date,
-                                     freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
-        return weekdays
+        return len(weekdays)
 
 
 calc = Model(["AAPL", "TSLA", "MSFT"], [2000, 10000, 1000], 10000,
