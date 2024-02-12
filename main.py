@@ -4,6 +4,7 @@ import numpy as np
 from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 
+from BayesianRegressionAlgorithm import BayesianRegressionAlgorithm
 from MonteCarlo import MonteCarloSimulation
 from RiskMetrics import RiskMetrics
 from RandomForest import RandomForestAlgorithm
@@ -47,7 +48,7 @@ class Model:
         #     is_flat_monte_graph = True
         # else:
         # TODO: re-make it into loop that goes through each share in portfolio
-        apple_data = self.getDataForTicker("MSFT", self.data)
+        apple_data = self.getDataForTicker("AAPL", self.data)
         if len(apple_data) < 100:
             raise Exception("Unable to predict - the share was created too recently.")
         else:
@@ -59,13 +60,16 @@ class Model:
             # linear = LinearRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
             # Random Forest Regression Algorithm:
-            # random_forest = RandomForestAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
+            random_forest = RandomForestAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
+
+            # Bayesian Regression Algorithm:
+            bayesian = BayesianRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
             # Monte Carlo Simulation:
             # Create a list of dates that includes weekdays only:
-            self.weekdays = self.getWeekDays()
-            monte = MonteCarloSimulation(investments, num_of_simulations, self.prediction_date,
-                                         apple_data["Adj Close"], self.weekdays, hold_duration, start_date)
+            # self.weekdays = self.getWeekDays()
+            # monte = MonteCarloSimulation(investments, num_of_simulations, self.prediction_date,
+            #                              apple_data["Adj Close"], self.weekdays, hold_duration, start_date)
 
         # Calculate risk metrics:
         # risk = RiskMetrics(tickers, self.investments, "TSLA", self.data["Adj Close"])
@@ -95,4 +99,4 @@ class Model:
 
 
 calc = Model(["AAPL", "TSLA", "MSFT"], [2000, 10000, 1000], 1000,
-             "1m", 1)
+             "1d", 1)

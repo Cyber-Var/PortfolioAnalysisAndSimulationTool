@@ -5,6 +5,7 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, r2_score
+from sklearn.preprocessing import StandardScaler
 
 
 class Regression:
@@ -78,9 +79,17 @@ class Regression:
         return X_train, y_train, X_test
 
     def makePrediction(self, X_train, y_train, X_test):
-        self.reg.fit(X_train, y_train)
-        prediction = self.reg.predict(X_test)
-        return prediction
+        scaler_X = StandardScaler()
+        scaler_y = StandardScaler()
+
+        X_train_scaled = scaler_X.fit_transform(X_train)
+        y_train_scaled = scaler_y.fit_transform(np.array(y_train).reshape(-1, 1))
+        y_train_scaled_1d = y_train_scaled.ravel()
+
+        X_test_scaled = scaler_X.transform(X_test)
+        self.reg.fit(X_train_scaled, y_train_scaled_1d)
+        prediction = self.reg.predict(X_test_scaled).reshape(-1, 1)
+        return scaler_y.inverse_transform(prediction)
 
     def prepareData(self, train_set, test_set, eval):
         X_train = [self.process_features(train_set[i:i + self.days]) for i in range(0, len(train_set) -
