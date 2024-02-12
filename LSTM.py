@@ -45,7 +45,7 @@ class LSTMAlgorithm(Regression):
         self.evaluateModel()
 
         self.final = True
-        # self.predict_price()
+        self.predict_price()
 
     def evaluateModel(self):
         Regression.reg = self.createModel()

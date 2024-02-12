@@ -41,31 +41,31 @@ class Model:
         self.data = self.downloadData(start_date, end_date)
 
         is_flat_monte_graph = False
-        if hold_duration == "1d" and ((today.weekday() == 4 and self.data.index[-1] == today.strftime('%Y-%m-%d'))
-                                      or today.weekday() == 5):
-            print("Prediction = ", self.data["Adj Close"])
-            is_flat_monte_graph = True
+        # if hold_duration == "1d" and ((today.weekday() == 4 and self.data.index[-1] == today.strftime('%Y-%m-%d'))
+        #                               or today.weekday() == 5):
+        #     print("Prediction = ", self.data["Adj Close"])
+        #     is_flat_monte_graph = True
+        # else:
+        # TODO: re-make it into loop that goes through each share in portfolio
+        apple_data = self.getDataForTicker("MSFT", self.data)
+        if len(apple_data) < 100:
+            raise Exception("Unable to predict - the share was created too recently.")
         else:
-            # TODO: re-make it into loop that goes through each share in portfolio
-            apple_data = self.getDataForTicker("AAPL", self.data)
-            if len(apple_data) < 100:
-                raise Exception("Unable to predict - the share was created too recently.")
-            else:
-                # esg = ESGScores(self.tickers)
+            # esg = ESGScores(self.tickers)
 
-                # lstm = LSTMAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
+            # lstm = LSTMAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
-                # Linear Regression Algorithm:
-                # linear = LinearRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
+            # Linear Regression Algorithm:
+            # linear = LinearRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
-                # Random Forest Regression Algorithm:
-                # random_forest = RandomForestAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
+            # Random Forest Regression Algorithm:
+            # random_forest = RandomForestAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
-                # Monte Carlo Simulation:
-                # Create a list of dates that includes weekdays only:
-                self.weekdays = self.getWeekDays()
-                monte = MonteCarloSimulation(investments, num_of_simulations, self.prediction_date,
-                                             apple_data["Adj Close"], self.weekdays, hold_duration, start_date)
+            # Monte Carlo Simulation:
+            # Create a list of dates that includes weekdays only:
+            self.weekdays = self.getWeekDays()
+            monte = MonteCarloSimulation(investments, num_of_simulations, self.prediction_date,
+                                         apple_data["Adj Close"], self.weekdays, hold_duration, start_date)
 
         # Calculate risk metrics:
         # risk = RiskMetrics(tickers, self.investments, "TSLA", self.data["Adj Close"])
@@ -94,5 +94,5 @@ class Model:
         return len(weekdays)
 
 
-calc = Model(["AAPL", "TSLA", "MSFT"], [2000, 10000, 1000], 10000,
-             "1d", 1)
+calc = Model(["AAPL", "TSLA", "MSFT"], [2000, 10000, 1000], 1000,
+             "1m", 1)
