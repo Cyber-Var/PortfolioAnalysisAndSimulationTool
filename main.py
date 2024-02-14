@@ -4,6 +4,7 @@ import numpy as np
 from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 
+from ARIMAAlgorithm import ARIMAAlgorithm
 from BayesianRegressionAlgorithm import BayesianRegressionAlgorithm
 from MonteCarlo import MonteCarloSimulation
 from RiskMetrics import RiskMetrics
@@ -12,7 +13,7 @@ from LinearRegressionAlgorithm import LinearRegressionAlgorithm
 from EthicalScore import ESGScores
 
 
-from LSTM import LSTMAlgorithm
+# from LSTM import LSTMAlgorithm
 
 
 class Model:
@@ -52,6 +53,8 @@ class Model:
         if len(apple_data) < 100:
             raise Exception("Unable to predict - the share was created too recently.")
         else:
+            arima = ARIMAAlgorithm(apple_data, hold_duration, start_date)
+
             # esg = ESGScores(self.tickers)
 
             # lstm = LSTMAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
@@ -60,10 +63,10 @@ class Model:
             # linear = LinearRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
             # Random Forest Regression Algorithm:
-            random_forest = RandomForestAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
+            # random_forest = RandomForestAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
             # Bayesian Regression Algorithm:
-            bayesian = BayesianRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
+            # bayesian = BayesianRegressionAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
             # Monte Carlo Simulation:
             # Create a list of dates that includes weekdays only:
@@ -99,4 +102,4 @@ class Model:
 
 
 calc = Model(["AAPL", "TSLA", "MSFT"], [2000, 10000, 1000], 1000,
-             "1d", 1)
+             "1w", 1)

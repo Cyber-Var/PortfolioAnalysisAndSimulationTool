@@ -25,8 +25,7 @@ class LSTMAlgorithm(Regression):
         else:
             train_start = date.today() - relativedelta(years=3)
         data = self.data[train_start:]
-        # prediction = self.predict_price(data)
-        # print("LSTM Prediction:", prediction, "\n")
+        prediction = self.predict_price(data)
 
     def evaluateModel(self):
         Regression.reg = self.createModel()
@@ -99,6 +98,7 @@ class LSTMAlgorithm(Regression):
         X_test = [self.process_features(data[-self.days:])]
 
         prediction = self.make_prediction(X_train, y_train, X_test)
+        print("LSTM Prediction:", prediction, "\n")
         return prediction
 
     def process_features(self, li):
@@ -114,9 +114,9 @@ class LSTMAlgorithm(Regression):
 
         # TODO: number of epochs controlled by user:
         if self.final:
-            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=100)
+            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=10)
         else:
-            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=100)
+            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=10)
         prediction_scaled = self.reg.predict(X_test_scaled)
         prediction = scaler_y.inverse_transform(prediction_scaled)
         return prediction
