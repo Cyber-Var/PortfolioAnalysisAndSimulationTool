@@ -1,9 +1,7 @@
 from datetime import date
-
 import numpy as np
 import pandas as pd
 from dateutil.relativedelta import relativedelta
-
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, r2_score
 from sklearn.preprocessing import StandardScaler
 
@@ -17,19 +15,22 @@ class Regression:
         self.prediction_date = prediction_date
         self.start_date = start_date
 
-        self.days = 5
-        self.num_days = 0
-        if self.hold_duration == "1w":
+        if self.hold_duration == "1d":
+            self.days = 5
+            self.num_days = 0
+            self.historic_date_range = relativedelta(months=6)
+        elif self.hold_duration == "1w":
             self.days = 20
             self.num_days = 4
-        elif self.hold_duration == "1m":
+            self.historic_date_range = relativedelta(years=1)
+        else:
             self.days = 80
             self.num_days = 20
+            self.historic_date_range = relativedelta(years=3)
 
     def evaluateModel(self):
         # TODO: explain this sliding method clearly in report
 
-        # all_predictions = []
         all_X_trains = []
         all_X_tests = []
         all_y_trains = []
@@ -38,24 +39,14 @@ class Regression:
         train_start = self.start_date
         counter = 0
         while True:
-            if self.hold_duration == "1d":
-                train_end = train_start + relativedelta(months=6)
-            elif self.hold_duration == "1w":
-                train_end = train_start + relativedelta(years=1)
-            else:
-                train_end = train_start + relativedelta(years=3)
-
-            test_start = train_end + relativedelta(days=1)
-            test_end = train_end + relativedelta(months=1)
+            train_end, test_start, test_end = self.get_train_test_dates(train_start)
 
             if test_end > date.today():
                 break
 
-            train = self.data[self.start_date:train_end]
-            test = pd.concat([train.tail(self.days + self.num_days), self.data[test_start:test_end]], axis=0)
+            train, test = self.split_train_test_sets(train_end, test_start, test_end)
 
             X_train, y_train, X_test, y_test = self.prepareData(train, test, True)
-
             all_X_trains.append(X_train)
             all_X_tests.append(X_test)
             all_y_trains.append(y_train)
@@ -65,6 +56,17 @@ class Regression:
             counter += 1
 
         return all_X_trains, all_X_tests, all_y_trains, all_y_tests
+
+    def get_train_test_dates(self, train_start):
+        train_end = train_start + self.historic_date_range
+        test_start = train_end + relativedelta(days=1)
+        test_end = train_end + relativedelta(months=1)
+        return train_end, test_start, test_end
+
+    def split_train_test_sets(self, train_end, test_start, test_end):
+        train = self.data[self.start_date:train_end]
+        test = pd.concat([train.tail(self.days + self.num_days), self.data[test_start:test_end]], axis=0)
+        return train, test
 
     def split_prediction_sets(self):
         if self.hold_duration == "1d":
@@ -91,20 +93,21 @@ class Regression:
         prediction = self.reg.predict(X_test_scaled).reshape(-1, 1)
         return scaler_y.inverse_transform(prediction)
 
-    def prepareData(self, train_set, test_set, eval):
-        X_train = [self.process_features(train_set[i:i + self.days]) for i in range(0, len(train_set) -
-                                                                                    (self.days + self.num_days))]
-        y_train = train_set["Adj Close"].iloc[(self.days + self.num_days):].values.tolist()
+    def prepareData(self, train_set, test_set, evaluate):
+        X_train, y_train = self.split_X_y(train_set)
 
-        if eval:
-            X_test = [self.process_features(test_set[i:i + self.days]) for i in range(0, len(test_set) -
-                                                                                      (self.days + self.num_days))]
-            y_test = test_set["Adj Close"].iloc[(self.days + self.num_days):].values.tolist()
+        if evaluate:
+            X_test, y_test = self.split_X_y(test_set)
         else:
             X_test = [self.process_features(train_set[-self.days:])]
             y_test = []
 
         return X_train, y_train, X_test, y_test
+
+    def split_X_y(self, data):
+        X = [self.process_features(data[i:i + self.days]) for i in range(0, len(data) - (self.days + self.num_days))]
+        y = data["Adj Close"].iloc[(self.days + self.num_days):].values.tolist()
+        return X, y
 
     def process_features(self, li):
         # print(li)
@@ -131,7 +134,6 @@ class Regression:
         return result
 
     def calculateEvalMetrics(self, predictions, y_test):
-
         mse = mean_squared_error(y_test, predictions)
         rmse = np.sqrt(mse)
         mae = mean_absolute_error(y_test, predictions)
@@ -143,5 +145,4 @@ class Regression:
         print(f'MAE: {mae}')
         print(f'MAPE: {mape}%')
         print(f'R-squared: {r2}\n')
-
         return mse, rmse, mae, mape, r2

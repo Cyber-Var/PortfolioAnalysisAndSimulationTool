@@ -1,17 +1,18 @@
 from datetime import date
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from dateutil.relativedelta import relativedelta
 
-from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, r2_score
+from Regression import Regression
 
 
-class MonteCarloSimulation:
+class MonteCarloSimulation(Regression):
 
     def __init__(self, values, num_of_simulations, prediction_date, data, num_weekdays,
                  hold_duration, start_date):
+        super().__init__(hold_duration, data, prediction_date, start_date)
+
         self.values = np.array(values)
         self.num_of_simulations = num_of_simulations
         self.prediction_date = prediction_date
@@ -28,22 +29,18 @@ class MonteCarloSimulation:
             self.days = 20
 
         # Evaluate Monte Carlo:
-        self.evaluateMC()
+        print("Monte Carlo Simulation Evaluation:")
+        mse, rmse, mae, mape, r2 = self.evaluateMC()
 
         # Display Monte Carlo results:
-        if self.hold_duration == "1d":
-            train_start = date.today() - relativedelta(months=6)
-        elif self.hold_duration == "1w":
-            train_start = date.today() - relativedelta(years=1)
-        else:
-            train_start = date.today() - relativedelta(years=3)
+        train_start = date.today() - self.historic_date_range
         data_for_prediction = self.data[train_start:]
-        results, s_0 = self.makePrediction(data_for_prediction)
+        results, s_0 = self.makeMCPrediction(data_for_prediction)
         self.displayResults(results, s_0)
 
-    def makePrediction(self, data_for_prediction):
+    def makeMCPrediction(self, data_for_prediction):
         s_0, mu, sigma = self.prepareForMC(data_for_prediction)
-        monte_results = self.simulateMonteCarlo(s_0, mu, sigma, data_for_prediction)
+        monte_results = self.simulateMonteCarlo(s_0, mu, sigma)
         return monte_results, s_0
 
     def displayResults(self, monte_results, s_0):
@@ -83,7 +80,7 @@ class MonteCarloSimulation:
 
         return s_0, mu, sigma
 
-    def calculateTimePoints(self, data):
+    def calculateTimePoints(self):
         prediction_length = int(self.num_weekdays / self.time_increment)
         time_points = np.arange(1, prediction_length + 1)
         return prediction_length, time_points
@@ -97,9 +94,9 @@ class MonteCarloSimulation:
         gbm = s_0 * np.exp(drift + vol)
         return gbm
 
-    def simulateMonteCarlo(self, s_0, mu, sigma, data):
+    def simulateMonteCarlo(self, s_0, mu, sigma):
         # t:
-        prediction_length, time_points = self.calculateTimePoints(data)
+        prediction_length, time_points = self.calculateTimePoints()
 
         # Drift:
         drift = (mu - 0.5 * (sigma ** 2)) * self.days
@@ -174,21 +171,11 @@ class MonteCarloSimulation:
         all_predictions = []
         all_tests = []
 
-        threshold = self.data.iloc[-250:].index[0]
-        today = date.today()
-
-        if self.hold_duration == "1d":
-            historic_date_range = relativedelta(months=6)
-        elif self.hold_duration == "1d":
-            historic_date_range = relativedelta(years=1)
-        else:
-            historic_date_range = relativedelta(years=3)
-
-        train_start = today - historic_date_range - relativedelta(days=1)
+        train_start = date.today() - self.historic_date_range - relativedelta(days=1)
 
         counter = 0
         while True:
-            train_end = train_start + historic_date_range
+            train_end = train_start + self.historic_date_range
             dataset = self.data[train_start:train_end]
 
             train = dataset.iloc[:-1]
@@ -197,7 +184,7 @@ class MonteCarloSimulation:
             if counter == 250:
                 break
 
-            monte_results, s_0 = self.makePrediction(train)
+            monte_results, s_0 = self.makeMCPrediction(train)
             predictions = [x[-1] for x in monte_results]
             average_prediction = sum(predictions) / len(predictions)
 
@@ -207,15 +194,4 @@ class MonteCarloSimulation:
             train_start -= relativedelta(days=1)
             counter += 1
 
-        mse = mean_squared_error(all_tests, all_predictions)
-        rmse = np.sqrt(mse)
-        mae = mean_absolute_error(all_tests, all_predictions)
-        mape = mean_absolute_percentage_error(all_tests, all_predictions) * 100
-        r2 = r2_score(all_tests, all_predictions)
-
-        print("Monte Carlo Simulation Evaluation:")
-        print(f'MSE: {mse}')
-        print(f'RMSE: {rmse}')
-        print(f'MAE: {mae}')
-        print(f'MAPE: {mape}%')
-        print(f'R-squared: {r2}\n')
+        return super().calculateEvalMetrics(all_predictions, all_tests)

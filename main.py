@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta, date
+from datetime import date
 from dateutil.relativedelta import relativedelta
 
 from ARIMAAlgorithm import ARIMAAlgorithm
@@ -11,9 +11,7 @@ from RiskMetrics import RiskMetrics
 from RandomForest import RandomForestAlgorithm
 from LinearRegressionAlgorithm import LinearRegressionAlgorithm
 from EthicalScore import ESGScores
-
-
-# from LSTM import LSTMAlgorithm
+from LSTM import LSTMAlgorithm
 
 
 class Model:
@@ -53,7 +51,7 @@ class Model:
         if len(apple_data) < 100:
             raise Exception("Unable to predict - the share was created too recently.")
         else:
-            arima = ARIMAAlgorithm(apple_data, hold_duration, start_date)
+            arima = ARIMAAlgorithm(hold_duration, apple_data, self.prediction_date, start_date)
 
             # esg = ESGScores(self.tickers)
 

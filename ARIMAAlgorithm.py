@@ -1,16 +1,16 @@
 import warnings
-
-import numpy as np
 from pmdarima import auto_arima
 from statsmodels.tsa.arima.model import ARIMA
 from datetime import date
 from dateutil.relativedelta import relativedelta
-from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, r2_score
+
+from Regression import Regression
 
 
-class ARIMAAlgorithm:
+class ARIMAAlgorithm(Regression):
 
-    def __init__(self, data, hold_duration, start_date):
+    def __init__(self, hold_duration, data, prediction_date, start_date):
+        super().__init__(hold_duration, data, prediction_date, start_date)
         self.params = None
 
         if hold_duration == "1m":
@@ -33,7 +33,8 @@ class ARIMAAlgorithm:
 
             self.params = self.predict_price(data_for_prediction)
 
-            self.evaluateModel()
+            print("ARIMA Evaluation:")
+            mse, rmse, mae, mape, r2 = self.evaluateModel()
 
     def predict_price(self, data):
         arima_model = self.setup_model(data, True)
@@ -94,21 +95,11 @@ class ARIMAAlgorithm:
         all_predictions = []
         all_tests = []
 
-        threshold = self.data.iloc[-250:].index[0]
-        today = date.today()
-
-        if self.hold_duration == "1d":
-            historic_date_range = relativedelta(months=6)
-        elif self.hold_duration == "1d":
-            historic_date_range = relativedelta(years=1)
-        else:
-            historic_date_range = relativedelta(years=3)
-
-        train_start = today - historic_date_range - relativedelta(days=1)
+        train_start = date.today() - self.historic_date_range - relativedelta(days=1)
 
         counter = 0
         while True:
-            train_end = train_start + historic_date_range
+            train_end = train_start + self.historic_date_range
             dataset = self.data[train_start:train_end]
 
             train = dataset.iloc[:-1]
@@ -126,15 +117,4 @@ class ARIMAAlgorithm:
             train_start -= relativedelta(days=1)
             counter += 1
 
-        mse = mean_squared_error(all_tests, all_predictions)
-        rmse = np.sqrt(mse)
-        mae = mean_absolute_error(all_tests, all_predictions)
-        mape = mean_absolute_percentage_error(all_tests, all_predictions) * 100
-        r2 = r2_score(all_tests, all_predictions)
-
-        print("ARIMA Evaluation:")
-        print(f'MSE: {mse}')
-        print(f'RMSE: {rmse}')
-        print(f'MAE: {mae}')
-        print(f'MAPE: {mape}%')
-        print(f'R-squared: {r2}\n')
+        return super().calculateEvalMetrics(all_predictions, all_tests)

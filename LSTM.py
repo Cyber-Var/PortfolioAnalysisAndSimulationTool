@@ -1,10 +1,8 @@
 import numpy as np
-import pandas as pd
 from datetime import date
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM, Dropout
 from sklearn.preprocessing import MinMaxScaler
-from dateutil.relativedelta import relativedelta
 
 from Regression import Regression
 
@@ -18,84 +16,28 @@ class LSTMAlgorithm(Regression):
         self.evaluateModel()
 
         self.final = True
-        if self.hold_duration == "1d":
-            train_start = date.today() - relativedelta(months=6)
-        elif self.hold_duration == "1w":
-            train_start = date.today() - relativedelta(years=1)
-        else:
-            train_start = date.today() - relativedelta(years=3)
+        train_start = date.today() - self.historic_date_range
         data = self.data[train_start:]
         prediction = self.predict_price(data)
 
     def evaluateModel(self):
         Regression.reg = self.createModel()
 
-        all_X_trains, all_X_tests, all_y_trains, all_y_tests = self.prepareForEval()
+        all_X_trains, all_X_tests, all_y_trains, all_y_tests = super().evaluateModel()
 
         all_predictions = []
         for i in range(len(all_X_trains)):
             predictions = self.make_prediction(all_X_trains[i], all_y_trains[i], all_X_tests[i])
             all_predictions.extend(predictions)
 
-        print(len(all_predictions))
-        print(all_predictions)
-        print(all_y_tests)
         print("LSTM Evaluation:")
         return super().calculateEvalMetrics(all_predictions, all_y_tests)
-
-    def prepareForEval(self):
-        # TODO: explain this sliding method clearly in report
-
-        all_X_trains = []
-        all_X_tests = []
-        all_y_trains = []
-        all_y_tests = []
-
-        train_start = self.start_date
-        counter = 0
-        while True:
-            if self.hold_duration == "1d":
-                train_end = train_start + relativedelta(months=6)
-            elif self.hold_duration == "1w":
-                train_end = train_start + relativedelta(years=1)
-            else:
-                train_end = train_start + relativedelta(years=3)
-
-            test_start = train_end + relativedelta(days=1)
-            test_end = train_end + relativedelta(months=1)
-
-            if test_end > date.today():
-                break
-
-            train = self.data[self.start_date:train_end]
-            test = pd.concat([train.tail(self.days + self.num_days), self.data[test_start:test_end]], axis=0)
-
-            X_train = [self.process_features(train[i:i + self.days]) for i in range(0, len(train) -
-                                                                                        (self.days + self.num_days))]
-            y_train = train["Adj Close"].iloc[(self.days + self.num_days):].values.tolist()
-
-            X_test = [self.process_features(test[i:i + self.days]) for i in range(0, len(test) -
-                                                                                  (self.days + self.num_days))]
-            y_test = test["Adj Close"].iloc[(self.days + self.num_days):].values.tolist()
-
-            all_X_trains.append(X_train)
-            all_X_tests.append(X_test)
-            all_y_trains.append(y_train)
-            all_y_tests.extend(y_test)
-
-            train_start += relativedelta(months=1)
-            counter += 1
-
-        return all_X_trains, all_X_tests, all_y_trains, all_y_tests
 
     # TODO: n_estimators chosen by user
     def predict_price(self, data):
         Regression.reg = self.createModel()
 
-        X_train = [self.process_features(data[i:i + self.days]) for i in range(0, len(data) -
-                                                                                    (self.days + self.num_days))]
-        y_train = data["Adj Close"].iloc[(self.days + self.num_days):].values.tolist()
-        X_test = [self.process_features(data[-self.days:])]
+        X_train, y_train, X_test, _ = super().prepareData(data, [], False)
 
         prediction = self.make_prediction(X_train, y_train, X_test)
         print("LSTM Prediction:", prediction, "\n")
@@ -142,6 +84,3 @@ class LSTMAlgorithm(Regression):
 
         lstm_model.compile(optimizer='adam', loss='mean_squared_error')
         return lstm_model
-
-
-

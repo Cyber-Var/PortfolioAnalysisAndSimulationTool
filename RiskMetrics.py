@@ -1,5 +1,4 @@
 import numpy as np
-from datetime import date
 from scipy.stats import norm
 
 
@@ -14,6 +13,7 @@ class RiskMetrics:
 
         # Display Risk Metrics results:
         vol, cat = self.calculateVolatility(ticker)
+        print("Risk Metrics:")
         print("Volatility:", cat, "(" + str(vol) + ")")
         print(self.calculatePortfolioVolatility())
         print(self.calculateSharpeRatio(ticker))
@@ -74,7 +74,6 @@ class RiskMetrics:
 
     # TODO: can regulate daily/weekly/monthly/annual
     def calculateVaR(self, ticker, confidence, volatility):
-        today = date.today().strftime("%Y-%m-%d")
         portfolio_value = self.close_prices[ticker].iloc[-1]
         Z = norm.ppf(1 - confidence)
         VaR = portfolio_value * volatility * Z

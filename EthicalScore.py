@@ -1,7 +1,3 @@
-import time
-
-import requests
-import pandas as pd
 import yesg
 
 
@@ -22,6 +18,3 @@ class ESGScores:
         g_score = scores["G-Score"]
         total_score = scores["Total-Score"]
         print(f"E-Score = {e_score}, S-Score = {s_score}, G-Score = {g_score}, Total-Score = {total_score}")
-
-
-
