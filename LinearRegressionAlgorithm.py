@@ -5,16 +5,18 @@ from Regression import Regression
 
 class LinearRegressionAlgorithm(Regression):
 
-    def __init__(self, hold_duration, data, prediction_date, start_date):
+    def __init__(self, hold_duration, data, prediction_date, start_date, params):
         super().__init__(hold_duration, data, prediction_date, start_date)
+        self.params = params
 
-        self.evaluateModel()
-        self.predict_price()
+    def setup_model(self):
+        model = LinearRegression(fit_intercept=self.params[0])
+        return model
 
     def evaluateModel(self):
-        Regression.reg = LinearRegression()
+        Regression.reg = self.setup_model()
 
-        all_X_trains, all_X_tests, all_y_trains, all_y_tests = super().evaluateModel()
+        all_X_trains, all_y_trains, all_X_tests, all_y_tests = super().evaluateModel()
 
         all_predictions = []
         for i in range(len(all_X_trains)):
@@ -26,7 +28,7 @@ class LinearRegressionAlgorithm(Regression):
 
     # TODO: n_estimators chosen by user
     def predict_price(self):
-        Regression.reg = LinearRegression()
+        Regression.reg = self.setup_model()
         X_train, y_train, X_test = super().split_prediction_sets()
 
         prediction = super().makePrediction(X_train, y_train, X_test)

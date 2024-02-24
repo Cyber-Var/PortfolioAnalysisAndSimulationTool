@@ -55,7 +55,7 @@ class Regression:
             train_start += relativedelta(months=1)
             counter += 1
 
-        return all_X_trains, all_X_tests, all_y_trains, all_y_tests
+        return all_X_trains, all_y_trains, all_X_tests, all_y_tests
 
     def get_train_test_dates(self, train_start):
         train_end = train_start + self.historic_date_range
@@ -139,10 +139,11 @@ class Regression:
         mae = mean_absolute_error(y_test, predictions)
         mape = mean_absolute_percentage_error(y_test, predictions) * 100
         r2 = r2_score(y_test, predictions)
+        return mse, rmse, mae, mape, r2
 
+    def printEvaluation(self, mse, rmse, mae, mape, r2):
         print(f'MSE: {mse}')
         print(f'RMSE: {rmse}')
         print(f'MAE: {mae}')
         print(f'MAPE: {mape}%')
         print(f'R-squared: {r2}\n')
-        return mse, rmse, mae, mape, r2

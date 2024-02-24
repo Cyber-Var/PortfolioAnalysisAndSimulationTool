@@ -9,11 +9,10 @@ from Regression import Regression
 
 class MonteCarloSimulation(Regression):
 
-    def __init__(self, values, num_of_simulations, prediction_date, data, num_weekdays,
+    def __init__(self, num_of_simulations, prediction_date, data, num_weekdays,
                  hold_duration, start_date):
         super().__init__(hold_duration, data, prediction_date, start_date)
 
-        self.values = np.array(values)
         self.num_of_simulations = num_of_simulations
         self.prediction_date = prediction_date
         self.num_weekdays = num_weekdays
@@ -28,15 +27,10 @@ class MonteCarloSimulation(Regression):
         elif self.hold_duration == "1m":
             self.days = 20
 
-        # Evaluate Monte Carlo:
-        print("Monte Carlo Simulation Evaluation:")
-        mse, rmse, mae, mape, r2 = self.evaluateMC()
-
-        # Display Monte Carlo results:
+    def get_data_for_prediction(self):
         train_start = date.today() - self.historic_date_range
         data_for_prediction = self.data[train_start:]
-        results, s_0 = self.makeMCPrediction(data_for_prediction)
-        self.displayResults(results, s_0)
+        return data_for_prediction
 
     def makeMCPrediction(self, data_for_prediction):
         s_0, mu, sigma = self.prepareForMC(data_for_prediction)
@@ -110,8 +104,11 @@ class MonteCarloSimulation(Regression):
         # Add starting point to each path:
         monte2 = np.hstack((np.array([[s_0] for _ in range(self.num_of_simulations)]), monte))
 
-        x_axis = pd.date_range(start=date.today(), end=self.prediction_date,
+        today = date.today()
+        x_axis = pd.date_range(start=today, end=self.prediction_date,
                                freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
+        if today.weekday() >= 5:
+            x_axis = pd.concat([pd.Series([today]), pd.Series(x_axis)], ignore_index=True)
 
         # Draw the simulation graph:
         for i in range(self.num_of_simulations):
@@ -165,7 +162,7 @@ class MonteCarloSimulation(Regression):
         print("Monte Carlo Simulation Price Probabilities:")
         print(results, "\n")
 
-    def evaluateMC(self):
+    def evaluateModel(self):
         # TODO: explain this sliding method clearly in report
 
         all_predictions = []
