@@ -1,0 +1,11 @@
+1d, AAPL, 25.02.24
+Best parameters for the Bayesian model:
+Best MSE parameters: (100, 0.0001, 0.0001, 1e-06, 1e-06, 0.0001, True, False, True)       MSE = 5.076755208596285
+Best RMSE parameters: (100, 0.0001, 0.0001, 1e-06, 1e-06, 0.0001, True, False, True)       RMSE = 2.2531655972423077
+Best MAE parameters: (100, 0.001, 0.0001, 1e-06, 1e-06, 0.0001, True, False, True)       MAE = 1.7129392881479164
+Best MAPE parameters: (100, 0.001, 0.0001, 1e-06, 1e-06, 0.0001, True, False, True)       MAPE = 0.9665067970478111
+Best R^2 parameters: (100, 0.0001, 0.0001, 1e-06, 1e-06, 0.0001, True, False, True)       R^2 = 0.9661951022374651 
+
+1w, AAPL, 26.02.24
+
+1m, AAPL, 26.02.24

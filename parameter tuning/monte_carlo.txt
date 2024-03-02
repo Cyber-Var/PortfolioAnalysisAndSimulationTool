@@ -1,0 +1,23 @@
+1d, AAPL, 25.02.24
+Best parameters for the Monte Carlo Simulation model:
+Best MSE parameters: (1000,)       MSE = 4.861399294624291
+Best RMSE parameters: (1000,)       RMSE = 2.2048581121297333
+Best MAE parameters: (1000,)       MAE = 1.6353894482742097
+Best MAPE parameters: (1000,)       MAPE = 0.8900543446321442
+Best R^2 parameters: (1000,)       R^2 = 0.9176950793794934 
+
+1w, AAPL, 26.02.24
+Best parameters for the Monte Carlo Simulation model:
+Best MSE parameters: (10000,)       MSE = 52.018682807323046
+Best RMSE parameters: (10000,)       RMSE = 7.212397854203763
+Best MAE parameters: (10000,)       MAE = 6.625187831704124
+Best MAPE parameters: (10000,)       MAPE = 3.5772371256600195
+Best R^2 parameters: (10000,)       R^2 = 0.11870914591686454 
+
+1m, AAPL, 26.02.24
+Best parameters for the Monte Carlo Simulation model:
+Best MSE parameters: (10000,)       MSE = 333921.72616968333
+Best RMSE parameters: (10000,)       RMSE = 577.859607664079
+Best MAE parameters: (10,)       MAE = 529.2119470034856
+Best MAPE parameters: (10,)       MAPE = 285.84455551398366
+Best R^2 parameters: (10000,)       R^2 = -5656.240996662864 

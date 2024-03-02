@@ -1,0 +1,23 @@
+1d, AAPL, 25.02.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 5.412396821770142
+Best RMSE parameters: (False,)       RMSE = 2.3264558499507664
+Best MAE parameters: (False,)       MAE = 1.7392514760474114
+Best MAPE parameters: (False,)       MAPE = 0.9857351430945491
+Best R^2 parameters: (False,)       R^2 = 0.9639601443674224 
+
+1w, AAPL, 26.02.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (True,)       MSE = 42.426379913324965
+Best RMSE parameters: (True,)       RMSE = 6.513553554959456
+Best MAE parameters: (True,)       MAE = 5.393204101809308
+Best MAPE parameters: (True,)       MAPE = 3.059523147815724
+Best R^2 parameters: (True,)       R^2 = 0.7174928675458518 
+
+1m, AAPL, 26.02.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 170.64607254525984
+Best RMSE parameters: (False,)       RMSE = 13.06315706654635
+Best MAE parameters: (False,)       MAE = 11.477976541802047
+Best MAPE parameters: (False,)       MAPE = 6.609430567588302
+Best R^2 parameters: (False,)       R^2 = -0.1362914469208072 
