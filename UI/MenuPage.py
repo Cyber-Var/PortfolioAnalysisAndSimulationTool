@@ -1,39 +1,34 @@
-import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGraphicsDropShadowEffect
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QPalette, QColor
 
-from UI.MainWindow import MainWindow
 import logging
 
+from UI.Page import Page
+from UI.PortfolioPage import PortfolioPage
 
-class MenuPage(QWidget):
-    def __init__(self):
+
+class MenuPage(QWidget, Page):
+    def __init__(self, main_window):
         super().__init__()
 
-        self.logger = logging.getLogger(__name__)
+        self.main_window = main_window
+
+        self.setStyleSheet(self.load_stylesheet())
 
         self.layout = QVBoxLayout()
-        self.init_page()
+        self.init_page("Main Menu")
 
-        self.add_menu_buttons()
+        self.build_page()
 
         self.setLayout(self.layout)
 
-    def init_page(self):
-        self.logger.info('Initializing the Main Menu Page')
-
-        self.setWindowTitle('Main Menu')
-
-        title = QLabel('Portfolio Analysis and Simulation Tool')
-        title.setAlignment(Qt.AlignCenter)
-        title.setFont(QFont('Arial', 30))
-        title.setStyleSheet("color: red;")
-        shadow_effect = QGraphicsDropShadowEffect(blurRadius=5, xOffset=3, yOffset=3)
-        title.setGraphicsEffect(shadow_effect)
-        self.layout.addWidget(title)
-
+    def build_page(self):
+        title_label = self.get_title_label("Portfolio Analysis and Simulation Tool")
+        self.layout.addWidget(title_label)
         self.layout.addStretch()
+
+        self.add_menu_buttons()
 
     def add_menu_buttons(self):
         portfolio_button = self.create_menu_button('Portfolio Analysis')
@@ -53,33 +48,15 @@ class MenuPage(QWidget):
 
         self.layout.addStretch()
 
-    def create_menu_button(self, button_text):
-        button = QPushButton(button_text)
-        button.setFont(QFont('Arial', 16))
-        button.setStyleSheet("""
-            QPushButton {
-                background-color: qlineargradient(
-                    x1:0, y1:0, x2:0, y2:1,
-                    stop:0 lightblue, stop:1 blue);
-                border-style: outset;
-                border-width: 2px;
-                border-radius: 15px;
-                border-color: beige;
-                min-width: 200px;
-                padding: 6px;
-            }
-            QPushButton:pressed {
-                background-color: qlineargradient(
-                    x1:0, y1:0, x2:0, y2:1,
-                    stop:0 blue, stop:1 darkblue);
-                border-style: inset;
-            }
-        """)
+    def create_menu_button(self, name):
+        button = QPushButton(name)
+        button.setObjectName('menuButton')
         return button
 
     def open_portfolio_page(self):
         self.logger.info('Opening the Portfolio Page')
-        pass
+        portfolio_page = PortfolioPage(self.main_window)
+        self.main_window.setCentralWidget(portfolio_page)
 
     def open_manual_page(self):
         self.logger.info('Opening the User Manual Page')

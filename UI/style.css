@@ -1,0 +1,52 @@
+QLabel {
+    font-family: Arial, serif;
+}
+
+#titleLabel {
+    font-size: 30px;
+    color: red;
+}
+
+#inputLabel {
+    font-size: 15px;
+    color: white;
+}
+
+#columnNameLabel {
+    font-size: 15px;
+    border: 1px solid black;
+    background-color: white;
+}
+
+QPushButton {
+    font-family: Arial, serif;
+    font-size: 16px;
+}
+
+#menuButton {
+    background-color: lightblue;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 15px;
+    border-color: beige;
+    min-width: 200px;
+    padding: 6px;
+}
+
+#menuButton:hover {
+    background-color: cadetblue;
+    border-style: inset;
+}
+
+#menuButton:pressed {
+    background-color: darkblue;
+    border-style: inset;
+}
+
+#addStockButton {
+    font-size: 15px;
+    border: 1px solid white;
+    background-color: black;
+    border-radius: 10px;
+    color: white;
+}
