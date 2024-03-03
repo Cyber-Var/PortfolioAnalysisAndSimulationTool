@@ -4,20 +4,12 @@ from scipy.stats import norm
 
 class RiskMetrics:
 
-    def __init__(self, tickers, investments, ticker, close_prices):
+    def __init__(self, tickers, investments, close_prices):
         self.tickers = tickers
         self.investments = investments
         self.close_prices = close_prices
 
         self.daily_returns = self.getDailyReturns()
-
-        # Display Risk Metrics results:
-        vol, cat = self.calculateVolatility(ticker)
-        print("Risk Metrics:")
-        print("Volatility:", cat, "(" + str(vol) + ")")
-        print(self.calculatePortfolioVolatility())
-        print(self.calculateSharpeRatio(ticker))
-        print("VaR: " + str(self.calculateVaR(ticker, 0.95, vol)))
 
     def getDailyReturns(self):
         data = self.close_prices
@@ -26,7 +18,10 @@ class RiskMetrics:
 
     # TODO: can regulate daily/weekly/monthly/annual
     def calculateVolatility(self, ticker):
-        volatility = self.daily_returns[ticker].std() * 100
+        if len(self.tickers) > 1:
+            volatility = self.daily_returns[ticker].std() * 100
+        else:
+            volatility = self.daily_returns.std() * 100
 
         if volatility < 2:
             daily_category = "Low"
@@ -38,8 +33,9 @@ class RiskMetrics:
         return volatility, daily_category
 
     def calculateWeights(self):
-        total = self.investments.sum()
-        weights = self.investments / total
+        invs = np.array(self.investments)
+        total = invs.sum()
+        weights = invs / total
         return weights
 
     # TODO: fix because it will break as overall data in main is different
@@ -61,7 +57,10 @@ class RiskMetrics:
 
     def calculateSharpeRatio(self, ticker):
         risk_free_rate = 1.02 ** (1 / 252) - 1
-        excess = self.daily_returns[ticker] - risk_free_rate
+        if len(self.tickers) > 1:
+            excess = self.daily_returns[ticker] - risk_free_rate
+        else:
+            excess = self.daily_returns - risk_free_rate
         sharpe_ratio = excess.mean() / excess.std()
 
         if sharpe_ratio < 0.1:
@@ -74,7 +73,10 @@ class RiskMetrics:
 
     # TODO: can regulate daily/weekly/monthly/annual
     def calculateVaR(self, ticker, confidence, volatility):
-        portfolio_value = self.close_prices[ticker].iloc[-1]
+        if len(self.tickers) > 1:
+            portfolio_value = self.close_prices[ticker].iloc[-1]
+        else:
+            portfolio_value = self.close_prices.iloc[-1]
         Z = norm.ppf(1 - confidence)
         VaR = portfolio_value * volatility * Z
         return VaR

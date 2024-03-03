@@ -18,6 +18,13 @@ QLabel {
     background-color: white;
 }
 
+#resultLabel {
+    font-size: 15px;
+    border: 1px solid white;
+    background-color: black;
+    color: white;
+}
+
 QPushButton {
     font-family: Arial, serif;
     font-size: 16px;
@@ -48,5 +55,12 @@ QPushButton {
     border: 1px solid white;
     background-color: black;
     border-radius: 10px;
+    color: white;
+}
+
+#moreInfoButton {
+    font-size: 15px;
+    border: 1px solid white;
+    background-color: black;
     color: white;
 }

@@ -31,5 +31,4 @@ class LinearRegressionAlgorithm(Regression):
         X_train, y_train, X_test = super().split_prediction_sets()
 
         prediction = super().makePrediction(X_train, y_train, X_test)
-        print("Linear Regression Prediction:", prediction, "\n")
         return prediction

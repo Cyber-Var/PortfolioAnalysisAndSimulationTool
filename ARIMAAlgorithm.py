@@ -50,9 +50,9 @@ class ARIMAAlgorithm(Regression):
         arima_model = self.setup_model(data, True)
         predicted_price, confidence_interval = self.make_prediction(arima_model, True)
 
-        print("ARIMA Prediction:")
-        print(f"Tomorrow's predicted closing price: {predicted_price.iloc[-1]}")
-        print(f"95% confidence interval: between {confidence_interval[0]} and {confidence_interval[1]} \n")
+        # print("ARIMA Prediction:")
+        # print(f"Tomorrow's predicted closing price: {predicted_price.iloc[-1]}")
+        # print(f"95% confidence interval: between {confidence_interval[0]} and {confidence_interval[1]} \n")
 
         return predicted_price
 

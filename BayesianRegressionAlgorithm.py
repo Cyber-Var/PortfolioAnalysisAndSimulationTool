@@ -34,5 +34,4 @@ class BayesianRegressionAlgorithm(Regression):
         Regression.reg = self.setup_model()
         X_train, y_train, X_test = super().split_prediction_sets()
         prediction = super().makePrediction(X_train, y_train, X_test)
-        print("Bayesian Regression Prediction:", prediction, "\n")
         return prediction

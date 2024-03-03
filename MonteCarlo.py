@@ -48,15 +48,13 @@ class MonteCarloSimulation(Regression):
                 less += 1
 
         percentage = (max(more, less) / self.num_of_simulations) * 100
+        percentage = "{:.2f}".format(percentage)
         if more >= less:
             prediction = str(percentage) + "% chance of growth"
         else:
             prediction = str(percentage) + "% chance of fall"
-        print("Monte Carlo Simulation Prediction:")
-        print(prediction, "\n")
 
-        plot_labels = self.plotSimulation(monte_results, s_0)
-        self.printProbabilities(plot_labels, monte_results, s_0)
+        return prediction
 
     def prepareForMC(self, data):
         # S_0:

@@ -1,10 +1,10 @@
-import numpy as np
 from datetime import date
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, LSTM, Dropout
+
+import numpy as np
+from dateutil.relativedelta import relativedelta
 from sklearn.preprocessing import MinMaxScaler
-import urllib.request, json
+from tensorflow.keras.layers import Dense, LSTM, Dropout
+from tensorflow.keras.models import Sequential
 
 from Regression import Regression
 
@@ -39,7 +39,6 @@ class LSTMAlgorithm(Regression):
         X_train, y_train, X_test, _ = super().prepareData(data, [], False)
 
         prediction = self.make_prediction(X_train, y_train, X_test, True)
-        print("LSTM Prediction:", prediction, "\n")
         return prediction
 
     def process_features(self, li):
@@ -55,9 +54,9 @@ class LSTMAlgorithm(Regression):
 
         # TODO: number of epochs controlled by user:
         if final:
-            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=50)
+            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=10)
         else:
-            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=50)
+            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=10)
 
         prediction_scaled = self.reg.predict(X_test_scaled)
         prediction = scaler_y.inverse_transform(prediction_scaled)
