@@ -72,7 +72,7 @@ class Controller:
         # Linear Regression Algorithm:
         data = self.getDataForTicker(ticker, self.data)
         linear_regression = LinearRegressionAlgorithm(self.hold_duration, data, self.prediction_date,
-                                                      self.start_date, (True,))
+                                                      self.start_date, (False,))
         return self.run_model(linear_regression, "Linear Regression")
 
     def run_random_forest(self, ticker):
@@ -89,12 +89,12 @@ class Controller:
                                                (100, 1e-3, 1e-6, 1e-6, 1e-6, 1e-6, True, True, True))
         return self.run_model(bayesian, "Bayesian Ridge Regression")
 
-    def run_monte_carlo(self, ticker, num_of_simulations):
+    def run_monte_carlo(self, ticker):
         # Monte Carlo Simulation:
         data = self.getDataForTicker(ticker, self.data)
         # Create a list of dates that includes weekdays only:
         weekdays = self.getWeekDays()
-        monte = MonteCarloSimulation(num_of_simulations, self.prediction_date, data["Adj Close"], weekdays,
+        monte = MonteCarloSimulation(10000, self.prediction_date, data["Adj Close"], weekdays,
                                      self.hold_duration, self.start_date)
         # print("Monte Carlo Simulation Evaluation:")
         # mse, rmse, mae, mape, r2 = monte.evaluateModel()
@@ -110,7 +110,8 @@ class Controller:
         data = self.getDataForTicker(ticker, self.data)
         aapl = yf.Ticker(ticker)
         today_data = aapl.history(period="1d")
-        arima = ARIMAAlgorithm(self.hold_duration, data, self.prediction_date, self.start_date, today_data, [20])
+        arima = ARIMAAlgorithm(self.hold_duration, data, self.prediction_date, self.start_date, today_data,
+                               [20, 1, 1, 1])
         # print("ARIMA Evaluation:")
         # mse, rmse, mae, mape, r2 = arima.evaluateModel()
         # arima.printEvaluation(mse, rmse, mae, mape, r2)
@@ -138,9 +139,12 @@ class Controller:
         data = self.getDataForTicker(ticker, self.data)
         self.plotMovingAverage(data, ticker)
 
-    def tune_hyperparameters(self, data, num_of_simulations):
+    def tune_hyperparameters(self, ticker, num_of_simulations):
+        data = self.getDataForTicker(ticker, self.data)
         weekdays = self.getWeekDays()
-        parameter_tester = ParameterTester(self.hold_duration, data, self.prediction_date, self.start_date,
+        aapl = yf.Ticker(ticker)
+        today_data = aapl.history(period="1d")
+        parameter_tester = ParameterTester(self.hold_duration, data, self.prediction_date, self.start_date, today_data,
                                            num_of_simulations, weekdays)
 
     def calculate_risk_metrics(self, ticker):

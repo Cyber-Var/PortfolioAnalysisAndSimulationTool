@@ -24,7 +24,7 @@ class ARIMAAlgorithm(Regression):
         self.hold_duration = hold_duration
         self.data = data
 
-        self.arima_order = (1, 1, 1)
+        self.arima_order = (self.params[1], self.params[2], self.params[3])
 
         if hold_duration == "1d":
             self.historical_range_for_graph = 30
@@ -57,6 +57,7 @@ class ARIMAAlgorithm(Regression):
         return predicted_price
 
     def setup_model(self, data, auto):
+        # TODO: remove auto ?
         if auto:
             if self.hold_duration == "1d":
                 arima_model = auto_arima(data["Adj Close"],
@@ -102,7 +103,7 @@ class ARIMAAlgorithm(Regression):
                 future_dates = pd.date_range(start=date.today(), end=self.prediction_date,
                                              freq='D').map(
                     lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
-                prediction, confidence_interval = model.predict(n_periods=len(future_dates), return_conf_int=True)
+                prediction, confidence_interval = model.predict(n_periods=len(future_dates) - 1, return_conf_int=True)
         else:
             if self.hold_duration == "1d":
                 prediction = model.forecast(steps=1)
@@ -169,9 +170,6 @@ class ARIMAAlgorithm(Regression):
         y_axis = np.insert(predictions, 0, data.iloc[-1]["Adj Close"])
 
         historical_prices = data['Adj Close'][-self.historical_range_for_graph:]
-
-        print(future_dates, "\n")
-        print(predictions)
 
         plt.plot(historical_dates, historical_prices, color='blue', label='Historical Adj Close')
         plt.plot(future_dates, y_axis, color='red', label='ARIMA Forecast')

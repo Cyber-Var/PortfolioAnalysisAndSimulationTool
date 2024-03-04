@@ -1,17 +1,1 @@
-1d, AAPL, 25.02.24
-Best parameters for the ARIMA model:
-Best MSE parameters: (20,)       MSE = 4.865865996540846
-Best RMSE parameters: (20,)       RMSE = 2.2058708023229388
-Best MAE parameters: (20,)       MAE = 1.6340706573104244
-Best MAPE parameters: (20,)       MAPE = 0.889356273435838
-Best R^2 parameters: (20,)       R^2 = 0.9176194645844259
-
-1w, AAPL, 26.02.24
-Best parameters for the ARIMA model:
-Best MSE parameters: (20,)       MSE = 5.0549314528003455
-Best RMSE parameters: (20,)       RMSE = 2.2483174715329564
-Best MAE parameters: (20,)       MAE = 1.6587458924839302
-Best MAPE parameters: (20,)       MAPE = 0.902221447958013
-Best R^2 parameters: (20,)       R^2 = 0.9143602890263831
-
-1m, AAPL, 26.02.24
+1d, AAPL, 04.03.24

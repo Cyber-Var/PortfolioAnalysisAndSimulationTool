@@ -228,7 +228,7 @@ class PortfolioPage(QWidget, Page):
         if self.algorithms[3]:
             self.monte_carlo_col_name.show()
             # TODO: num_of_simulations set by user
-            monte_carlo_prediction = self.controller.run_monte_carlo(ticker, 10000)
+            monte_carlo_prediction = self.controller.run_monte_carlo(ticker)
             monte_carlo_prediction_label = QLabel(monte_carlo_prediction)
             monte_carlo_prediction_label.setObjectName("resultLabel")
             monte_carlo_prediction_label.setFixedHeight(50)

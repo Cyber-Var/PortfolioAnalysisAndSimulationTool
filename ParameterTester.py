@@ -4,7 +4,7 @@ from itertools import product
 
 from ARIMAAlgorithm import ARIMAAlgorithm
 from BayesianRegressionAlgorithm import BayesianRegressionAlgorithm
-# from LSTM import LSTMAlgorithm
+from LSTM import LSTMAlgorithm
 from LinearRegressionAlgorithm import LinearRegressionAlgorithm
 from MonteCarlo import MonteCarloSimulation
 from RandomForest import RandomForestAlgorithm
@@ -12,23 +12,24 @@ from RandomForest import RandomForestAlgorithm
 
 class ParameterTester:
 
-    def __init__(self, hold_duration, data, prediction_date, start_date, num_of_simulations, weekdays):
+    def __init__(self, hold_duration, data, prediction_date, start_date, today_data, num_of_simulations, weekdays):
         self.hold_duration = hold_duration
         self.data = data
         self.prediction_date = prediction_date
         self.start_date = start_date
+        self.today_data = today_data
         self.num_of_simulations = num_of_simulations
         self.weekdays = weekdays
 
-        # self.tune_linear_regression_parameters()
-        self.tune_random_forest_parameters()
+        self.tune_linear_regression_parameters()
+        # self.tune_random_forest_parameters()
         # self.tune_bayesian_parameters()
         # self.tune_arima_parameters()
         # self.tune_monte_carlo_parameters()
 
         # TODO: add multiple epochs !
         # self.tune_lstm_parameters()
-        os.system('say "Your code has finished"')
+        # os.system('say "Your code has finished"')
 
     def print_best_parameters(self, parameter_grid, model_name, file_name):
         parameters_combinations = list(product(*parameter_grid.values()))
@@ -58,7 +59,7 @@ class ParameterTester:
                                                     self.start_date, parameters_set)
             elif model_name == "ARIMA":
                 model = ARIMAAlgorithm(self.hold_duration, self.data, self.prediction_date, self.start_date,
-                                       parameters_set)
+                                       self.today_data, parameters_set)
             elif model_name == "Monte Carlo Simulation":
                 model = MonteCarloSimulation(parameters_set[0], self.prediction_date,
                                              self.data["Adj Close"], self.weekdays, self.hold_duration, self.start_date)
@@ -142,6 +143,9 @@ class ParameterTester:
     def tune_arima_parameters(self):
         parameter_grid = {
             'maxiter': [20, 50, 100],
+            'p': [0, 1, 2, 3, 4, 5],
+            'd': [0, 1, 2],
+            'q': [0, 1, 2, 3, 4, 5]
         }
         self.print_best_parameters(parameter_grid, "ARIMA", "arima.txt")
 
