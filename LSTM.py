@@ -54,9 +54,9 @@ class LSTMAlgorithm(Regression):
 
         # TODO: number of epochs controlled by user:
         if final:
-            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=10)
+            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=self.params[6])
         else:
-            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=10)
+            self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=self.params[6])
 
         prediction_scaled = self.reg.predict(X_test_scaled)
         prediction = scaler_y.inverse_transform(prediction_scaled)

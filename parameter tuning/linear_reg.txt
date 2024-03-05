@@ -94,4 +94,3 @@ Best MAE parameters: (False,)       MAE = 19.58290055833024
 Best MAPE parameters: (False,)       MAPE = 5.423919382819236
 Best R^2 parameters: (False,)       R^2 = 0.6342863103748229 
 
-

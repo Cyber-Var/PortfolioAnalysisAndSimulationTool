@@ -6,6 +6,19 @@ Best MAE parameters: (100, 0.001, 0.0001, 1e-06, 1e-06, 0.0001, True, False, Tru
 Best MAPE parameters: (100, 0.001, 0.0001, 1e-06, 1e-06, 0.0001, True, False, True)       MAPE = 0.9665067970478111
 Best R^2 parameters: (100, 0.0001, 0.0001, 1e-06, 1e-06, 0.0001, True, False, True)       R^2 = 0.9661951022374651 
 
-1w, AAPL, 26.02.24
+1w, AAPL, 04.03.24
 
-1m, AAPL, 26.02.24
+Best parameters for the Bayesian model:
+Best MSE parameters: (100, 0.001, 1e-06, 1e-06, 0.0001, 0.0001, True, False, True)       MSE = 38.17476665835164
+Best RMSE parameters: (100, 0.001, 1e-06, 1e-06, 0.0001, 0.0001, True, False, True)       RMSE = 6.178573189527793
+Best MAE parameters: (100, 0.001, 1e-06, 1e-06, 0.0001, 0.0001, True, False, True)       MAE = 5.192269540331367
+Best MAPE parameters: (100, 0.001, 1e-06, 1e-06, 0.0001, 0.0001, True, False, True)       MAPE = 2.9159387082085138
+Best R^2 parameters: (100, 0.001, 1e-06, 1e-06, 0.0001, 0.0001, True, False, True)       R^2 = 0.7054284160818102 
+
+1m, AAPL, 05.03.24
+Best parameters for the Bayesian model:
+Best MSE parameters: (100, 0.001, 1e-06, 1e-06, 0.0001, 0.0001, True, False, True)       MSE = 156.06914247906627
+Best RMSE parameters: (100, 0.001, 1e-06, 1e-06, 0.0001, 0.0001, True, False, True)       RMSE = 12.492763604545884
+Best MAE parameters: (100, 0.001, 1e-06, 1e-06, 0.0001, 0.0001, True, False, True)       MAE = 11.07053981749117
+Best MAPE parameters: (100, 0.001, 1e-06, 1e-06, 0.0001, 0.0001, True, False, True)       MAPE = 6.32348527370761
+Best R^2 parameters: (100, 0.001, 1e-06, 1e-06, 0.0001, 0.0001, True, False, True)       R^2 = -0.2084864313738508

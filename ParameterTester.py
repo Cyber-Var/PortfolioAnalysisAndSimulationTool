@@ -21,15 +21,15 @@ class ParameterTester:
         self.num_of_simulations = num_of_simulations
         self.weekdays = weekdays
 
-        self.tune_linear_regression_parameters()
+        # self.tune_linear_regression_parameters()
         # self.tune_random_forest_parameters()
         # self.tune_bayesian_parameters()
-        # self.tune_arima_parameters()
+        self.tune_arima_parameters()
         # self.tune_monte_carlo_parameters()
 
         # TODO: add multiple epochs !
         # self.tune_lstm_parameters()
-        # os.system('say "Your code has finished"')
+        os.system('say "Your code has finished"')
 
     def print_best_parameters(self, parameter_grid, model_name, file_name):
         parameters_combinations = list(product(*parameter_grid.values()))
@@ -48,6 +48,9 @@ class ParameterTester:
         counter = 1
         num = len(parameters_combinations)
         for parameters_set in parameters_combinations:
+            print(f"{counter} / {num}")
+            print(parameters_set)
+
             if model_name == "Linear Regression":
                 model = LinearRegressionAlgorithm(self.hold_duration, self.data, self.prediction_date,
                                                   self.start_date, parameters_set)
@@ -85,7 +88,6 @@ class ParameterTester:
                 best_r2 = r2
                 best_r2_params = parameters_set
 
-            print(f"{counter} / {num}")
             counter += 1
 
         print(f"Best parameters for the {model_name} model:")
@@ -115,37 +117,37 @@ class ParameterTester:
 
     def tune_random_forest_parameters(self):
         parameter_grid = {
-            'n_estimators': [50, 100, 200],
+            'n_estimators': [50, 100],
             'max_features': ['sqrt', 'log2', 0.5, 1],
-            'max_depth': [5, 10, 20, None],
+            'max_depth': [10, 20],
             'min_samples_split': [2, 5, 10],
             'min_samples_leaf': [1, 2, 5],
             'bootstrap': [True, False],
-            'criterion': ["squared_error", "absolute_error"],
-            'random_state': [None, 42]
+            'criterion': ["squared_error"],
+            'random_state': [42]
         }
         self.print_best_parameters(parameter_grid, "Random Forest", "random_forest.txt")
 
     def tune_bayesian_parameters(self):
         parameter_grid = {
-            'n_iter': [100, 200, 300],
+            'n_iter': [100],
             'tol': [1e-3, 1e-4, 1e-5],
             'alpha_1': [1e-6, 1e-5, 1e-4],
-            'alpha_2': [1e-6, 1e-5, 1e-4],
+            'alpha_2': [1e-6],
             'lambda_1': [1e-6, 1e-5, 1e-4],
-            'lambda_2': [1e-6, 1e-5, 1e-4],
-            'compute_score': [True, False],
-            'fit_intercept': [True, False],
-            'copy_X': [True, False]
+            'lambda_2': [1e-4],
+            'compute_score': [True],
+            'fit_intercept': [False],
+            'copy_X': [True]
         }
         self.print_best_parameters(parameter_grid, "Bayesian", "bayesian.txt")
 
     def tune_arima_parameters(self):
         parameter_grid = {
             'maxiter': [20, 50, 100],
-            'p': [0, 1, 2, 3, 4, 5],
+            'p': [0, 1, 2],
             'd': [0, 1, 2],
-            'q': [0, 1, 2, 3, 4, 5]
+            'q': [0, 1, 2, 3]
         }
         self.print_best_parameters(parameter_grid, "ARIMA", "arima.txt")
 
@@ -158,10 +160,19 @@ class ParameterTester:
     def tune_lstm_parameters(self):
         parameter_grid = {
             'num_lstm_layers': [2, 3, 4, 5],
-            'lstm_units': [50, 100, 150],
-            'dropout_rate': [0, 0.2, 0.3, 0.4],
-            'dense_units': [25, 50, 100],
-            'optimizer': ['adam', 'rmsprop'],
-            'loss': ['mean_squared_error', 'mean_absolute_error'],
+            'lstm_units': [50],
+            'dropout_rate': [0, 0.2],
+            'dense_units': [25],
+            'optimizer': ['adam'],
+            'loss': ['mean_squared_error'],
+            'epochs': [10, 50]
         }
+        # parameter_grid = {
+        #     'num_lstm_layers': [2, 3, 4, 5],
+        #     'lstm_units': [50, 100, 150],
+        #     'dropout_rate': [0, 0.2, 0.3, 0.4],
+        #     'dense_units': [25, 50, 75],
+        #     'optimizer': ['adam', 'rmsprop'],
+        #     'loss': ['mean_squared_error', 'mean_absolute_error'],
+        # }
         self.print_best_parameters(parameter_grid, "LSTM", "lstm.txt")
