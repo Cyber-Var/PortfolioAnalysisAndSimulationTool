@@ -53,6 +53,7 @@ class Controller:
             self.moving_avg_value = 80
 
         self.data = []
+        self.today = today
         # apple_data = self.getDataForTicker("AAPL", self.data)
 
     def add_ticker(self, ticker, investment):
@@ -148,9 +149,9 @@ class Controller:
                                            num_of_simulations, weekdays)
 
     def calculate_risk_metrics(self, ticker):
-        # data = self.getDataForTicker(ticker, self.data)
+        data = self.data[(self.today - relativedelta(months=6)):]["Adj Close"]
         # Risk metrics:
-        risk_metrics = RiskMetrics(self.tickers, self.investments, self.data["Adj Close"])
+        risk_metrics = RiskMetrics(self.tickers, self.investments, data)
         # Display Risk Metrics results:
         vol, cat = risk_metrics.calculateVolatility(ticker)
         print("Risk Metrics:")
@@ -160,8 +161,9 @@ class Controller:
         print("VaR: " + str(risk_metrics.calculateVaR(ticker, 0.95, vol)))
 
     def get_volatility(self, ticker):
-        data = self.getDataForTicker(ticker, self.data)
-        risk_metrics = RiskMetrics(self.tickers, self.investments, self.data["Adj Close"])
+        data = self.data[(self.today - relativedelta(months=6)):]["Adj Close"]
+        print(data)
+        risk_metrics = RiskMetrics(self.tickers, self.investments, data)
         return risk_metrics.calculateVolatility(ticker)
 
     def run_model(self, model, model_name):

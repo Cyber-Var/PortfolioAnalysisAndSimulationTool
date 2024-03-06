@@ -1,4 +1,8 @@
+import math
+
+import numpy as np
 from sklearn.linear_model import BayesianRidge
+from sklearn.preprocessing import StandardScaler
 
 from Regression import Regression
 
@@ -33,5 +37,22 @@ class BayesianRegressionAlgorithm(Regression):
     def predict_price(self):
         Regression.reg = self.setup_model()
         X_train, y_train, X_test = super().split_prediction_sets()
-        prediction = super().makePrediction(X_train, y_train, X_test)
+        prediction, confidence = self.makeFinalPrediction(X_train, y_train, X_test)
+        print(f"Predicted price: {prediction[0][0]} +/- {confidence[0][0]} pounds.")
         return prediction
+
+    def makeFinalPrediction(self, X_train, y_train, X_test):
+        scaler_X = StandardScaler()
+        scaler_y = StandardScaler()
+
+        X_train_scaled = scaler_X.fit_transform(X_train)
+        y_train_scaled = scaler_y.fit_transform(np.array(y_train).reshape(-1, 1))
+        y_train_scaled_1d = y_train_scaled.ravel()
+
+        X_test_scaled = scaler_X.transform(X_test)
+        self.reg.fit(X_train_scaled, y_train_scaled_1d)
+        # prediction = self.reg.predict(X_test_scaled).reshape(-1, 1)
+        prediction, conf = self.reg.predict(X_test_scaled, return_std=True)
+        prediction_transformed_back = scaler_y.inverse_transform(prediction.reshape(-1, 1))
+        confidence_transformed_back = np.abs(scaler_y.inverse_transform(conf.reshape(-1, 1)) - prediction_transformed_back)
+        return prediction_transformed_back, confidence_transformed_back

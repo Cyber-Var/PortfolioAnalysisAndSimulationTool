@@ -1,1 +1,71 @@
-1d, AAPL, 05.03.24
+1d, AAPL, 06.03.24
+Best parameters for the ARIMA model:
+Best MSE parameters: (20, 2, 0, 1)       MSE = 4.8982901324357195
+Best RMSE parameters: (20, 2, 0, 1)       RMSE = 2.2132081087045834
+Best MAE parameters: (20, 2, 0, 1)       MAE = 1.632659938587857
+Best MAPE parameters: (20, 2, 0, 1)       MAPE = 0.89032589131892
+Best R^2 parameters: (20, 2, 0, 1)       R^2 = 0.919072312458977
+
+1w, AAPL, 06.03.24
+Best parameters for the ARIMA model:
+Best MSE parameters: (20, 1, 1, 2)       MSE = 4.846865726503205
+Best RMSE parameters: (20, 1, 1, 2)       RMSE = 2.20155983941005
+Best MAE parameters: (20, 1, 1, 2)       MAE = 1.6427990288370884
+Best MAPE parameters: (20, 1, 1, 2)       MAPE = 0.8959633095615822
+Best R^2 parameters: (20, 1, 1, 2)       R^2 = 0.9197580436329201 
+
+1m, AAPL, 06.03.24
+Best parameters for the ARIMA model:
+Best MSE parameters: (20, 0, 1, 0)       MSE = 4.967031867554411
+Best RMSE parameters: (20, 0, 1, 0)       RMSE = 2.2286838868611247
+Best MAE parameters: (20, 0, 1, 0)       MAE = 1.665771240234375
+Best MAPE parameters: (20, 0, 1, 0)       MAPE = 0.9085580968424795
+Best R^2 parameters: (20, 0, 1, 0)       R^2 = 0.9177686412456607 
+
+1d, TSLA, 06.03.24
+Best parameters for the ARIMA model:
+Best MSE parameters: (20, 2, 1, 1)       MSE = 42.65496883033589
+Best RMSE parameters: (20, 2, 1, 1)       RMSE = 6.5310771569731045
+Best MAE parameters: (20, 0, 1, 0)       MAE = 4.7337999877929695
+Best MAPE parameters: (20, 0, 1, 0)       MAPE = 2.0155275305746994
+Best R^2 parameters: (20, 2, 1, 1)       R^2 = 0.9411503159519874 
+
+1w, TSLA, 06.03.24
+Best parameters for the ARIMA model:
+Best MSE parameters: (20, 2, 1, 1)       MSE = 43.63641947427274
+Best RMSE parameters: (20, 2, 1, 1)       RMSE = 6.605786817198443
+Best MAE parameters: (20, 1, 1, 2)       MAE = 4.701839364859309
+Best MAPE parameters: (20, 1, 1, 2)       MAPE = 2.0068144011259625
+Best R^2 parameters: (20, 2, 1, 1)       R^2 = 0.9394210182197311 
+
+1m, TSLA, 06.03.24
+Best parameters for the ARIMA model:
+Best MSE parameters: (20, 0, 1, 0)       MSE = 44.33659795660339
+Best RMSE parameters: (20, 0, 1, 0)       RMSE = 6.658573267345145
+Best MAE parameters: (20, 1, 1, 1)       MAE = 4.795560399494632
+Best MAPE parameters: (20, 1, 1, 1)       MAPE = 2.040028006071514
+Best R^2 parameters: (20, 0, 1, 0)       R^2 = 0.9384489838494718 
+
+1d, MSFT, 06.03.24
+Best parameters for the ARIMA model:
+Best MSE parameters: (20, 0, 2, 1)       MSE = 20.607645871127776
+Best RMSE parameters: (20, 0, 2, 1)       RMSE = 4.539564502364492
+Best MAE parameters: (20, 0, 2, 2)       MAE = 3.599834021241629
+Best MAPE parameters: (20, 0, 1, 0)       MAPE = 1.012349107581409
+Best R^2 parameters: (20, 0, 2, 1)       R^2 = 0.9803176925980799 
+
+1w, MSFT, 06.03.24
+Best parameters for the ARIMA model:
+Best MSE parameters: (20, 2, 1, 0)       MSE = 20.12479944782765
+Best RMSE parameters: (20, 2, 1, 0)       RMSE = 4.486067258504675
+Best MAE parameters: (20, 0, 1, 0)       MAE = 3.5345828857421875
+Best MAPE parameters: (20, 0, 1, 0)       MAPE = 0.9961556919688709
+Best R^2 parameters: (20, 2, 1, 0)       R^2 = 0.9801656591401232 
+
+1m, MSFT, 06.03.24
+Best parameters for the ARIMA model:
+Best MSE parameters: (20, 2, 1, 0)       MSE = 19.85029997165402
+Best RMSE parameters: (20, 2, 1, 0)       RMSE = 4.455367546191225
+Best MAE parameters: (20, 2, 1, 2)       MAE = 3.466357247626069
+Best MAPE parameters: (20, 2, 1, 2)       MAPE = 0.9774643544274141
+Best R^2 parameters: (20, 2, 1, 0)       R^2 = 0.9804361973470329 

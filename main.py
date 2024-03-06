@@ -7,9 +7,9 @@ from UI.MainWindow import MainWindow
 from UI.MenuPage import MenuPage
 
 
-controller = Controller("1d")
-controller.add_ticker("AAPL", 1000)
-controller.tune_hyperparameters("AAPL", 10000)
+controller = Controller("1m")
+controller.add_ticker("MSFT", 1000)
+controller.tune_hyperparameters("MSFT", 10000)
 
 # app = QApplication(sys.argv)
 #

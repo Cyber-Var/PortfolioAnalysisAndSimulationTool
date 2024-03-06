@@ -147,7 +147,7 @@ class ParameterTester:
             'maxiter': [20, 50, 100],
             'p': [0, 1, 2],
             'd': [0, 1, 2],
-            'q': [0, 1, 2, 3]
+            'q': [0, 1, 2]
         }
         self.print_best_parameters(parameter_grid, "ARIMA", "arima.txt")
 
