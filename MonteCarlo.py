@@ -10,8 +10,8 @@ from Regression import Regression
 class MonteCarloSimulation(Regression):
 
     def __init__(self, num_of_simulations, prediction_date, data, num_weekdays,
-                 hold_duration, start_date):
-        super().__init__(hold_duration, data, prediction_date, start_date)
+                 hold_duration, start_date, is_long):
+        super().__init__(hold_duration, data, prediction_date, start_date, is_long)
 
         self.num_of_simulations = num_of_simulations
         self.prediction_date = prediction_date

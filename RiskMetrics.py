@@ -5,8 +5,8 @@ from scipy.stats import norm
 class RiskMetrics:
 
     def __init__(self, tickers, investments, close_prices):
-        self.tickers = tickers
-        self.investments = investments
+        self.tickers = list(tickers)
+        self.investments = list(investments)
         self.close_prices = close_prices
 
         self.daily_returns = self.getDailyReturns()
@@ -47,13 +47,13 @@ class RiskMetrics:
         portfolio_volatility = np.sqrt(variance) * 100
 
         if portfolio_volatility < 2:
-            daily_category = "Low"
+            category = "Low"
         elif 2 <= portfolio_volatility <= 3:
-            daily_category = "Normal"
+            category = "Normal"
         else:
-            daily_category = "High"
+            category = "High"
 
-        return "Portfolio volatility: " + daily_category + " (" + str(portfolio_volatility) + ")"
+        return f"{portfolio_volatility:.2f} {category}"
 
     def calculateSharpeRatio(self, ticker):
         risk_free_rate = 1.02 ** (1 / 252) - 1

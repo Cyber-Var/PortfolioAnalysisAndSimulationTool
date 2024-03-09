@@ -5,9 +5,10 @@ from Regression import Regression
 
 class RandomForestAlgorithm(Regression):
 
-    def __init__(self, hold_duration, data, prediction_date, start_date, params):
-        super().__init__(hold_duration, data, prediction_date, start_date)
+    def __init__(self, hold_duration, data, prediction_date, start_date, params, is_long, investment_amount):
+        super().__init__(hold_duration, data, prediction_date, start_date, is_long)
         self.params = params
+        self.investment_amount = investment_amount
 
     def setup_model(self):
         model = RandomForestRegressor(n_estimators=self.params[0], max_features=self.params[1],
@@ -33,4 +34,5 @@ class RandomForestAlgorithm(Regression):
         Regression.reg = self.setup_model()
         X_train, y_train, X_test = super().split_prediction_sets()
         prediction = super().makePrediction(X_train, y_train, X_test)
-        return prediction
+        profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
+        return profit_loss_amount

@@ -13,10 +13,11 @@ from Regression import Regression
 
 class ARIMAAlgorithm(Regression):
 
-    def __init__(self, hold_duration, data, prediction_date, start_date, today_data, params):
-        super().__init__(hold_duration, data, prediction_date, start_date)
+    def __init__(self, hold_duration, data, prediction_date, start_date, today_data, params, is_long, investment_amount):
+        super().__init__(hold_duration, data, prediction_date, start_date, is_long)
         self.today_data = today_data
         self.params = params
+        self.investment_amount = investment_amount
 
         warnings.filterwarnings("ignore")
 
@@ -50,11 +51,15 @@ class ARIMAAlgorithm(Regression):
         arima_model = self.setup_model(data, True)
         predicted_price, confidence_interval = self.make_prediction(arima_model, True)
 
-        # print("ARIMA Prediction:")
-        # print(f"Tomorrow's predicted closing price: {predicted_price.iloc[-1]}")
-        # print(f"95% confidence interval: between {confidence_interval[0]} and {confidence_interval[1]} \n")
+        print("ARIMA Prediction:")
+        prediction = predicted_price.iloc[-1]
+        print(f"Tomorrow's predicted closing price: {prediction}")
+        confidence = abs(prediction - confidence_interval[0])
+        print(f"95% confidence interval: between {confidence_interval[0]} and {confidence_interval[1]} \n")
+        profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
+        print(f"Profit / loss: {profit_loss_amount} +/- {confidence} \n")
 
-        return predicted_price
+        return profit_loss_amount
 
     def setup_model(self, data, auto):
         # TODO: remove auto ?

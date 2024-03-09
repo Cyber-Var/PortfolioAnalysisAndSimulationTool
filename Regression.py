@@ -9,11 +9,12 @@ from sklearn.preprocessing import StandardScaler
 class Regression:
     reg = None
 
-    def __init__(self, hold_duration, data, prediction_date, start_date):
+    def __init__(self, hold_duration, data, prediction_date, start_date, is_long):
         self.hold_duration = hold_duration
         self.data = data
         self.prediction_date = prediction_date
         self.start_date = start_date
+        self.is_long = is_long
 
         if self.hold_duration == "1d":
             self.days = 5
@@ -147,3 +148,18 @@ class Regression:
         print(f'MAE: {mae}')
         print(f'MAPE: {mape}%')
         print(f'R-squared: {r2}\n')
+
+    def calculate_profit_or_loss(self, predicted_price, investment_amount, confidence=False):
+        current_price = self.data.iloc[-1]["Adj Close"]
+        if not confidence:
+            percentage_change = (predicted_price - current_price) / current_price
+        else:
+            percentage_change = predicted_price / current_price
+        profit_or_loss_value = investment_amount * percentage_change
+        if not self.is_long:
+            profit_or_loss_value = -profit_or_loss_value
+        print(current_price)
+        print(predicted_price)
+        return profit_or_loss_value
+
+

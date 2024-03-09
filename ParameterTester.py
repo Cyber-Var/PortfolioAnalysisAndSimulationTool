@@ -22,9 +22,9 @@ class ParameterTester:
         self.weekdays = weekdays
 
         # self.tune_linear_regression_parameters()
-        # self.tune_random_forest_parameters()
+        self.tune_random_forest_parameters()
         # self.tune_bayesian_parameters()
-        self.tune_arima_parameters()
+        # self.tune_arima_parameters()
         # self.tune_monte_carlo_parameters()
 
         # TODO: add multiple epochs !
@@ -56,7 +56,7 @@ class ParameterTester:
                                                   self.start_date, parameters_set)
             elif model_name == "Random Forest":
                 model = RandomForestAlgorithm(self.hold_duration, self.data, self.prediction_date,
-                                              self.start_date, parameters_set)
+                                              self.start_date, parameters_set, True, 1000)
             elif model_name == "Bayesian":
                 model = BayesianRegressionAlgorithm(self.hold_duration, self.data, self.prediction_date,
                                                     self.start_date, parameters_set)

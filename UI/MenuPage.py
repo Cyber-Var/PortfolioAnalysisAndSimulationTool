@@ -9,11 +9,11 @@ from UI.PortfolioPage import PortfolioPage
 
 
 class MenuPage(QWidget, Page):
-    def __init__(self, main_window, controller):
+    def __init__(self, main_window, controllers):
         super().__init__()
 
         self.main_window = main_window
-        self.controller = controller
+        self.controllers = controllers
 
         self.setStyleSheet(self.load_stylesheet())
 
@@ -56,7 +56,7 @@ class MenuPage(QWidget, Page):
 
     def open_portfolio_page(self):
         self.logger.info('Opening the Portfolio Page')
-        portfolio_page = PortfolioPage(self.main_window, self.controller)
+        portfolio_page = PortfolioPage(self.main_window, self.controllers)
         self.main_window.setCentralWidget(portfolio_page)
 
     def open_manual_page(self):

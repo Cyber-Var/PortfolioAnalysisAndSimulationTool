@@ -9,9 +9,10 @@ from Regression import Regression
 
 class BayesianRegressionAlgorithm(Regression):
 
-    def __init__(self, hold_duration, data, prediction_date, start_date, params):
-        super().__init__(hold_duration, data, prediction_date, start_date)
+    def __init__(self, hold_duration, data, prediction_date, start_date, params, is_long, investment_amount):
+        super().__init__(hold_duration, data, prediction_date, start_date, is_long)
         self.params = params
+        self.investment_amount = investment_amount
 
     def setup_model(self):
         model = BayesianRidge(max_iter=self.params[0], tol=self.params[1],
@@ -38,8 +39,10 @@ class BayesianRegressionAlgorithm(Regression):
         Regression.reg = self.setup_model()
         X_train, y_train, X_test = super().split_prediction_sets()
         prediction, confidence = self.makeFinalPrediction(X_train, y_train, X_test)
+        profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
         print(f"Predicted price: {prediction[0][0]} +/- {confidence[0][0]} pounds.")
-        return prediction
+        print(f"Predicted profit/loss: {profit_loss_amount} +/- {confidence[0][0]} pounds.")
+        return profit_loss_amount
 
     def makeFinalPrediction(self, X_train, y_train, X_test):
         scaler_X = StandardScaler()

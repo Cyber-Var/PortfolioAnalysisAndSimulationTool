@@ -11,9 +11,10 @@ from Regression import Regression
 
 class LSTMAlgorithm(Regression):
 
-    def __init__(self, hold_duration, data, prediction_date, start_date, params):
-        super().__init__(hold_duration, data, prediction_date, start_date)
+    def __init__(self, hold_duration, data, prediction_date, start_date, params, is_long, investment_amount):
+        super().__init__(hold_duration, data, prediction_date, start_date, is_long)
         self.params = params
+        self.investment_amount = investment_amount
 
     def get_data_for_prediction(self):
         train_start = date.today() - self.historic_date_range
@@ -60,7 +61,8 @@ class LSTMAlgorithm(Regression):
 
         prediction_scaled = self.reg.predict(X_test_scaled)
         prediction = scaler_y.inverse_transform(prediction_scaled)
-        return prediction
+        profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
+        return profit_loss_amount
 
     def createModel(self):
         num_features = 5

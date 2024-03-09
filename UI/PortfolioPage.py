@@ -1,3 +1,5 @@
+import re
+
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox,
                              QScrollArea, QDialog, QLineEdit)
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -8,16 +10,17 @@ from UI.Page import Page
 
 class PortfolioPage(QWidget, Page):
 
-    def __init__(self, main_window, controller):
+    def __init__(self, main_window, controllers):
         super().__init__()
 
         self.main_window = main_window
-        self.controller = controller
+        self.controllers = controllers
 
         self.hold_duration_label = None
         self.hold_duration_1d = None
         self.hold_duration_1w = None
         self.hold_duration_1m = None
+        self.current_controller = None
 
         self.algorithms_label = None
         self.algorithm_1 = None
@@ -28,14 +31,26 @@ class PortfolioPage(QWidget, Page):
         self.algorithm_6 = None
         self.algorithms = [False] * 6
 
+        self.portfolio_results = []
+        self.portfolio_amount_label = None
+        self.portfolio_linear_regression = None
+        self.portfolio_random_forest = None
+        self.portfolio_bayesian = None
+        self.portfolio_monte_carlo = None
+        self.portfolio_lstm = None
+        self.portfolio_arima = None
+        self.portfolio_volatility_label = None
+
+        self.result_col_names = []
         self.ticker_col_name = None
         self.stock_name_col_name = None
+        self.amount_col_name = None
         self.lin_reg_col_name = None
         self.random_forest_col_name = None
         self.bayesian_col_name = None
         self.monte_carlo_col_name = None
-        self.arima_col_name = None
         self.lstm_col_name = None
+        self.arima_col_name = None
         self.volatility_col_name = None
         self.more_info_col_name = None
 
@@ -67,6 +82,7 @@ class PortfolioPage(QWidget, Page):
 
         self.hold_duration_1d = self.create_hold_duration_button("1 day")
         self.hold_duration_1d.setChecked(True)
+        self.current_controller = self.controllers[0]
         self.hold_duration_1w = self.create_hold_duration_button("1 week")
         self.hold_duration_1m = self.create_hold_duration_button("1 month")
 
@@ -85,8 +101,8 @@ class PortfolioPage(QWidget, Page):
         self.algorithm_2 = self.create_algorithm_checkbox("Random Forest", 1)
         self.algorithm_3 = self.create_algorithm_checkbox("Bayesian", 2)
         self.algorithm_4 = self.create_algorithm_checkbox("Monte Carlo", 3)
-        self.algorithm_5 = self.create_algorithm_checkbox("ARIMA", 4)
-        self.algorithm_6 = self.create_algorithm_checkbox("LSTM", 5)
+        self.algorithm_5 = self.create_algorithm_checkbox("LSTM", 4)
+        self.algorithm_6 = self.create_algorithm_checkbox("ARIMA", 5)
 
         algorithms_vbox.addWidget(self.algorithm_1)
         algorithms_vbox.addWidget(self.algorithm_2)
@@ -102,6 +118,7 @@ class PortfolioPage(QWidget, Page):
 
         self.ticker_col_name = self.create_column_names_labels("Ticker")
         self.stock_name_col_name = self.create_column_names_labels("Name")
+        self.amount_col_name = self.create_column_names_labels("Investment Amount")
         self.lin_reg_col_name = self.create_column_names_labels("Linear Regression")
         self.lin_reg_col_name.hide()
         self.random_forest_col_name = self.create_column_names_labels("Random Forest")
@@ -110,21 +127,24 @@ class PortfolioPage(QWidget, Page):
         self.bayesian_col_name.hide()
         self.monte_carlo_col_name = self.create_column_names_labels("Monte Carlo")
         self.monte_carlo_col_name.hide()
-        self.arima_col_name = self.create_column_names_labels("ARIMA")
-        self.arima_col_name.hide()
         self.lstm_col_name = self.create_column_names_labels("LSTM")
         self.lstm_col_name.hide()
+        self.arima_col_name = self.create_column_names_labels("ARIMA")
+        self.arima_col_name.hide()
         self.volatility_col_name = self.create_column_names_labels("Volatility")
         self.more_info_col_name = self.create_column_names_labels("More Info")
+        self.result_col_names = [self.lin_reg_col_name, self.random_forest_col_name, self.bayesian_col_name,
+                                 self.monte_carlo_col_name, self.lstm_col_name, self.arima_col_name]
 
         column_names_hbox.addWidget(self.ticker_col_name)
         column_names_hbox.addWidget(self.stock_name_col_name)
+        column_names_hbox.addWidget(self.amount_col_name)
         column_names_hbox.addWidget(self.lin_reg_col_name)
         column_names_hbox.addWidget(self.random_forest_col_name)
         column_names_hbox.addWidget(self.bayesian_col_name)
         column_names_hbox.addWidget(self.monte_carlo_col_name)
-        column_names_hbox.addWidget(self.arima_col_name)
         column_names_hbox.addWidget(self.lstm_col_name)
+        column_names_hbox.addWidget(self.arima_col_name)
         column_names_hbox.addWidget(self.volatility_col_name)
         column_names_hbox.addWidget(self.more_info_col_name)
 
@@ -145,9 +165,80 @@ class PortfolioPage(QWidget, Page):
         scrollable_widget.setLayout(scrollable_layout)
         scrollable_area.setWidget(scrollable_widget)
 
+        self.show_portfolio_results()
+
         self.layout.addWidget(title_label)
         self.layout.addLayout(input_hbox)
         self.layout.addWidget(scrollable_area)
+
+    def show_portfolio_results(self):
+        portfolio_hbox = QHBoxLayout()
+
+        portfolio_ticker_label = QLabel("-")
+        portfolio_ticker_label.setObjectName("resultLabel")
+        portfolio_ticker_label.setFixedHeight(70)
+
+        portfolio_label = QLabel("Portfolio")
+        portfolio_label.setObjectName("resultLabel")
+        portfolio_label.setFixedHeight(70)
+
+        self.portfolio_amount_label = QLabel("-")
+        self.portfolio_amount_label.setObjectName("resultLabel")
+        self.portfolio_amount_label.setFixedHeight(70)
+
+        self.portfolio_linear_regression = QLabel("")
+        self.portfolio_random_forest = QLabel("")
+        self.portfolio_bayesian = QLabel("")
+        self.portfolio_monte_carlo = QLabel("")
+        self.portfolio_lstm = QLabel("")
+        self.portfolio_arima = QLabel("")
+
+        self.portfolio_linear_regression.setObjectName("resultLabel")
+        self.portfolio_random_forest.setObjectName("resultLabel")
+        self.portfolio_bayesian.setObjectName("resultLabel")
+        self.portfolio_monte_carlo.setObjectName("resultLabel")
+        self.portfolio_lstm.setObjectName("resultLabel")
+        self.portfolio_arima.setObjectName("resultLabel")
+
+        self.portfolio_linear_regression.setFixedHeight(70)
+        self.portfolio_random_forest.setFixedHeight(70)
+        self.portfolio_bayesian.setFixedHeight(70)
+        self.portfolio_monte_carlo.setFixedHeight(70)
+        self.portfolio_lstm.setFixedHeight(70)
+        self.portfolio_arima.setFixedHeight(70)
+
+        self.portfolio_linear_regression.hide()
+        self.portfolio_random_forest.hide()
+        self.portfolio_bayesian.hide()
+        self.portfolio_monte_carlo.hide()
+        self.portfolio_lstm.hide()
+        self.portfolio_arima.hide()
+
+        self.portfolio_results = [self.portfolio_linear_regression, self.portfolio_random_forest,
+                                  self.portfolio_bayesian, self.portfolio_monte_carlo, self.portfolio_lstm,
+                                  self.portfolio_arima]
+
+        self.portfolio_volatility_label = QLabel("")
+        self.portfolio_volatility_label.setObjectName("resultLabel")
+        self.portfolio_volatility_label.setFixedHeight(70)
+
+        portfolio_more_info_label = QLabel("-")
+        portfolio_more_info_label.setObjectName("resultLabel")
+        portfolio_more_info_label.setFixedHeight(70)
+
+        portfolio_hbox.addWidget(portfolio_ticker_label)
+        portfolio_hbox.addWidget(portfolio_label)
+        portfolio_hbox.addWidget(self.portfolio_amount_label)
+        portfolio_hbox.addWidget(self.portfolio_linear_regression)
+        portfolio_hbox.addWidget(self.portfolio_random_forest)
+        portfolio_hbox.addWidget(self.portfolio_bayesian)
+        portfolio_hbox.addWidget(self.portfolio_monte_carlo)
+        portfolio_hbox.addWidget(self.portfolio_lstm)
+        portfolio_hbox.addWidget(self.portfolio_arima)
+        portfolio_hbox.addWidget(self.portfolio_volatility_label)
+        portfolio_hbox.addWidget(portfolio_more_info_label)
+
+        self.results_vbox.addLayout(portfolio_hbox)
 
     def create_hold_duration_button(self, name):
         button = QRadioButton(name)
@@ -168,91 +259,119 @@ class PortfolioPage(QWidget, Page):
         return label
 
     def hold_duration_button_toggled(self):
-        # if self.hold_duration_1d.isChecked():
-        #     self.hold_duration_label.setText("Selected option: 1 day")
-        # elif self.hold_duration_1w.isChecked():
-        #     self.hold_duration_label.setText("Selected option: 1 week")
-        # elif self.hold_duration_1m.isChecked():
-        #     self.hold_duration_label.setText("Selected option: 1 month")
-        pass
+        if self.hold_duration_1d.isChecked():
+            self.current_controller = self.controllers[0]
+        elif self.hold_duration_1w.isChecked():
+            self.current_controller = self.controllers[1]
+        elif self.hold_duration_1m.isChecked():
+            self.current_controller = self.controllers[2]
+
+    def result_to_string(self, result):
+        if result > 0:
+            return f"+{result:.2f}$"
+        return f"{result:.2f}$"
 
     def algorithms_state_changed(self, state, index):
         if state == Qt.Checked:
             self.algorithms[index] = True
+            algorithm_name = self.current_controller.algorithms_with_indices[index]
+            algorithmic_results = self.current_controller.results[algorithm_name]
+            for ticker in self.current_controller.tickers_and_investments.keys():
+                label = self.results_map[ticker].itemAt(3 + index).widget()
+                if ticker not in algorithmic_results.keys():
+                    self.current_controller.run_algorithm(ticker, index)
+                if index == 3:
+                    label.setText(algorithmic_results[ticker])
+                else:
+                    result = algorithmic_results[ticker]
+                    label.setText(self.result_to_string(result))
+                label.show()
+                self.result_col_names[index].show()
+                self.update_portfolio_results()
         else:
             self.algorithms[index] = False
+            for ticker in self.current_controller.tickers_and_investments.keys():
+                self.results_map[ticker].itemAt(3 + index).widget().hide()
+                self.result_col_names[index].hide()
+                self.update_portfolio_results()
+
+    def update_portfolio_results(self):
+        self.portfolio_amount_label.setText(str(sum(self.current_controller.tickers_and_investments.values())) + "$")
+        for index, is_chosen in enumerate(self.algorithms):
+            if is_chosen:
+                if index == 3:
+                    result = self.current_controller.calculate_portfolio_monte_carlo()
+                else:
+                    num_result = self.current_controller.calculate_portfolio_result(index)
+                    result = self.result_to_string(num_result)
+                self.portfolio_results[index].setText(result)
+                self.portfolio_results[index].show()
+            else:
+                self.portfolio_results[index].hide()
+        self.portfolio_volatility_label.setText(self.current_controller.get_portfolio_volatility())
 
     def show_add_stock_window(self):
         popup = AddStockPopUp()
         popup.valid_ticker_entered.connect(self.add_ticker)
         popup.exec_()
 
-    def add_ticker(self, ticker, investment):
-        self.controller.add_ticker(ticker, investment)
+    def add_ticker(self, ticker, investment, is_long):
+        self.current_controller.add_ticker(ticker, float(investment), is_long)
 
         results_hbox = QHBoxLayout()
 
-        ticker_label = QLabel(ticker)
-        ticker_label.setObjectName("resultLabel")
-        ticker_label.setFixedHeight(50)
-        results_hbox.addWidget(ticker_label)
+        for i in range(10):
+            label = QLabel()
+            label.setObjectName("resultLabel")
+            label.setFixedHeight(50)
+            if 3 <= i <= 8:
+                label.hide()
+            results_hbox.addWidget(label)
+
+        results_hbox.itemAt(0).widget().setText(ticker)
 
         stock_info = yf.Ticker(ticker).info
         stock_name = stock_info.get('longName', 'N/A')
-        stock_name_label = QLabel(stock_name)
-        stock_name_label.setObjectName("resultLabel")
-        stock_name_label.setFixedHeight(50)
-        results_hbox.addWidget(stock_name_label)
+        results_hbox.itemAt(1).widget().setText(stock_name)
+
+        results_hbox.itemAt(2).widget().setText(str(investment) + "$")
+
+        volatility, category = self.current_controller.get_volatility(ticker)
+        results_hbox.itemAt(9).widget().setText(f"{volatility:.2f} {category}")
 
         if self.algorithms[0]:
             self.lin_reg_col_name.show()
-            lin_reg_prediction = self.controller.run_linear_regression(ticker)
-            lin_reg_label = QLabel(f"{lin_reg_prediction[0][0]:.2f}")
-            lin_reg_label.setObjectName("resultLabel")
-            lin_reg_label.setFixedHeight(50)
-            results_hbox.addWidget(lin_reg_label)
+            lin_reg_prediction = self.current_controller.run_linear_regression(ticker)
+            results_hbox.itemAt(3).widget().setText(self.result_to_string(lin_reg_prediction))
+            results_hbox.itemAt(3).widget().show()
         if self.algorithms[1]:
             self.random_forest_col_name.show()
-            random_forest_prediction = self.controller.run_random_forest(ticker)
-            random_forest_label = QLabel(f"{random_forest_prediction[0][0]:.2f}")
-            random_forest_label.setObjectName("resultLabel")
-            random_forest_label.setFixedHeight(50)
-            results_hbox.addWidget(random_forest_label)
+            random_forest_prediction = self.current_controller.run_random_forest(ticker)
+            results_hbox.itemAt(4).widget().setText(self.result_to_string(random_forest_prediction))
+            results_hbox.itemAt(4).widget().show()
         if self.algorithms[2]:
             self.bayesian_col_name.show()
-            bayesian_prediction = self.controller.run_bayesian(ticker)
-            bayesian_label = QLabel(f"{bayesian_prediction[0][0]:.2f}")
-            bayesian_label.setObjectName("resultLabel")
-            bayesian_label.setFixedHeight(50)
-            results_hbox.addWidget(bayesian_label)
+            bayesian_prediction = self.current_controller.run_bayesian(ticker)
+            results_hbox.itemAt(5).widget().setText(self.result_to_string(bayesian_prediction))
+            results_hbox.itemAt(5).widget().show()
         if self.algorithms[3]:
             self.monte_carlo_col_name.show()
             # TODO: num_of_simulations set by user
-            monte_carlo_prediction = self.controller.run_monte_carlo(ticker)
-            monte_carlo_prediction_label = QLabel(monte_carlo_prediction)
-            monte_carlo_prediction_label.setObjectName("resultLabel")
-            monte_carlo_prediction_label.setFixedHeight(50)
-            results_hbox.addWidget(monte_carlo_prediction_label)
+            monte_carlo_prediction = self.current_controller.run_monte_carlo(ticker)
+            results_hbox.itemAt(6).widget().setText(monte_carlo_prediction)
+            results_hbox.itemAt(6).widget().show()
         if self.algorithms[4]:
-            self.arima_col_name.show()
-            arima_prediction = self.controller.run_arima(ticker)
-            arima_prediction_label = QLabel(f"{arima_prediction.iloc[-1]:.2f}")
-            arima_prediction_label.setObjectName("resultLabel")
-            arima_prediction_label.setFixedHeight(50)
-            results_hbox.addWidget(arima_prediction_label)
-        if self.algorithms[5]:
             self.lstm_col_name.show()
-            lstm_prediction = self.controller.run_lstm(ticker)
-            lstm_prediction_label = QLabel(f"{lstm_prediction[0][0]:.2f}")
-            lstm_prediction_label.setObjectName("resultLabel")
-            lstm_prediction_label.setFixedHeight(50)
-            results_hbox.addWidget(lstm_prediction_label)
+            lstm_prediction = self.current_controller.run_lstm(ticker)
+            results_hbox.itemAt(7).widget().setText(self.result_to_string(lstm_prediction))
+            results_hbox.itemAt(7).widget().show()
+        if self.algorithms[5]:
+            self.arima_col_name.show()
+            arima_prediction = self.current_controller.run_arima(ticker)
+            results_hbox.itemAt(8).widget().setText(self.result_to_string(arima_prediction))
+            results_hbox.itemAt(8).widget().show()
 
-        volatility, category = self.controller.get_volatility(ticker)
-        volatility_label = QLabel(f"{volatility:.2f} {category}")
-        volatility_label.setObjectName("resultLabel")
-        volatility_label.setFixedHeight(50)
-        results_hbox.addWidget(volatility_label)
+        self.update_portfolio_results()
 
         more_info_button = QPushButton("--->")
         more_info_button.clicked.connect((lambda state, ticker_name=ticker: self.show_single_share_page(ticker_name)))
@@ -268,10 +387,8 @@ class PortfolioPage(QWidget, Page):
         pass
 
 
-
 class AddStockPopUp(QDialog):
-
-    valid_ticker_entered = pyqtSignal(str, str)
+    valid_ticker_entered = pyqtSignal(str, str, bool)
 
     def __init__(self):
         super().__init__()
@@ -289,6 +406,14 @@ class AddStockPopUp(QDialog):
 
         investment_label = QLabel("and the investment amount:")
         self.investment = QLineEdit()
+        self.investment.textChanged.connect(self.hide_invalid_label)
+
+        long_short_layout = QHBoxLayout()
+        self.investment_long = QRadioButton("Long")
+        self.investment_short = QRadioButton("Short")
+        self.investment_long.setChecked(True)
+        long_short_layout.addWidget(self.investment_long)
+        long_short_layout.addWidget(self.investment_short)
 
         buttons_hbox = QHBoxLayout()
 
@@ -305,6 +430,7 @@ class AddStockPopUp(QDialog):
         layout.addWidget(investment_label)
         layout.addWidget(self.investment)
         layout.addWidget(self.invalid_label)
+        layout.addLayout(long_short_layout)
         layout.addLayout(buttons_hbox)
 
         self.setLayout(layout)
@@ -312,17 +438,21 @@ class AddStockPopUp(QDialog):
     def validate_ticker(self):
         ticker = self.ticker_name.text()
         investment = self.investment.text()
-        if self.is_valid(ticker):
-            self.valid_ticker_entered.emit(ticker, investment)
+        if self.is_valid(ticker, investment):
+            if self.investment_long.isChecked():
+                is_long = True
+            else:
+                is_long = False
+            self.valid_ticker_entered.emit(ticker.upper(), investment, is_long)
             self.close()
         else:
             self.invalid_label.show()
 
-    def is_valid(self, ticker):
+    def is_valid(self, ticker, investment):
         try:
             data = yf.Ticker(ticker)
             one_day_data = data.history(period="1d")
-            if len(one_day_data) > 0:
+            if len(one_day_data) > 0 and bool(re.match(r'^\d*\.?\d+$', investment)) and float(investment) > 0:
                 return True
             return False
         except Exception:
