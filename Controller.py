@@ -27,9 +27,7 @@ class Controller:
 
     algorithms = ["linear_regression", "random_forest", "bayesian", "monte_carlo", "lstm", "arima"]
 
-    def __init__(self, hold_duration):
-        self.hold_duration = hold_duration
-
+    def __init__(self):
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -37,34 +35,53 @@ class Controller:
         self.end_date = today
 
         # TODO: choose historical date range here using user's preferred investment behaviour:
-        if hold_duration == "1d":
-            self.start_date = today - relativedelta(months=18)
-            self.prediction_date = today + relativedelta(days=1)
-            while self.prediction_date.weekday() >= 5:
-                self.prediction_date = self.prediction_date + relativedelta(days=1)
-            self.moving_avg_value = 5
-        elif hold_duration == "1w":
-            self.start_date = today - relativedelta(years=2)
-            self.prediction_date = today + relativedelta(days=7)
-            self.moving_avg_value = 20
-        else:
-            self.start_date = today - relativedelta(years=4)
-            self.prediction_date = today + relativedelta(months=1)
-            self.moving_avg_value = 80
 
-        self.data = pd.DataFrame()
+        start_date_1d = today - relativedelta(months=18)
+        prediction_date_1d = today + relativedelta(days=1)
+        while prediction_date_1d.weekday() >= 5:
+            prediction_date_1d = prediction_date_1d + relativedelta(days=1)
+
+        start_date_1w = today - relativedelta(years=2)
+        prediction_date_1w = today + relativedelta(days=7)
+
+        start_date_1m = today - relativedelta(years=4)
+        prediction_date_1m = today + relativedelta(months=1)
+
+        self.start_dates = {
+            "1d": start_date_1d,
+            "1w": start_date_1w,
+            "1m": start_date_1m
+        }
+
+        self.prediction_dates = {
+            "1d": prediction_date_1d,
+            "1w": prediction_date_1w,
+            "1m": prediction_date_1m
+        }
+
+        self.moving_avg_values = {
+            "1d": 5,
+            "1w": 20,
+            "1m": 80
+        }
+
+        self.data = {
+            "1d": pd.DataFrame(),
+            "1w": pd.DataFrame(),
+            "1m": pd.DataFrame()
+        }
         self.today = today
 
         self.tickers_and_investments = {}
         self.tickers_and_long_or_short = {}
 
-        self.linear_regression_results = {}
-        self.random_forest_results = {}
-        self.bayesian_results = {}
-        self.monte_carlo_results = {}
-        self.lstm_results = {}
-        self.arima_results = {}
-        self.volatilities = {}
+        self.linear_regression_results = {"1d": {}, "1w": {}, "1m": {}}
+        self.random_forest_results = {"1d": {}, "1w": {}, "1m": {}}
+        self.bayesian_results = {"1d": {}, "1w": {}, "1m": {}}
+        self.monte_carlo_results = {"1d": {}, "1w": {}, "1m": {}}
+        self.lstm_results = {"1d": {}, "1w": {}, "1m": {}}
+        self.arima_results = {"1d": {}, "1w": {}, "1m": {}}
+        self.volatilities = {"1d": {}, "1w": {}, "1m": {}}
 
         # TODO: same processing for VaRs and Sharpe Ratios
         self.VaRs = {}
@@ -85,7 +102,7 @@ class Controller:
         self.algorithms_with_indices = {}
         for index, name in enumerate(self.results.keys()):
             self.algorithms_with_indices[index] = name
-        print(self.algorithms_with_indices)
+        # print(self.algorithms_with_indices)
 
         self.portfolio_results = {}
 
@@ -95,68 +112,79 @@ class Controller:
             self.tickers_and_investments[ticker] = investment
             self.tickers_and_long_or_short[ticker] = is_long
             # Retrieve historical data from Yahoo! Finance:
-            self.data = self.downloadData(self.start_date, self.end_date)
+            for hold_dur in self.start_dates.keys():
+                self.data[hold_dur] = self.downloadData(self.start_dates[hold_dur], self.end_date)
 
     def remove_ticker(self, ticker):
         del self.tickers_and_investments[ticker]
         del self.tickers_and_long_or_short[ticker]
         if len(self.tickers_and_investments) > 0:
-            self.data.drop(ticker, axis=1, inplace=True)
+            for hold_dur in self.start_dates.keys():
+                # self.data[hold_dur].drop(ticker, axis=1, inplace=True)
+                self.data[hold_dur].drop(columns=ticker, level=1, inplace=True)
         else:
-            self.data = pd.DataFrame()
+            self.data = {
+                "1d": pd.DataFrame(),
+                "1w": pd.DataFrame(),
+                "1m": pd.DataFrame()
+            }
 
-    def run_algorithm(self, ticker, algorithm_index):
+    def run_algorithm(self, ticker, algorithm_index, hold_duration):
         print("called")
         if algorithm_index == 0:
-            return self.run_linear_regression(ticker)
+            return self.run_linear_regression(ticker, hold_duration)
         elif algorithm_index == 1:
-            return self.run_random_forest(ticker)
+            return self.run_random_forest(ticker, hold_duration)
         elif algorithm_index == 2:
-            return self.run_bayesian(ticker)
+            return self.run_bayesian(ticker, hold_duration)
         elif algorithm_index == 3:
-            return self.run_monte_carlo(ticker)
+            return self.run_monte_carlo(ticker, hold_duration)
         elif algorithm_index == 4:
-            return self.run_lstm(ticker)
+            return self.run_lstm(ticker, hold_duration)
         elif algorithm_index == 5:
-            return self.run_arima(ticker)
+            return self.run_arima(ticker, hold_duration)
 
-    def run_linear_regression(self, ticker):
+    def run_linear_regression(self, ticker, hold_duration):
         # Linear Regression Algorithm:
-        data = self.getDataForTicker(ticker, self.data)
-        linear_regression = LinearRegressionAlgorithm(self.hold_duration, data, self.prediction_date, self.start_date,
-                                                      (False,), self.tickers_and_long_or_short[ticker],
+        data = self.getDataForTicker(ticker, self.data[hold_duration])
+        linear_regression = LinearRegressionAlgorithm(hold_duration, data, self.prediction_dates[hold_duration],
+                                                      self.start_dates[hold_duration], (False,),
+                                                      self.tickers_and_long_or_short[ticker],
                                                       self.tickers_and_investments[ticker])
         prediction = self.run_model(linear_regression, "Linear Regression")
-        self.linear_regression_results[ticker] = prediction
+        self.linear_regression_results[hold_duration][ticker] = prediction
         return prediction
 
-    def run_random_forest(self, ticker):
+    def run_random_forest(self, ticker, hold_duration):
         # Random Forest Regression Algorithm:
-        data = self.getDataForTicker(ticker, self.data)
-        random_forest = RandomForestAlgorithm(self.hold_duration, data, self.prediction_date, self.start_date,
-                                              (50, 'sqrt', 5, 2, 1, True, "squared_error", None),
+        data = self.getDataForTicker(ticker, self.data[hold_duration])
+        random_forest = RandomForestAlgorithm(hold_duration, data, self.prediction_dates[hold_duration],
+                                              self.start_dates[hold_duration], (50, 'sqrt', 5, 2, 1, True,
+                                                                                "squared_error", None),
                                               self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         prediction = self.run_model(random_forest, "Random Forest Regression")
-        self.random_forest_results[ticker] = prediction
+        self.random_forest_results[hold_duration][ticker] = prediction
         return prediction
 
-    def run_bayesian(self, ticker):
+    def run_bayesian(self, ticker, hold_duration):
         # Bayesian Regression Algorithm:
-        data = self.getDataForTicker(ticker, self.data)
-        bayesian = BayesianRegressionAlgorithm(self.hold_duration, data, self.prediction_date, self.start_date,
-                                               (100, 1e-3, 1e-6, 1e-6, 1e-6, 1e-6, True, True, True),
+        data = self.getDataForTicker(ticker, self.data[hold_duration])
+        bayesian = BayesianRegressionAlgorithm(hold_duration, data, self.prediction_dates[hold_duration],
+                                               self.start_dates[hold_duration], (100, 1e-3, 1e-6, 1e-6, 1e-6,
+                                                                                 1e-6, True, True, True),
                                                self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         prediction = self.run_model(bayesian, "Bayesian Ridge Regression")
-        self.bayesian_results[ticker] = prediction
+        self.bayesian_results[hold_duration][ticker] = prediction
         return prediction
 
-    def run_monte_carlo(self, ticker):
+    def run_monte_carlo(self, ticker, hold_duration):
         # Monte Carlo Simulation:
-        data = self.getDataForTicker(ticker, self.data)
+        data = self.getDataForTicker(ticker, self.data[hold_duration])
         # Create a list of dates that includes weekdays only:
-        weekdays = self.getWeekDays()
-        monte = MonteCarloSimulation(10000, self.prediction_date, data["Adj Close"], weekdays,
-                                     self.hold_duration, self.start_date, self.tickers_and_long_or_short[ticker])
+        weekdays = self.getWeekDays(hold_duration)
+        monte = MonteCarloSimulation(10000, self.prediction_dates[hold_duration], data["Adj Close"],
+                                     weekdays, hold_duration, self.start_dates[hold_duration],
+                                     self.tickers_and_long_or_short[ticker])
         # print("Monte Carlo Simulation Evaluation:")
         # mse, rmse, mae, mape, r2 = monte.evaluateModel()
         # monte.printEvaluation(mse, rmse, mae, mape, r2)
@@ -165,16 +193,16 @@ class Controller:
         # monte.printProbabilities(plot_labels, results, s_0)
         result = monte.displayResults(results, s_0)
 
-        self.monte_carlo_results[ticker] = result
+        self.monte_carlo_results[hold_duration][ticker] = result
         return result
 
-    def run_arima(self, ticker):
+    def run_arima(self, ticker, hold_duration):
         # ARIMA:
-        data = self.getDataForTicker(ticker, self.data)
+        data = self.getDataForTicker(ticker, self.data[hold_duration])
         aapl = yf.Ticker(ticker)
         today_data = aapl.history(period="1d")
-        arima = ARIMAAlgorithm(self.hold_duration, data, self.prediction_date, self.start_date, today_data,
-                               [20, 1, 1, 1], self.tickers_and_long_or_short[ticker],
+        arima = ARIMAAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
+                               today_data, [20, 1, 1, 1], self.tickers_and_long_or_short[ticker],
                                self.tickers_and_investments[ticker])
         # print("ARIMA Evaluation:")
         # mse, rmse, mae, mape, r2 = arima.evaluateModel()
@@ -183,40 +211,41 @@ class Controller:
         predictions = arima.predict_price(data_for_prediction)
         # arima.plot_arima(predictions, data_for_prediction)
 
-        self.arima_results[ticker] = predictions
+        self.arima_results[hold_duration][ticker] = predictions
         return predictions
 
-    def run_lstm(self, ticker):
+    def run_lstm(self, ticker, hold_duration):
         # LSTM:
-        data = self.getDataForTicker(ticker, self.data)
-        lstm = LSTMAlgorithm(self.hold_duration, data, self.prediction_date, self.start_date, (3, 50, 0.2, 25, 'adam',
-                                                                                               'mean_squared_error', 10),
+        data = self.getDataForTicker(ticker, self.data[hold_duration])
+        lstm = LSTMAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
+                             (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 10),
                              self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         # mse, rmse, mae, mape, r2 = lstm.evaluateModel()
         # print("LSTM Evaluation:")
         # lstm.printEvaluation(mse, rmse, mae, mape, r2)
         prediction = lstm.predict_price(lstm.get_data_for_prediction())[0][0]
-        self.lstm_results[ticker] = prediction
+        self.lstm_results[hold_duration][ticker] = prediction
         return prediction
 
     def get_esg_scores(self):
         # ESG Scores:
         esg = ESGScores(self.tickers_and_investments.keys())
 
-    def plot_moving_average_graph(self, ticker):
-        data = self.getDataForTicker(ticker, self.data)
-        self.plotMovingAverage(data, ticker)
+    def plot_moving_average_graph(self, ticker, hold_duration):
+        data = self.getDataForTicker(ticker, self.data[hold_duration])
+        self.plotMovingAverage(data, ticker, hold_duration)
 
-    def tune_hyperparameters(self, ticker, num_of_simulations):
-        data = self.getDataForTicker(ticker, self.data)
-        weekdays = self.getWeekDays()
+    def tune_hyperparameters(self, ticker, num_of_simulations, hold_duration):
+        data = self.getDataForTicker(ticker, self.data[hold_duration])
+        weekdays = self.getWeekDays(hold_duration)
         aapl = yf.Ticker(ticker)
         today_data = aapl.history(period="1d")
-        parameter_tester = ParameterTester(self.hold_duration, data, self.prediction_date, self.start_date, today_data,
+        parameter_tester = ParameterTester(hold_duration, data, self.prediction_dates[hold_duration],
+                                           self.start_dates[hold_duration], today_data,
                                            num_of_simulations, weekdays)
 
-    def calculate_risk_metrics(self, ticker):
-        data = self.data[(self.today - relativedelta(months=6)):]["Adj Close"]
+    def calculate_risk_metrics(self, ticker, hold_duration):
+        data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
         # Risk metrics:
         risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(), data)
         # Display Risk Metrics results:
@@ -230,19 +259,19 @@ class Controller:
         print(sharpe_ratio)
         print("VaR: " + str(VaR))
 
-        self.volatilities[ticker] = vol
+        self.volatilities[hold_duration][ticker] = vol
         self.VaRs[ticker] = VaR
         self.sharpe_ratios[ticker] = sharpe_ratio
 
-    def get_volatility(self, ticker):
-        data = self.data[(self.today - relativedelta(months=6)):]["Adj Close"]
+    def get_volatility(self, ticker, hold_duration):
+        data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
         risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(), data)
         volatility = risk_metrics.calculateVolatility(ticker)
-        self.volatilities[ticker] = volatility
+        self.volatilities[hold_duration][ticker] = volatility
         return volatility
 
-    def get_portfolio_volatility(self):
-        data = self.data[(self.today - relativedelta(months=6)):]["Adj Close"]
+    def get_portfolio_volatility(self, hold_duration):
+        data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
         risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(), data)
         portfolio_vol = risk_metrics.calculatePortfolioVolatility()
         return portfolio_vol
@@ -255,27 +284,22 @@ class Controller:
         print(predicted_price)
         return predicted_price[0][0]  # , mse, rmse, mae, mape, r2
 
-    def calculate_portfolio_result(self, index):
+    def calculate_portfolio_result(self, index, hold_duration):
         algorithm_name = self.algorithms_with_indices[index]
-        algorithm_results = self.results[algorithm_name]
+        algorithm_results = self.results[algorithm_name][hold_duration]
         final_result = 0
         for ticker in algorithm_results.keys():
             final_result += algorithm_results[ticker]
         self.portfolio_results[index] = final_result
         return final_result
 
-    def calculate_portfolio_results(self):
-        for algorithm in self.algorithms:
-            self.calculate_portfolio_result(algorithm)
-        return self.portfolio_results
-
-    def calculate_portfolio_monte_carlo(self):
+    def calculate_portfolio_monte_carlo(self, hold_duration):
         total_positives = 0
         total_negatives = 0
         total_negatives2 = 0
         total_investments = 0
-        for ticker in self.monte_carlo_results.keys():
-            monte_result = self.monte_carlo_results[ticker]
+        for ticker in self.monte_carlo_results[hold_duration].keys():
+            monte_result = self.monte_carlo_results[hold_duration][ticker]
             percentage = float(monte_result.split('%')[0])
             if monte_result.split()[-1] == "growth":
                 total_positives += percentage * self.tickers_and_investments[ticker]
@@ -298,31 +322,32 @@ class Controller:
         return data
 
     def getDataForTicker(self, ticker, data):
-        if len(self.tickers_and_investments.keys()) >= 2:
-            ticker_data = pd.DataFrame()
-            for col, ti in data.columns:
+        ticker_data = pd.DataFrame()
+        if len(self.tickers_and_investments.keys()) > 1:
+            for col in data.columns.levels[0]:
                 ticker_data[col] = data[col][ticker]
             return ticker_data
         return data
 
     # TODO: move to MonteCarlo class:
-    def getWeekDays(self):
-        if self.hold_duration == "1d":
-            weekdays = pd.to_datetime([self.prediction_date])
-        elif self.hold_duration == "1w":
-            weekdays = pd.date_range(self.prediction_date - relativedelta(days=6), self.prediction_date,
+    def getWeekDays(self, hold_duration):
+        if hold_duration == "1d":
+            weekdays = pd.to_datetime([self.prediction_dates[hold_duration]])
+        elif hold_duration == "1w":
+            weekdays = pd.date_range(self.prediction_dates[hold_duration] - relativedelta(days=6), self.prediction_dates[hold_duration],
                                      freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
         else:
-            weekdays = pd.date_range(self.prediction_date - relativedelta(months=1) + relativedelta(days=1),
-                                     self.prediction_date,
+            weekdays = pd.date_range(self.prediction_dates[hold_duration] - relativedelta(months=1) + relativedelta(days=1),
+                                     self.prediction_dates[hold_duration],
                                      freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
         return len(weekdays)
 
     # TODO: moving_avg_value set by user
-    def plotMovingAverage(self, data, ticker):
-        data["MA"] = data["Adj Close"].rolling(window=self.moving_avg_value).mean()
+    def plotMovingAverage(self, data, ticker, hold_duration):
+        data["MA"] = data["Adj Close"].rolling(window=self.moving_avg_values[hold_duration]).mean()
 
-        plt.plot(data.index, data["MA"], color='green', label=f'{self.moving_avg_value}-Day Moving Average')
+        plt.plot(data.index, data["MA"], color='green',
+                 label=f'{self.moving_avg_values[hold_duration]}-Day Moving Average')
         plt.title(f'Moving Average of {ticker} stock')
         plt.xlabel('Date')
         plt.ylabel('Moving Average of Adjusted Close Price')

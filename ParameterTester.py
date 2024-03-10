@@ -22,13 +22,12 @@ class ParameterTester:
         self.weekdays = weekdays
 
         # self.tune_linear_regression_parameters()
-        self.tune_random_forest_parameters()
+        # self.tune_random_forest_parameters()
         # self.tune_bayesian_parameters()
         # self.tune_arima_parameters()
         # self.tune_monte_carlo_parameters()
 
-        # TODO: add multiple epochs !
-        # self.tune_lstm_parameters()
+        self.tune_lstm_parameters()
         os.system('say "Your code has finished"')
 
     def print_best_parameters(self, parameter_grid, model_name, file_name):
@@ -68,7 +67,7 @@ class ParameterTester:
                                              self.data["Adj Close"], self.weekdays, self.hold_duration, self.start_date)
             else:
                 model = LSTMAlgorithm(self.hold_duration, self.data, self.prediction_date, self.start_date,
-                                      parameters_set)
+                                      parameters_set, True, 1000)
 
             mse, rmse, mae, mape, r2 = model.evaluateModel()
 

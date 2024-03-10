@@ -10,17 +10,17 @@ from UI.Page import Page
 
 class PortfolioPage(QWidget, Page):
 
-    def __init__(self, main_window, controllers):
+    def __init__(self, main_window, controller):
         super().__init__()
 
         self.main_window = main_window
-        self.controllers = controllers
+        self.controller = controller
 
+        self.hold_duration = "1d"
         self.hold_duration_label = None
         self.hold_duration_1d = None
         self.hold_duration_1w = None
         self.hold_duration_1m = None
-        self.current_controller = None
 
         self.algorithms_label = None
         self.algorithm_1 = None
@@ -82,7 +82,6 @@ class PortfolioPage(QWidget, Page):
 
         self.hold_duration_1d = self.create_hold_duration_button("1 day")
         self.hold_duration_1d.setChecked(True)
-        self.current_controller = self.controllers[0]
         self.hold_duration_1w = self.create_hold_duration_button("1 week")
         self.hold_duration_1m = self.create_hold_duration_button("1 month")
 
@@ -258,13 +257,17 @@ class PortfolioPage(QWidget, Page):
         label.setFixedHeight(50)
         return label
 
-    def hold_duration_button_toggled(self):
-        if self.hold_duration_1d.isChecked():
-            self.current_controller = self.controllers[0]
-        elif self.hold_duration_1w.isChecked():
-            self.current_controller = self.controllers[1]
-        elif self.hold_duration_1m.isChecked():
-            self.current_controller = self.controllers[2]
+    def hold_duration_button_toggled(self, checked):
+        if checked:
+            if self.hold_duration_1d.isChecked():
+                self.hold_duration = "1d"
+                self.update_shares_results()
+            elif self.hold_duration_1w.isChecked():
+                self.hold_duration = "1w"
+                self.update_shares_results()
+            elif self.hold_duration_1m.isChecked():
+                self.hold_duration = "1m"
+                self.update_shares_results()
 
     def result_to_string(self, result):
         if result > 0:
@@ -274,41 +277,49 @@ class PortfolioPage(QWidget, Page):
     def algorithms_state_changed(self, state, index):
         if state == Qt.Checked:
             self.algorithms[index] = True
-            algorithm_name = self.current_controller.algorithms_with_indices[index]
-            algorithmic_results = self.current_controller.results[algorithm_name]
-            for ticker in self.current_controller.tickers_and_investments.keys():
-                label = self.results_map[ticker].itemAt(3 + index).widget()
-                if ticker not in algorithmic_results.keys():
-                    self.current_controller.run_algorithm(ticker, index)
-                if index == 3:
-                    label.setText(algorithmic_results[ticker])
-                else:
-                    result = algorithmic_results[ticker]
-                    label.setText(self.result_to_string(result))
-                label.show()
-                self.result_col_names[index].show()
-                self.update_portfolio_results()
+            self.update_algorithm_values(index)
         else:
             self.algorithms[index] = False
-            for ticker in self.current_controller.tickers_and_investments.keys():
+            for ticker in self.controller.tickers_and_investments.keys():
                 self.results_map[ticker].itemAt(3 + index).widget().hide()
                 self.result_col_names[index].hide()
                 self.update_portfolio_results()
 
+    def update_algorithm_values(self, index):
+        algorithm_name = self.controller.algorithms_with_indices[index]
+        algorithmic_results = self.controller.results[algorithm_name][self.hold_duration]
+        for ticker in self.controller.tickers_and_investments.keys():
+            label = self.results_map[ticker].itemAt(3 + index).widget()
+            if ticker not in algorithmic_results.keys():
+                self.controller.run_algorithm(ticker, index, self.hold_duration)
+            if index == 3:
+                label.setText(algorithmic_results[ticker])
+            else:
+                result = algorithmic_results[ticker]
+                label.setText(self.result_to_string(result))
+            label.show()
+            self.result_col_names[index].show()
+            self.update_portfolio_results()
+
     def update_portfolio_results(self):
-        self.portfolio_amount_label.setText(str(sum(self.current_controller.tickers_and_investments.values())) + "$")
+        self.portfolio_amount_label.setText(str(sum(self.controller.tickers_and_investments.values())) + "$")
         for index, is_chosen in enumerate(self.algorithms):
             if is_chosen:
                 if index == 3:
-                    result = self.current_controller.calculate_portfolio_monte_carlo()
+                    result = self.controller.calculate_portfolio_monte_carlo(self.hold_duration)
                 else:
-                    num_result = self.current_controller.calculate_portfolio_result(index)
+                    num_result = self.controller.calculate_portfolio_result(index, self.hold_duration)
                     result = self.result_to_string(num_result)
                 self.portfolio_results[index].setText(result)
                 self.portfolio_results[index].show()
             else:
                 self.portfolio_results[index].hide()
-        self.portfolio_volatility_label.setText(self.current_controller.get_portfolio_volatility())
+        self.portfolio_volatility_label.setText(self.controller.get_portfolio_volatility(self.hold_duration))
+
+    def update_shares_results(self):
+        for index, is_chosen in enumerate(self.algorithms):
+            if is_chosen:
+                self.update_algorithm_values(index)
 
     def show_add_stock_window(self):
         popup = AddStockPopUp()
@@ -316,7 +327,7 @@ class PortfolioPage(QWidget, Page):
         popup.exec_()
 
     def add_ticker(self, ticker, investment, is_long):
-        self.current_controller.add_ticker(ticker, float(investment), is_long)
+        self.controller.add_ticker(ticker, float(investment), is_long)
 
         results_hbox = QHBoxLayout()
 
@@ -336,38 +347,38 @@ class PortfolioPage(QWidget, Page):
 
         results_hbox.itemAt(2).widget().setText(str(investment) + "$")
 
-        volatility, category = self.current_controller.get_volatility(ticker)
+        volatility, category = self.controller.get_volatility(ticker, self.hold_duration)
         results_hbox.itemAt(9).widget().setText(f"{volatility:.2f} {category}")
 
         if self.algorithms[0]:
             self.lin_reg_col_name.show()
-            lin_reg_prediction = self.current_controller.run_linear_regression(ticker)
+            lin_reg_prediction = self.controller.run_linear_regression(ticker, self.hold_duration)
             results_hbox.itemAt(3).widget().setText(self.result_to_string(lin_reg_prediction))
             results_hbox.itemAt(3).widget().show()
         if self.algorithms[1]:
             self.random_forest_col_name.show()
-            random_forest_prediction = self.current_controller.run_random_forest(ticker)
+            random_forest_prediction = self.controller.run_random_forest(ticker, self.hold_duration)
             results_hbox.itemAt(4).widget().setText(self.result_to_string(random_forest_prediction))
             results_hbox.itemAt(4).widget().show()
         if self.algorithms[2]:
             self.bayesian_col_name.show()
-            bayesian_prediction = self.current_controller.run_bayesian(ticker)
+            bayesian_prediction = self.controller.run_bayesian(ticker, self.hold_duration)
             results_hbox.itemAt(5).widget().setText(self.result_to_string(bayesian_prediction))
             results_hbox.itemAt(5).widget().show()
         if self.algorithms[3]:
             self.monte_carlo_col_name.show()
             # TODO: num_of_simulations set by user
-            monte_carlo_prediction = self.current_controller.run_monte_carlo(ticker)
+            monte_carlo_prediction = self.controller.run_monte_carlo(ticker, self.hold_duration)
             results_hbox.itemAt(6).widget().setText(monte_carlo_prediction)
             results_hbox.itemAt(6).widget().show()
         if self.algorithms[4]:
             self.lstm_col_name.show()
-            lstm_prediction = self.current_controller.run_lstm(ticker)
+            lstm_prediction = self.controller.run_lstm(ticker, self.hold_duration)
             results_hbox.itemAt(7).widget().setText(self.result_to_string(lstm_prediction))
             results_hbox.itemAt(7).widget().show()
         if self.algorithms[5]:
             self.arima_col_name.show()
-            arima_prediction = self.current_controller.run_arima(ticker)
+            arima_prediction = self.controller.run_arima(ticker, self.hold_duration)
             results_hbox.itemAt(8).widget().setText(self.result_to_string(arima_prediction))
             results_hbox.itemAt(8).widget().show()
 

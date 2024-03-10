@@ -62,7 +62,8 @@ class LSTMAlgorithm(Regression):
         prediction_scaled = self.reg.predict(X_test_scaled)
         prediction = scaler_y.inverse_transform(prediction_scaled)
         profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
-        return profit_loss_amount
+        # TODO: return profit_loss_amount
+        return prediction
 
     def createModel(self):
         num_features = 5
