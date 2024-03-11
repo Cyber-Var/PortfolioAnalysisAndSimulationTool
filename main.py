@@ -9,7 +9,7 @@ from UI.MenuPage import MenuPage
 
 controller = Controller()
 controller.add_ticker("MSFT", 1000, True)
-controller.tune_hyperparameters("MSFT", 10000, "1d")
+controller.tune_hyperparameters("MSFT", 10000, "1m")
 
 
 # app = QApplication(sys.argv)
