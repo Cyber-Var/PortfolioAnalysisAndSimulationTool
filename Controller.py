@@ -158,9 +158,14 @@ class Controller:
     def run_random_forest(self, ticker, hold_duration):
         # Random Forest Regression Algorithm:
         data = self.getDataForTicker(ticker, self.data[hold_duration])
+        if hold_duration == "1d":
+            params = (50, 0.5, 10, 2, 1, True, "squared_error", 42)
+        elif hold_duration == "1w":
+            params = (100, 0.5, 10, 2, 2, True, "squared_error", 42)
+        else:
+            params = (100, 0.5, 20, 2, 2, True, "squared_error", 42)
         random_forest = RandomForestAlgorithm(hold_duration, data, self.prediction_dates[hold_duration],
-                                              self.start_dates[hold_duration], (50, 'sqrt', 5, 2, 1, True,
-                                                                                "squared_error", None),
+                                              self.start_dates[hold_duration], params,
                                               self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         prediction = self.run_model(random_forest, "Random Forest Regression")
         self.random_forest_results[hold_duration][ticker] = prediction
@@ -169,9 +174,13 @@ class Controller:
     def run_bayesian(self, ticker, hold_duration):
         # Bayesian Regression Algorithm:
         data = self.getDataForTicker(ticker, self.data[hold_duration])
+        if hold_duration == "1d":
+            tol = 0.001
+        else:
+            tol = 1e-5
         bayesian = BayesianRegressionAlgorithm(hold_duration, data, self.prediction_dates[hold_duration],
-                                               self.start_dates[hold_duration], (100, 1e-3, 1e-6, 1e-6, 1e-6,
-                                                                                 1e-6, True, True, True),
+                                               self.start_dates[hold_duration], (100, tol, 0.0001, 1e-6, 1e-6,
+                                                                                 1e-4, True, False, True),
                                                self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         prediction = self.run_model(bayesian, "Bayesian Ridge Regression")
         self.bayesian_results[hold_duration][ticker] = prediction
@@ -201,8 +210,14 @@ class Controller:
         data = self.getDataForTicker(ticker, self.data[hold_duration])
         aapl = yf.Ticker(ticker)
         today_data = aapl.history(period="1d")
+        if hold_duration == "1d":
+            params = (20, 2, 1, 1)
+        elif hold_duration == "1w":
+            params = (20, 2, 1, 2)
+        else:
+            params = (20, 0, 1, 0)
         arima = ARIMAAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
-                               today_data, [20, 1, 1, 1], self.tickers_and_long_or_short[ticker],
+                               today_data, params, self.tickers_and_long_or_short[ticker],
                                self.tickers_and_investments[ticker])
         # print("ARIMA Evaluation:")
         # mse, rmse, mae, mape, r2 = arima.evaluateModel()
@@ -217,9 +232,14 @@ class Controller:
     def run_lstm(self, ticker, hold_duration):
         # LSTM:
         data = self.getDataForTicker(ticker, self.data[hold_duration])
+        if hold_duration == "1d":
+            params = (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)
+        elif hold_duration == "1w":
+            params = (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)
+        else:
+            params = (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)
         lstm = LSTMAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
-                             (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 10),
-                             self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
+                             params, self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         # mse, rmse, mae, mape, r2 = lstm.evaluateModel()
         # print("LSTM Evaluation:")
         # lstm.printEvaluation(mse, rmse, mae, mape, r2)
@@ -245,17 +265,23 @@ class Controller:
                                            num_of_simulations, weekdays)
 
     def calculate_risk_metrics(self, ticker, hold_duration):
-        data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
+        # data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
+        data = self.data[hold_duration]["Adj Close"]
         # Risk metrics:
-        risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(), data)
+        risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
+                                   self.tickers_and_long_or_short.values(), data)
         # Display Risk Metrics results:
         vol, cat = risk_metrics.calculateVolatility(ticker)
-        portfolio_vol = risk_metrics.calculatePortfolioVolatility()
+        portfolio_vol, portfolio_vol_cat = risk_metrics.calculatePortfolioVolatility()
+        portfolio_sharpe, portfolio_sharpe_cat = risk_metrics.calculatePortfolioSharpeRatio(portfolio_vol)
+        portfolio_VaR = risk_metrics.calculatePortfolioVaR(0.95, portfolio_vol, hold_duration)
         sharpe_ratio = risk_metrics.calculateSharpeRatio(ticker)
         VaR = risk_metrics.calculateVaR(ticker, 0.95, vol)
         print("Risk Metrics:")
         print("Volatility:", cat, "(" + str(vol) + ")")
-        print(portfolio_vol)
+        print("Portfolio Volatility:", portfolio_vol, portfolio_vol_cat)
+        print("Portfolio Sharpe Ratio:", portfolio_sharpe, portfolio_sharpe_cat)
+        print("Portfolio VaR:", portfolio_VaR)
         print(sharpe_ratio)
         print("VaR: " + str(VaR))
 

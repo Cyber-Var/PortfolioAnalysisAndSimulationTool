@@ -4,23 +4,7 @@ Best MSE parameters: (50, 0.5, 10, 2, 1, True, 'squared_error', 42)       MSE = 
 Best RMSE parameters: (50, 0.5, 10, 2, 1, True, 'squared_error', 42)       RMSE = 5.073494611932909
 Best MAE parameters: (50, 0.5, 20, 5, 1, True, 'squared_error', None)       MAE = 3.9489143736309362
 Best MAPE parameters: (50, 0.5, 20, 5, 1, True, 'squared_error', None)       MAPE = 2.227061159968404
-Best R^2 parameters: (50, 0.5, 10, 2, 1, True, 'squared_error', 42)       R^2 = 0.8286011760671391 
-
-1w, AAPL, 29.02.24
-Best parameters for the Random Forest model:
-Best MSE parameters: (50, 1, 10, 2, 2, True, 'squared_error', 42)       MSE = 86.5052670777212
-Best RMSE parameters: (50, 1, 10, 2, 2, True, 'squared_error', 42)       RMSE = 9.30082077441132
-Best MAE parameters: (100, 1, 10, 2, 2, False, 'squared_error', 42)       MAE = 7.632591572278438
-Best MAPE parameters: (100, 1, 10, 2, 2, False, 'squared_error', 42)       MAPE = 4.278356802466911
-Best R^2 parameters: (50, 1, 10, 2, 2, True, 'squared_error', 42)       R^2 = 0.3893312131333633 
-
-1m, AAPL, 05.03.24
-Best parameters for the Random Forest model:
-Best MSE parameters: (50, 0.5, 20, 2, 1, True, 'squared_error', 42)       MSE = 57.44239565758181
-Best RMSE parameters: (50, 0.5, 20, 2, 1, True, 'squared_error', 42)       RMSE = 7.579076174414783
-Best MAE parameters: (50, 0.5, 10, 5, 1, False, 'squared_error', 42)       MAE = 6.306639755700765
-Best MAPE parameters: (50, 0.5, 10, 5, 1, False, 'squared_error', 42)       MAPE = 3.4925683031770167
-Best R^2 parameters: (50, 0.5, 20, 2, 1, True, 'squared_error', 42)       R^2 = 0.555207713855089 
+Best R^2 parameters: (50, 0.5, 10, 2, 1, True, 'squared_error', 42)       R^2 = 0.8286011760671391
 
 1d, TSLA, 07.03.24
 Best parameters for the Random Forest model:
@@ -28,23 +12,7 @@ Best MSE parameters: (100, 0.5, 10, 2, 5, True, 'squared_error', 42)       MSE =
 Best RMSE parameters: (100, 0.5, 10, 2, 5, True, 'squared_error', 42)       RMSE = 9.840793733215843
 Best MAE parameters: (100, 0.5, 10, 2, 5, True, 'squared_error', 42)       MAE = 7.189777827004835
 Best MAPE parameters: (100, 0.5, 10, 2, 5, True, 'squared_error', 42)       MAPE = 3.175370663372344
-Best R^2 parameters: (100, 0.5, 10, 2, 5, True, 'squared_error', 42)       R^2 = 0.9182257110965446 
-
-1w, TSLA, 07.03.24
-Best parameters for the Random Forest model:
-Best MSE parameters: (100, 0.5, 10, 10, 2, True, 'squared_error', 42)       MSE = 611.6493229635682
-Best RMSE parameters: (100, 0.5, 10, 10, 2, True, 'squared_error', 42)       RMSE = 24.73154509858954
-Best MAE parameters: (100, 0.5, 20, 10, 2, True, 'squared_error', 42)       MAE = 19.878227104445187
-Best MAPE parameters: (100, 0.5, 20, 10, 2, True, 'squared_error', 42)       MAPE = 9.268802966400132
-Best R^2 parameters: (100, 0.5, 10, 10, 2, True, 'squared_error', 42)       R^2 = 0.4835134483812986 
-
-1m, TSLA, 07.03.24
-Best parameters for the Random Forest model:
-Best MSE parameters: (50, 0.5, 10, 5, 2, True, 'squared_error', 42)       MSE = 1196.6260497393087
-Best RMSE parameters: (50, 0.5, 10, 5, 2, True, 'squared_error', 42)       RMSE = 34.592283095212274
-Best MAE parameters: (50, 0.5, 20, 2, 2, True, 'squared_error', 42)       MAE = 29.01041733730362
-Best MAPE parameters: (50, 0.5, 20, 2, 1, True, 'squared_error', 42)       MAPE = 13.842359973803317
-Best R^2 parameters: (50, 0.5, 10, 5, 2, True, 'squared_error', 42)       R^2 = -0.009471687809016416 
+Best R^2 parameters: (100, 0.5, 10, 2, 5, True, 'squared_error', 42)       R^2 = 0.9182257110965446
 
 1d, MSFT, 09.03.24
 Best parameters for the Random Forest model:
@@ -52,7 +20,23 @@ Best MSE parameters: (50, 0.5, 10, 5, 1, False, 'squared_error', 42)       MSE =
 Best RMSE parameters: (50, 0.5, 10, 5, 1, False, 'squared_error', 42)       RMSE = 13.824051414623858
 Best MAE parameters: (50, 0.5, 10, 5, 1, False, 'squared_error', 42)       MAE = 10.457780874857894
 Best MAPE parameters: (50, 0.5, 10, 5, 1, False, 'squared_error', 42)       MAPE = 3.0430863583840226
-Best R^2 parameters: (50, 0.5, 10, 5, 1, False, 'squared_error', 42)       R^2 = 0.8765228035701756 
+Best R^2 parameters: (50, 0.5, 10, 5, 1, False, 'squared_error', 42)       R^2 = 0.8765228035701756
+
+1w, AAPL, 29.02.24
+Best parameters for the Random Forest model:
+Best MSE parameters: (50, 1, 10, 2, 2, True, 'squared_error', 42)       MSE = 86.5052670777212
+Best RMSE parameters: (50, 1, 10, 2, 2, True, 'squared_error', 42)       RMSE = 9.30082077441132
+Best MAE parameters: (100, 1, 10, 2, 2, False, 'squared_error', 42)       MAE = 7.632591572278438
+Best MAPE parameters: (100, 1, 10, 2, 2, False, 'squared_error', 42)       MAPE = 4.278356802466911
+Best R^2 parameters: (50, 1, 10, 2, 2, True, 'squared_error', 42)       R^2 = 0.3893312131333633
+
+1w, TSLA, 07.03.24
+Best parameters for the Random Forest model:
+Best MSE parameters: (100, 0.5, 10, 10, 2, True, 'squared_error', 42)       MSE = 611.6493229635682
+Best RMSE parameters: (100, 0.5, 10, 10, 2, True, 'squared_error', 42)       RMSE = 24.73154509858954
+Best MAE parameters: (100, 0.5, 20, 10, 2, True, 'squared_error', 42)       MAE = 19.878227104445187
+Best MAPE parameters: (100, 0.5, 20, 10, 2, True, 'squared_error', 42)       MAPE = 9.268802966400132
+Best R^2 parameters: (100, 0.5, 10, 10, 2, True, 'squared_error', 42)       R^2 = 0.4835134483812986
 
 1w, MSFT, 09.03.24
 Best parameters for the Random Forest model:
@@ -60,7 +44,23 @@ Best MSE parameters: (50, 0.5, 10, 2, 5, True, 'squared_error', 42)       MSE = 
 Best RMSE parameters: (50, 0.5, 10, 2, 5, True, 'squared_error', 42)       RMSE = 22.65208893197726
 Best MAE parameters: (100, 0.5, 20, 2, 5, True, 'squared_error', 42)       MAE = 17.36114812524105
 Best MAPE parameters: (100, 0.5, 20, 2, 5, True, 'squared_error', 42)       MAPE = 5.133506621645602
-Best R^2 parameters: (50, 0.5, 10, 2, 5, True, 'squared_error', 42)       R^2 = 0.6684625604696197 
+Best R^2 parameters: (50, 0.5, 10, 2, 5, True, 'squared_error', 42)       R^2 = 0.6684625604696197
+
+1m, AAPL, 05.03.24
+Best parameters for the Random Forest model:
+Best MSE parameters: (50, 0.5, 20, 2, 1, True, 'squared_error', 42)       MSE = 57.44239565758181
+Best RMSE parameters: (50, 0.5, 20, 2, 1, True, 'squared_error', 42)       RMSE = 7.579076174414783
+Best MAE parameters: (50, 0.5, 10, 5, 1, False, 'squared_error', 42)       MAE = 6.306639755700765
+Best MAPE parameters: (50, 0.5, 10, 5, 1, False, 'squared_error', 42)       MAPE = 3.4925683031770167
+Best R^2 parameters: (50, 0.5, 20, 2, 1, True, 'squared_error', 42)       R^2 = 0.555207713855089
+
+1m, TSLA, 07.03.24
+Best parameters for the Random Forest model:
+Best MSE parameters: (50, 0.5, 10, 5, 2, True, 'squared_error', 42)       MSE = 1196.6260497393087
+Best RMSE parameters: (50, 0.5, 10, 5, 2, True, 'squared_error', 42)       RMSE = 34.592283095212274
+Best MAE parameters: (50, 0.5, 20, 2, 2, True, 'squared_error', 42)       MAE = 29.01041733730362
+Best MAPE parameters: (50, 0.5, 20, 2, 1, True, 'squared_error', 42)       MAPE = 13.842359973803317
+Best R^2 parameters: (50, 0.5, 10, 5, 2, True, 'squared_error', 42)       R^2 = -0.009471687809016416
 
 1m, MSFT, 09.03.24
 Best parameters for the Random Forest model:

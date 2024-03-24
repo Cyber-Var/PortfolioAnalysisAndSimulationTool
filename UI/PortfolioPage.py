@@ -345,7 +345,11 @@ class PortfolioPage(QWidget, Page):
         stock_name = stock_info.get('longName', 'N/A')
         results_hbox.itemAt(1).widget().setText(stock_name)
 
-        results_hbox.itemAt(2).widget().setText(str(investment) + "$")
+        if is_long:
+            long_short_str = "Long"
+        else:
+            long_short_str = "Short"
+        results_hbox.itemAt(2).widget().setText(str(investment) + "$ " + long_short_str)
 
         volatility, category = self.controller.get_volatility(ticker, self.hold_duration)
         results_hbox.itemAt(9).widget().setText(f"{volatility:.2f} {category}")
@@ -367,7 +371,7 @@ class PortfolioPage(QWidget, Page):
             results_hbox.itemAt(5).widget().show()
         if self.algorithms[3]:
             self.monte_carlo_col_name.show()
-            # TODO: num_of_simulations set by user
+            # TODO: num_of_simulations set by user ??
             monte_carlo_prediction = self.controller.run_monte_carlo(ticker, self.hold_duration)
             results_hbox.itemAt(6).widget().setText(monte_carlo_prediction)
             results_hbox.itemAt(6).widget().show()

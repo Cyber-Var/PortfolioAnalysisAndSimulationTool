@@ -8,8 +8,12 @@ from UI.MenuPage import MenuPage
 
 
 controller = Controller()
-controller.add_ticker("MSFT", 1000, True)
-controller.tune_hyperparameters("MSFT", 10000, "1m")
+controller.add_ticker("AAPL", 1000, True)
+controller.add_ticker("TSLA", 2000, False)
+controller.add_ticker("NVDA", 3000, True)
+controller.calculate_risk_metrics("AAPL", "1d")
+controller.calculate_risk_metrics("TSLA", "1d")
+controller.calculate_risk_metrics("NVDA", "1d")
 
 
 # app = QApplication(sys.argv)

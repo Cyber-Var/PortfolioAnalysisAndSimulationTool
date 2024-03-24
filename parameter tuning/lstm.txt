@@ -4,23 +4,7 @@ Best MSE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MSE 
 Best RMSE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       RMSE = 2.949551428983689
 Best MAE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAE = 2.309172307352621
 Best MAPE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAPE = 1.3136506410245825
-Best R^2 parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.9326346305655138 
-
-1w, AAPL, 05.03.24
-Best parameters for the LSTM model:
-Best MSE parameters: (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       MSE = 37.892043759346016
-Best RMSE parameters: (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       RMSE = 6.155651367592712
-Best MAE parameters: (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       MAE = 5.029859991187593
-Best MAPE parameters: (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       MAPE = 2.826197740489072
-Best R^2 parameters: (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.7065914503481301 
-
-1m, AAPL, 05.03.24
-Best parameters for the LSTM model:
-Best MSE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MSE = 134.1239449481259
-Best RMSE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       RMSE = 11.581189271751235
-Best MAE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAE = 9.341204821825977
-Best MAPE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAPE = 5.227835724267689
-Best R^2 parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       R^2 = -0.038558746830197776 
+Best R^2 parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.9326346305655138
 
 1d, TSLA, 10.03.24
 Best parameters for the LSTM model:
@@ -28,23 +12,7 @@ Best MSE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MSE 
 Best RMSE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       RMSE = 8.43993997053543
 Best MAE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAE = 6.444704345703125
 Best MAPE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAPE = 2.9147745522201762
-Best R^2 parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.9395918397346987 
-
-1w, TSLA, 10.03.24
-Best parameters for the LSTM model:
-Best MSE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 10)       MSE = 261.8489776289044
-Best RMSE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 10)       RMSE = 16.18174828715687
-Best MAE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 10)       MAE = 12.993573547363281
-Best MAPE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 10)       MAPE = 5.933330761988351
-Best R^2 parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 10)       R^2 = 0.7779413083629303 
-
-1m, TSLA, 10.03.24
-Best parameters for the LSTM model:
-Best MSE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MSE = 683.5509589837399
-Best RMSE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       RMSE = 26.144807495633618
-Best MAE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAE = 20.532023559570312
-Best MAPE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAPE = 9.304027659458361
-Best R^2 parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.4203207016744209 
+Best R^2 parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.9395918397346987
 
 1d, MSFT, 10.03.24
 Best parameters for the LSTM model:
@@ -52,7 +20,23 @@ Best MSE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MSE 
 Best RMSE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       RMSE = 6.605810734938611
 Best MAE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAE = 5.31556005859375
 Best MAPE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       MAPE = 1.596859949638519
-Best R^2 parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.9712609536210863 
+Best R^2 parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.9712609536210863
+
+1w, AAPL, 05.03.24
+Best parameters for the LSTM model:
+Best MSE parameters: (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       MSE = 37.892043759346016
+Best RMSE parameters: (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       RMSE = 6.155651367592712
+Best MAE parameters: (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       MAE = 5.029859991187593
+Best MAPE parameters: (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       MAPE = 2.826197740489072
+Best R^2 parameters: (3, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.7065914503481301
+
+1w, TSLA, 10.03.24
+Best parameters for the LSTM model:
+Best MSE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 10)       MSE = 261.8489776289044
+Best RMSE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 10)       RMSE = 16.18174828715687
+Best MAE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 10)       MAE = 12.993573547363281
+Best MAPE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 10)       MAPE = 5.933330761988351
+Best R^2 parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 10)       R^2 = 0.7779413083629303
 
 1w, MSFT, 11.03.24
 Best parameters for the LSTM model:
@@ -60,7 +44,23 @@ Best MSE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       MS
 Best RMSE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       RMSE = 12.702119185337684
 Best MAE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       MAE = 10.358218505859375
 Best MAPE parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       MAPE = 3.115523198040174
-Best R^2 parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.8937393543598973 
+Best R^2 parameters: (2, 50, 0.2, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.8937393543598973
+
+1m, AAPL, 05.03.24
+Best parameters for the LSTM model:
+Best MSE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MSE = 134.1239449481259
+Best RMSE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       RMSE = 11.581189271751235
+Best MAE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAE = 9.341204821825977
+Best MAPE parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAPE = 5.227835724267689
+Best R^2 parameters: (2, 50, 0, 25, 'adam', 'mean_squared_error', 50)       R^2 = -0.038558746830197776
+
+1m, TSLA, 10.03.24
+Best parameters for the LSTM model:
+Best MSE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MSE = 683.5509589837399
+Best RMSE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       RMSE = 26.144807495633618
+Best MAE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAE = 20.532023559570312
+Best MAPE parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       MAPE = 9.304027659458361
+Best R^2 parameters: (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)       R^2 = 0.4203207016744209
 
 1m, MSFT, 11.03.24
 Best parameters for the LSTM model:
