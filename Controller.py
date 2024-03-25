@@ -81,11 +81,10 @@ class Controller:
         self.monte_carlo_results = {"1d": {}, "1w": {}, "1m": {}}
         self.lstm_results = {"1d": {}, "1w": {}, "1m": {}}
         self.arima_results = {"1d": {}, "1w": {}, "1m": {}}
-        self.volatilities = {"1d": {}, "1w": {}, "1m": {}}
 
-        # TODO: same processing for VaRs and Sharpe Ratios
-        self.VaRs = {}
-        self.sharpe_ratios = {}
+        self.volatilities = {"1d": {}, "1w": {}, "1m": {}}
+        self.sharpe_ratios = {"1d": {}, "1w": {}, "1m": {}}
+        self.VaRs = {"1d": {}, "1w": {}, "1m": {}}
 
         self.results = {
             "linear_regression": self.linear_regression_results,
@@ -267,6 +266,7 @@ class Controller:
     def calculate_risk_metrics(self, ticker, hold_duration):
         # data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
         data = self.data[hold_duration]["Adj Close"]
+
         # Risk metrics:
         risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
                                    self.tickers_and_long_or_short.values(), data)
@@ -275,14 +275,14 @@ class Controller:
         portfolio_vol, portfolio_vol_cat = risk_metrics.calculatePortfolioVolatility()
         portfolio_sharpe, portfolio_sharpe_cat = risk_metrics.calculatePortfolioSharpeRatio(portfolio_vol)
         portfolio_VaR = risk_metrics.calculatePortfolioVaR(0.95, portfolio_vol, hold_duration)
-        sharpe_ratio = risk_metrics.calculateSharpeRatio(ticker)
+        sharpe_ratio, sharpe_ratio_cat = risk_metrics.calculateSharpeRatio(ticker)
         VaR = risk_metrics.calculateVaR(ticker, 0.95, vol)
         print("Risk Metrics:")
         print("Volatility:", cat, "(" + str(vol) + ")")
         print("Portfolio Volatility:", portfolio_vol, portfolio_vol_cat)
         print("Portfolio Sharpe Ratio:", portfolio_sharpe, portfolio_sharpe_cat)
         print("Portfolio VaR:", portfolio_VaR)
-        print(sharpe_ratio)
+        print("Sharpe Ratio:", sharpe_ratio, sharpe_ratio_cat)
         print("VaR: " + str(VaR))
 
         self.volatilities[hold_duration][ticker] = vol
@@ -290,17 +290,55 @@ class Controller:
         self.sharpe_ratios[ticker] = sharpe_ratio
 
     def get_volatility(self, ticker, hold_duration):
-        data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
-        risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(), data)
+        data = self.data[hold_duration]["Adj Close"]
+        # data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
+        risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
+                                   self.tickers_and_long_or_short.values(), data)
         volatility = risk_metrics.calculateVolatility(ticker)
         self.volatilities[hold_duration][ticker] = volatility
         return volatility
 
+    def get_sharpe_ratio(self, ticker, hold_duration):
+        data = self.data[hold_duration]["Adj Close"]
+        # data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
+        risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
+                                   self.tickers_and_long_or_short.values(), data)
+        sharpe_ratio = risk_metrics.calculateSharpeRatio(ticker)
+        self.sharpe_ratios[hold_duration][ticker] = sharpe_ratio
+        return sharpe_ratio
+
+    def get_VaR(self, ticker, hold_duration, volatility):
+        data = self.data[hold_duration]["Adj Close"]
+        # data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
+        risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
+                                   self.tickers_and_long_or_short.values(), data)
+        VaR = risk_metrics.calculateVaR(ticker, 0.95, volatility)
+        self.VaRs[hold_duration][ticker] = VaR
+        return VaR
+
     def get_portfolio_volatility(self, hold_duration):
-        data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
-        risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(), data)
+        data = self.data[hold_duration]["Adj Close"]
+        # data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
+        risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
+                                   self.tickers_and_long_or_short.values(), data)
         portfolio_vol = risk_metrics.calculatePortfolioVolatility()
         return portfolio_vol
+
+    def get_portfolio_sharpe_ratio(self, hold_duration, portfolio_vol):
+        data = self.data[hold_duration]["Adj Close"]
+        # data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
+        risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
+                                   self.tickers_and_long_or_short.values(), data)
+        portfolio_sharpe_ratio = risk_metrics.calculatePortfolioSharpeRatio(portfolio_vol)
+        return portfolio_sharpe_ratio
+
+    def get_portfolio_VaR(self, hold_duration, portfolio_vol):
+        data = self.data[hold_duration]["Adj Close"]
+        # data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
+        risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
+                                   self.tickers_and_long_or_short.values(), data)
+        portfolio_VaR = risk_metrics.calculatePortfolioVaR(hold_duration, 0.95, portfolio_vol)
+        return portfolio_VaR
 
     def run_model(self, model, model_name):
         # mse, rmse, mae, mape, r2 = model.evaluateModel()

@@ -32,14 +32,16 @@ class PortfolioPage(QWidget, Page):
         self.algorithms = [False] * 6
 
         self.portfolio_results = []
-        self.portfolio_amount_label = None
+        self.portfolio_amount = None
         self.portfolio_linear_regression = None
         self.portfolio_random_forest = None
         self.portfolio_bayesian = None
         self.portfolio_monte_carlo = None
         self.portfolio_lstm = None
         self.portfolio_arima = None
-        self.portfolio_volatility_label = None
+        self.portfolio_volatility = None
+        self.portfolio_sharpe_ratio = None
+        self.portfolio_VaR = None
 
         self.result_col_names = []
         self.ticker_col_name = None
@@ -52,6 +54,8 @@ class PortfolioPage(QWidget, Page):
         self.lstm_col_name = None
         self.arima_col_name = None
         self.volatility_col_name = None
+        self.sharpe_ratio_col_name = None
+        self.VaR_col_name = None
         self.more_info_col_name = None
 
         self.results_vbox = None
@@ -131,6 +135,8 @@ class PortfolioPage(QWidget, Page):
         self.arima_col_name = self.create_column_names_labels("ARIMA")
         self.arima_col_name.hide()
         self.volatility_col_name = self.create_column_names_labels("Volatility")
+        self.sharpe_ratio_col_name = self.create_column_names_labels("Sharpe Ratio")
+        self.VaR_col_name = self.create_column_names_labels("Value at Risk")
         self.more_info_col_name = self.create_column_names_labels("More Info")
         self.result_col_names = [self.lin_reg_col_name, self.random_forest_col_name, self.bayesian_col_name,
                                  self.monte_carlo_col_name, self.lstm_col_name, self.arima_col_name]
@@ -145,6 +151,8 @@ class PortfolioPage(QWidget, Page):
         column_names_hbox.addWidget(self.lstm_col_name)
         column_names_hbox.addWidget(self.arima_col_name)
         column_names_hbox.addWidget(self.volatility_col_name)
+        column_names_hbox.addWidget(self.sharpe_ratio_col_name)
+        column_names_hbox.addWidget(self.VaR_col_name)
         column_names_hbox.addWidget(self.more_info_col_name)
 
         add_stock_button = QPushButton("+ Add Stock")
@@ -181,9 +189,9 @@ class PortfolioPage(QWidget, Page):
         portfolio_label.setObjectName("resultLabel")
         portfolio_label.setFixedHeight(70)
 
-        self.portfolio_amount_label = QLabel("-")
-        self.portfolio_amount_label.setObjectName("resultLabel")
-        self.portfolio_amount_label.setFixedHeight(70)
+        self.portfolio_amount = QLabel("-")
+        self.portfolio_amount.setObjectName("resultLabel")
+        self.portfolio_amount.setFixedHeight(70)
 
         self.portfolio_linear_regression = QLabel("")
         self.portfolio_random_forest = QLabel("")
@@ -217,9 +225,17 @@ class PortfolioPage(QWidget, Page):
                                   self.portfolio_bayesian, self.portfolio_monte_carlo, self.portfolio_lstm,
                                   self.portfolio_arima]
 
-        self.portfolio_volatility_label = QLabel("")
-        self.portfolio_volatility_label.setObjectName("resultLabel")
-        self.portfolio_volatility_label.setFixedHeight(70)
+        self.portfolio_volatility = QLabel("")
+        self.portfolio_volatility.setObjectName("resultLabel")
+        self.portfolio_volatility.setFixedHeight(70)
+
+        self.portfolio_sharpe_ratio = QLabel("")
+        self.portfolio_sharpe_ratio.setObjectName("resultLabel")
+        self.portfolio_sharpe_ratio.setFixedHeight(70)
+
+        self.portfolio_VaR = QLabel("")
+        self.portfolio_VaR.setObjectName("resultLabel")
+        self.portfolio_VaR.setFixedHeight(70)
 
         portfolio_more_info_label = QLabel("-")
         portfolio_more_info_label.setObjectName("resultLabel")
@@ -227,14 +243,16 @@ class PortfolioPage(QWidget, Page):
 
         portfolio_hbox.addWidget(portfolio_ticker_label)
         portfolio_hbox.addWidget(portfolio_label)
-        portfolio_hbox.addWidget(self.portfolio_amount_label)
+        portfolio_hbox.addWidget(self.portfolio_amount)
         portfolio_hbox.addWidget(self.portfolio_linear_regression)
         portfolio_hbox.addWidget(self.portfolio_random_forest)
         portfolio_hbox.addWidget(self.portfolio_bayesian)
         portfolio_hbox.addWidget(self.portfolio_monte_carlo)
         portfolio_hbox.addWidget(self.portfolio_lstm)
         portfolio_hbox.addWidget(self.portfolio_arima)
-        portfolio_hbox.addWidget(self.portfolio_volatility_label)
+        portfolio_hbox.addWidget(self.portfolio_volatility)
+        portfolio_hbox.addWidget(self.portfolio_sharpe_ratio)
+        portfolio_hbox.addWidget(self.portfolio_VaR)
         portfolio_hbox.addWidget(portfolio_more_info_label)
 
         self.results_vbox.addLayout(portfolio_hbox)
@@ -302,7 +320,7 @@ class PortfolioPage(QWidget, Page):
             self.update_portfolio_results()
 
     def update_portfolio_results(self):
-        self.portfolio_amount_label.setText(str(sum(self.controller.tickers_and_investments.values())) + "$")
+        self.portfolio_amount.setText(str(sum(self.controller.tickers_and_investments.values())) + "$")
         for index, is_chosen in enumerate(self.algorithms):
             if is_chosen:
                 if index == 3:
@@ -314,7 +332,14 @@ class PortfolioPage(QWidget, Page):
                 self.portfolio_results[index].show()
             else:
                 self.portfolio_results[index].hide()
-        self.portfolio_volatility_label.setText(self.controller.get_portfolio_volatility(self.hold_duration))
+
+        portfolio_vol, portfolio_vol_cat = self.controller.get_portfolio_volatility(self.hold_duration)
+        self.portfolio_volatility.setText(f'{portfolio_vol} {portfolio_vol_cat}')
+
+        portfolio_sharpe, portfolio_share_cat = self.controller.get_portfolio_sharpe_ratio(self.hold_duration, portfolio_vol)
+        self.portfolio_sharpe_ratio.setText(f'{portfolio_sharpe} {portfolio_share_cat}')
+
+        self.portfolio_VaR.setText(str(self.controller.get_portfolio_VaR(self.hold_duration, portfolio_vol)))
 
     def update_shares_results(self):
         for index, is_chosen in enumerate(self.algorithms):
@@ -331,7 +356,7 @@ class PortfolioPage(QWidget, Page):
 
         results_hbox = QHBoxLayout()
 
-        for i in range(10):
+        for i in range(12):
             label = QLabel()
             label.setObjectName("resultLabel")
             label.setFixedHeight(50)
@@ -350,9 +375,6 @@ class PortfolioPage(QWidget, Page):
         else:
             long_short_str = "Short"
         results_hbox.itemAt(2).widget().setText(str(investment) + "$ " + long_short_str)
-
-        volatility, category = self.controller.get_volatility(ticker, self.hold_duration)
-        results_hbox.itemAt(9).widget().setText(f"{volatility:.2f} {category}")
 
         if self.algorithms[0]:
             self.lin_reg_col_name.show()
@@ -385,6 +407,15 @@ class PortfolioPage(QWidget, Page):
             arima_prediction = self.controller.run_arima(ticker, self.hold_duration)
             results_hbox.itemAt(8).widget().setText(self.result_to_string(arima_prediction))
             results_hbox.itemAt(8).widget().show()
+
+        volatility, volatility_category = self.controller.get_volatility(ticker, self.hold_duration)
+        results_hbox.itemAt(9).widget().setText(f"{volatility:.2f} {volatility_category}")
+
+        sharpe_ratio, sharpe_ratio_category = self.controller.get_sharpe_ratio(ticker, self.hold_duration)
+        results_hbox.itemAt(10).widget().setText(f"{sharpe_ratio:.2f} {sharpe_ratio_category}")
+
+        VaR = self.controller.get_VaR(ticker, self.hold_duration, volatility)
+        results_hbox.itemAt(11).widget().setText(f"{VaR:.2f}")
 
         self.update_portfolio_results()
 

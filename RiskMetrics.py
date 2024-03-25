@@ -39,10 +39,10 @@ class RiskMetrics:
 
     def calculateSharpeRatio(self, ticker):
         risk_free_rate = 1.02 ** (1 / 252) - 1
-        if len(self.tickers) > 1:
-            excess = self.daily_returns[ticker] - risk_free_rate
-        else:
+        if len(self.tickers) == 1:
             excess = self.daily_returns - risk_free_rate
+        else:
+            excess = self.daily_returns[ticker] - risk_free_rate
         sharpe_ratio = excess.mean() / excess.std()
 
         if sharpe_ratio < 0.1:
@@ -51,7 +51,7 @@ class RiskMetrics:
             sharpe_category = "Normal"
         else:
             sharpe_category = "High"
-        return "Sharpe Ratio: " + sharpe_category + " (" + str(sharpe_ratio) + ")"
+        return sharpe_ratio, sharpe_category
 
     # TODO: can regulate daily/weekly/monthly/annual
     # TODO: choose 1 of the methods below (choice is between historical VaR and Parametric VaR)
@@ -65,7 +65,10 @@ class RiskMetrics:
         # Z = norm.ppf(1 - confidence)
         # VaR = portfolio_value * volatility * Z
 
-        daily_returns = self.daily_returns[ticker]
+        if len(self.tickers) == 1:
+            daily_returns = self.daily_returns
+        else:
+            daily_returns = self.daily_returns[ticker]
         historical_losses = [r for r in daily_returns if r < 0]
         historical_losses.sort()
 
@@ -115,14 +118,14 @@ class RiskMetrics:
 
         expected_returns = np.mean(self.daily_returns, axis=0)
 
-        if len(weights) == 1:
+        if len(self.tickers) == 1:
             portfolio_expected_returns = expected_returns
         else:
             portfolio_expected_returns = 0
             for i in range(len(weights)):
                 portfolio_expected_returns += weights[i] * expected_returns.iloc[i]
 
-        portfolio_sharpe_ratio = (portfolio_expected_returns - risk_free_rate) / portfolio_vol / 100
+        portfolio_sharpe_ratio = (portfolio_expected_returns - risk_free_rate) / (portfolio_vol / 100)
 
         if abs(portfolio_sharpe_ratio) < 0.1:
             category = "Low"
@@ -131,9 +134,9 @@ class RiskMetrics:
         else:
             category = "High"
 
-        return portfolio_sharpe_ratio, category
+        return abs(portfolio_sharpe_ratio), category
 
-    def calculatePortfolioVaR(self, confidence, portfolio_vol, hold_duration):
+    def calculatePortfolioVaR(self, hold_duration, confidence, portfolio_vol):
         weights = self.calculatePortfolioWeights()
         total_investment_amount = sum(self.investments)
 
@@ -144,11 +147,15 @@ class RiskMetrics:
         # Z = norm.ppf(1 - confidence, mean_investment, stdev_investment)
         # portfolio_VaR = total_investment_amount - Z
 
-        weighted_returns = (self.daily_returns * weights).sum(axis=1)
-        historical_losses = weighted_returns[weighted_returns < 0].sort_values()
+        if len(self.tickers) > 1:
+            weighted_returns = (self.daily_returns * weights).sum(axis=1)
+            historical_losses = weighted_returns[weighted_returns < 0].sort_values()
 
-        index = int((1 - confidence) * len(historical_losses))
-        percentile_loss = historical_losses.iloc[index]
+            index = int((1 - confidence) * len(historical_losses))
+            percentile_loss = historical_losses.iloc[index]
+        else:
+            weighted_returns = (self.daily_returns * weights).sum()
+            percentile_loss = weighted_returns
 
         portfolio_VaR = -1 * percentile_loss * total_investment_amount
 
@@ -159,5 +166,5 @@ class RiskMetrics:
         else:
             num_days = 20
 
-        return np.round(portfolio_VaR * np.sqrt(num_days), 2)
+        return abs(np.round(portfolio_VaR * np.sqrt(num_days), 2))
 
