@@ -31,6 +31,13 @@ class LSTMAlgorithm(Regression):
             predictions = self.make_prediction(all_X_trains[i], all_y_trains[i], all_X_tests[i], False)
             all_predictions.extend(predictions)
 
+        print(all_predictions)
+        more_than_0 = [x for x in all_predictions if x > 0]
+        print(more_than_0)
+        print(len(all_predictions))
+        print(len(more_than_0))
+        print(all_y_tests)
+
         return super().calculateEvalMetrics(all_predictions, all_y_tests)
 
     # TODO: n_estimators chosen by user
@@ -40,7 +47,8 @@ class LSTMAlgorithm(Regression):
         X_train, y_train, X_test, _ = super().prepareData(data, [], False)
 
         prediction = self.make_prediction(X_train, y_train, X_test, True)
-        return prediction
+        profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
+        return profit_loss_amount
 
     def process_features(self, li):
         result = li["Adj Close"].values.tolist()
@@ -61,8 +69,7 @@ class LSTMAlgorithm(Regression):
 
         prediction_scaled = self.reg.predict(X_test_scaled)
         prediction = scaler_y.inverse_transform(prediction_scaled)
-        profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
-        return profit_loss_amount
+        return prediction
 
     def createModel(self):
         num_features = 5

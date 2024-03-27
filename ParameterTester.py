@@ -35,8 +35,6 @@ class ParameterTester:
 
         best_mse = float('inf')
         best_mse_params = None
-        best_rmse = float('inf')
-        best_rmse_params = None
         best_mae = float('inf')
         best_mae_params = None
         best_mape = float('inf')
@@ -69,14 +67,11 @@ class ParameterTester:
                 model = LSTMAlgorithm(self.hold_duration, self.data, self.prediction_date, self.start_date,
                                       parameters_set, True, 1000)
 
-            mse, rmse, mae, mape, r2 = model.evaluateModel()
+            mse, mae, mape, r2 = model.evaluateModel()
 
             if mse < best_mse:
                 best_mse = mse
                 best_mse_params = parameters_set
-            if rmse < best_rmse:
-                best_rmse = rmse
-                best_rmse_params = parameters_set
             if mae < best_mae:
                 best_mae = mae
                 best_mae_params = parameters_set
@@ -91,7 +86,6 @@ class ParameterTester:
 
         print(f"Best parameters for the {model_name} model:")
         print("Best MSE parameters:", best_mse_params, "      MSE =", best_mse)
-        print("Best RMSE parameters:", best_rmse_params, "      RMSE =", best_rmse)
         print("Best MAE parameters:", best_mae_params, "      MAE =", best_mae)
         print("Best MAPE parameters:", best_mape_params, "      MAPE =", best_mape)
         print("Best R^2 parameters:", best_r2_params, "      R^2 =", best_r2, "\n\n")
@@ -101,7 +95,6 @@ class ParameterTester:
 
             print(f"Best parameters for the {model_name} model:")
             print("Best MSE parameters:", best_mse_params, "      MSE =", best_mse)
-            print("Best RMSE parameters:", best_rmse_params, "      RMSE =", best_rmse)
             print("Best MAE parameters:", best_mae_params, "      MAE =", best_mae)
             print("Best MAPE parameters:", best_mape_params, "      MAPE =", best_mape)
             print("Best R^2 parameters:", best_r2_params, "      R^2 =", best_r2, "\n\n")

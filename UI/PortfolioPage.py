@@ -31,6 +31,8 @@ class PortfolioPage(QWidget, Page):
         self.algorithm_6 = None
         self.algorithms = [False] * 6
 
+        self.ranking_vbox = None
+
         self.portfolio_results = []
         self.portfolio_amount = None
         self.portfolio_linear_regression = None
@@ -113,6 +115,14 @@ class PortfolioPage(QWidget, Page):
         algorithms_vbox.addWidget(self.algorithm_4)
         algorithms_vbox.addWidget(self.algorithm_5)
         algorithms_vbox.addWidget(self.algorithm_6)
+
+        self.ranking_vbox = QVBoxLayout()
+        input_hbox.addLayout(self.ranking_vbox)
+
+        for i in range(6):
+            ranking_label = QLabel()
+            ranking_label.setObjectName('rankingLabel')
+            self.ranking_vbox.addWidget(ranking_label)
 
         self.results_vbox = QVBoxLayout()
 

@@ -1,7 +1,9 @@
+import os
+
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from datetime import date
+from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QVBoxLayout
@@ -83,7 +85,7 @@ class Controller:
         self.arima_results = {"1d": {}, "1w": {}, "1m": {}}
 
         self.volatilities = {"1d": {}, "1w": {}, "1m": {}}
-        self.sharpe_ratios = {"1d": {}, "1w": {}, "1m": {}}
+        self.sharpe_ratios ={"1d": {}, "1w": {}, "1m": {}}
         self.VaRs = {"1d": {}, "1w": {}, "1m": {}}
 
         self.results = {
@@ -97,6 +99,23 @@ class Controller:
             "VaR": self.VaRs,
             "sharpe_ratio": self.sharpe_ratios
         }
+
+        self.linear_regression_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
+        self.random_forest_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
+        self.bayesian_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
+        self.monte_carlo_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
+        self.lstm_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
+        self.arima_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
+
+        self.evaluations = {
+            "linear_regression": self.linear_regression_evaluation,
+            "random_forest": self.random_forest_evaluation,
+            "bayesian": self.bayesian_evaluation,
+            "monte_carlo": self.monte_carlo_evaluation,
+            "lstm": self.lstm_evaluation,
+            "arima": self.arima_evaluation,
+        }
+        self.eval_tickers = ["AAPL", "TSLA", "AMD"]
 
         self.algorithms_with_indices = {}
         for index, name in enumerate(self.results.keys()):
@@ -128,22 +147,22 @@ class Controller:
                 "1m": pd.DataFrame()
             }
 
-    def run_algorithm(self, ticker, algorithm_index, hold_duration):
-        print("called")
+    def run_algorithm(self, ticker, algorithm_index, hold_duration, evaluate=False):
+        print("called", algorithm_index, ticker, hold_duration, evaluate)
         if algorithm_index == 0:
-            return self.run_linear_regression(ticker, hold_duration)
+            return self.run_linear_regression(ticker, hold_duration, evaluate)
         elif algorithm_index == 1:
-            return self.run_random_forest(ticker, hold_duration)
+            return self.run_random_forest(ticker, hold_duration, evaluate)
         elif algorithm_index == 2:
-            return self.run_bayesian(ticker, hold_duration)
+            return self.run_bayesian(ticker, hold_duration, evaluate)
         elif algorithm_index == 3:
-            return self.run_monte_carlo(ticker, hold_duration)
+            return self.run_monte_carlo(ticker, hold_duration, evaluate)
         elif algorithm_index == 4:
-            return self.run_lstm(ticker, hold_duration)
+            return self.run_lstm(ticker, hold_duration, evaluate)
         elif algorithm_index == 5:
-            return self.run_arima(ticker, hold_duration)
+            return self.run_arima(ticker, hold_duration, evaluate)
 
-    def run_linear_regression(self, ticker, hold_duration):
+    def run_linear_regression(self, ticker, hold_duration, evaluate=False):
         # Linear Regression Algorithm:
         data = self.getDataForTicker(ticker, self.data[hold_duration])
         linear_regression = LinearRegressionAlgorithm(hold_duration, data, self.prediction_dates[hold_duration],
@@ -152,9 +171,12 @@ class Controller:
                                                       self.tickers_and_investments[ticker])
         prediction = self.run_model(linear_regression, "Linear Regression")
         self.linear_regression_results[hold_duration][ticker] = prediction
+        if evaluate:
+            self.linear_regression_evaluation[hold_duration][ticker] = linear_regression.evaluateModel()
+        print(self.linear_regression_evaluation)
         return prediction
 
-    def run_random_forest(self, ticker, hold_duration):
+    def run_random_forest(self, ticker, hold_duration, evaluate=False):
         # Random Forest Regression Algorithm:
         data = self.getDataForTicker(ticker, self.data[hold_duration])
         if hold_duration == "1d":
@@ -168,9 +190,12 @@ class Controller:
                                               self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         prediction = self.run_model(random_forest, "Random Forest Regression")
         self.random_forest_results[hold_duration][ticker] = prediction
+        if evaluate:
+            self.random_forest_evaluation[hold_duration][ticker] = random_forest.evaluateModel()
+            print(self.random_forest_evaluation)
         return prediction
 
-    def run_bayesian(self, ticker, hold_duration):
+    def run_bayesian(self, ticker, hold_duration, evaluate=False):
         # Bayesian Regression Algorithm:
         data = self.getDataForTicker(ticker, self.data[hold_duration])
         if hold_duration == "1d":
@@ -183,9 +208,12 @@ class Controller:
                                                self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         prediction = self.run_model(bayesian, "Bayesian Ridge Regression")
         self.bayesian_results[hold_duration][ticker] = prediction
+        if evaluate:
+            self.bayesian_evaluation[hold_duration][ticker] = bayesian.evaluateModel()
+            print(self.bayesian_evaluation)
         return prediction
 
-    def run_monte_carlo(self, ticker, hold_duration):
+    def run_monte_carlo(self, ticker, hold_duration, evaluate=False):
         # Monte Carlo Simulation:
         data = self.getDataForTicker(ticker, self.data[hold_duration])
         # Create a list of dates that includes weekdays only:
@@ -194,17 +222,20 @@ class Controller:
                                      weekdays, hold_duration, self.start_dates[hold_duration],
                                      self.tickers_and_long_or_short[ticker])
         # print("Monte Carlo Simulation Evaluation:")
-        # mse, rmse, mae, mape, r2 = monte.evaluateModel()
-        # monte.printEvaluation(mse, rmse, mae, mape, r2)
+        # mse, mae, mape, r2 = monte.evaluateModel()
+        # monte.printEvaluation(mse, mae, mape, r2)
         results, s_0 = monte.makeMCPrediction(monte.get_data_for_prediction())
         # plot_labels = monte.plotSimulation(results, s_0)
         # monte.printProbabilities(plot_labels, results, s_0)
         result = monte.displayResults(results, s_0)
 
         self.monte_carlo_results[hold_duration][ticker] = result
+        if evaluate:
+            self.monte_carlo_evaluation[hold_duration][ticker] = monte.evaluateModel()
+            print(self.monte_carlo_evaluation)
         return result
 
-    def run_arima(self, ticker, hold_duration):
+    def run_arima(self, ticker, hold_duration, evaluate=False):
         # ARIMA:
         data = self.getDataForTicker(ticker, self.data[hold_duration])
         aapl = yf.Ticker(ticker)
@@ -219,16 +250,19 @@ class Controller:
                                today_data, params, self.tickers_and_long_or_short[ticker],
                                self.tickers_and_investments[ticker])
         # print("ARIMA Evaluation:")
-        # mse, rmse, mae, mape, r2 = arima.evaluateModel()
-        # arima.printEvaluation(mse, rmse, mae, mape, r2)
+        # mse, mae, mape, r2 = arima.evaluateModel()
+        # arima.printEvaluation(mse, mae, mape, r2)
         data_for_prediction = arima.get_data_for_prediction()
         predictions = arima.predict_price(data_for_prediction)
         # arima.plot_arima(predictions, data_for_prediction)
 
         self.arima_results[hold_duration][ticker] = predictions
+        if evaluate:
+            self.arima_evaluation[hold_duration][ticker] = arima.evaluateModel()
+            print(self.arima_evaluation)
         return predictions
 
-    def run_lstm(self, ticker, hold_duration):
+    def run_lstm(self, ticker, hold_duration, evaluate=False):
         # LSTM:
         data = self.getDataForTicker(ticker, self.data[hold_duration])
         if hold_duration == "1d":
@@ -239,11 +273,14 @@ class Controller:
             params = (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)
         lstm = LSTMAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
                              params, self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
-        # mse, rmse, mae, mape, r2 = lstm.evaluateModel()
+        # mse, mae, mape, r2 = lstm.evaluateModel()
         # print("LSTM Evaluation:")
-        # lstm.printEvaluation(mse, rmse, mae, mape, r2)
+        # lstm.printEvaluation(mse, mae, mape, r2)
         prediction = lstm.predict_price(lstm.get_data_for_prediction())[0][0]
         self.lstm_results[hold_duration][ticker] = prediction
+        if evaluate:
+            self.lstm_evaluation[hold_duration][ticker] = lstm.evaluateModel()
+            print(self.lstm_evaluation)
         return prediction
 
     def get_esg_scores(self):
@@ -341,12 +378,12 @@ class Controller:
         return portfolio_VaR
 
     def run_model(self, model, model_name):
-        # mse, rmse, mae, mape, r2 = model.evaluateModel()
+        # mse, mae, mape, r2 = model.evaluateModel()
         # print(model_name, "Evaluation:")
-        # model.printEvaluation(mse, rmse, mae, mape, r2)
+        # model.printEvaluation(mse, mae, mape, r2)
         predicted_price = model.predict_price()
         print(predicted_price)
-        return predicted_price[0][0]  # , mse, rmse, mae, mape, r2
+        return predicted_price[0][0]  # , mse, mae, mape, r2
 
     def calculate_portfolio_result(self, index, hold_duration):
         algorithm_name = self.algorithms_with_indices[index]
@@ -418,6 +455,127 @@ class Controller:
         plt.xticks(fontsize=9, rotation=340)
         plt.legend()
         plt.show()
+
+    def handle_ranking(self):
+        current_date = datetime.now()
+        ranking_file_name = "ranking.txt"
+
+        should_update = False
+        if os.path.exists(ranking_file_name):
+            with open(ranking_file_name, 'r') as file:
+                last_date = file.readline().split()
+            if should_update or str(current_date.month) != last_date[0] or str(current_date.year) != last_date[1]:
+                should_update = True
+
+        if not os.path.exists(ranking_file_name) or should_update:
+            self.update_ranking()
+            with open(ranking_file_name, 'w') as file:
+                file.write(f"{current_date.month} {current_date.year}")
+
+    def update_ranking(self):
+        self.add_ticker("AAPL", 1000, True)
+        self.add_ticker("TSLA", 2000, True)
+        self.add_ticker("AMD", 1000, False)
+
+        # TODO: make range 6:
+        for algorithm_index in range(2):
+            for ticker in self.eval_tickers:
+                self.run_algorithm(ticker, algorithm_index, "1d", True)
+                self.run_algorithm(ticker, algorithm_index, "1w", True)
+                self.run_algorithm(ticker, algorithm_index, "1m", True)
+
+        print(self.evaluations)
+
+        sums_mse = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
+                      self.evaluations.keys()}
+        print(sums_mse)
+        sums_mae = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
+                      self.evaluations.keys()}
+        sums_mape = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
+                      self.evaluations.keys()}
+        sums_r2 = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
+                      self.evaluations.keys()}
+
+        for algorithm in ["linear_regression", "random_forest"]:
+            for hold_dur in self.evaluations[algorithm].keys():
+                for ticker in self.evaluations[algorithm][hold_dur].keys():
+                    evals = self.evaluations[algorithm][hold_dur][ticker]
+                    sums_mse[algorithm][hold_dur] += evals[0]
+                    sums_mae[algorithm][hold_dur] += evals[1]
+                    sums_mape[algorithm][hold_dur] += evals[2]
+                    sums_r2[algorithm][hold_dur] -= evals[3]
+        print(sums_mse)
+        print(sums_mae)
+        print(sums_mape)
+        print(sums_r2)
+
+        rankings_mse = {}
+        rankings_mae = {}
+        rankings_mape = {}
+        rankings_r2 = {}
+        for duration in ["1d", "1w", "1m"]:
+            # TODO: check that this is ranked correctly:
+            rankings_mse[duration] = sorted([alg for alg in sums_mse], key=lambda x: x[1])
+            rankings_mae[duration] = sorted([alg for alg in sums_mae], key=lambda x: x[1])
+            rankings_mape[duration] = sorted([alg for alg in sums_mape], key=lambda x: x[1])
+            rankings_r2[duration] = sorted([alg for alg in sums_r2], key=lambda x: x[1])
+
+        print("MSE rankings:")
+        print(rankings_mse)
+        print("MAE rankings:")
+        print(rankings_mae)
+        print("MAPE rankings:")
+        print(rankings_mape)
+        print("R^2 rankings:")
+        print(rankings_r2)
+
+        rankings = {}
+
+
+        return rankings_mse
+
+        # self.evaluations = {
+        #     "linear_regression": self.linear_regression_evaluation,
+        #     "random_forest": self.random_forest_evaluation,
+        #     "bayesian": self.bayesian_evaluation,
+        #     "monte_carlo": self.monte_carlo_evaluation,
+        #     "lstm": self.lstm_evaluation,
+        #     "arima": self.arima_evaluation,
+        # }
+        # eval_one_value = {"AAPL": None, "TSLA": None, "AMD": None}
+        # eval_list = {"1d": eval_one_value.copy(), "1w": eval_one_value.copy(), "1m": eval_one_value.copy()}
+        # self.linear_regression_evaluation = eval_list.copy()
+
+    def write_rankings_to_file(self, rankings):
+        with open("ranking.txt", 'a') as file:
+            for hold_dur in rankings.keys():
+                file.write(','.join(map(str, rankings[hold_dur])) + "\n")
+
+
+
+    def get_current_rankings(self):
+        with open("ranking.txt", 'r') as file:
+            lines = []
+            for line in file:
+                lines.append(line)
+            for i in range(1, 7):
+                algorithm_evals = lines[i].split("|")
+                evals_1d = algorithm_evals.split(",")
+
+
+        # if algorithm_index == 0:
+        #     return self.run_linear_regression(ticker, hold_duration)
+        # elif algorithm_index == 1:
+        #     return self.run_random_forest(ticker, hold_duration)
+        # elif algorithm_index == 2:
+        #     return self.run_bayesian(ticker, hold_duration)
+        # elif algorithm_index == 3:
+        #     return self.run_monte_carlo(ticker, hold_duration)
+        # elif algorithm_index == 4:
+        #     return self.run_lstm(ticker, hold_duration)
+        # elif algorithm_index == 5:
+        #     return self.run_arima(ticker, hold_duration)
+
 
 
 # calc = Controller("1m")

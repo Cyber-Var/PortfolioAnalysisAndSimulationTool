@@ -12,6 +12,12 @@ QLabel {
     color: white;
 }
 
+#inputLabel {
+    font-size: 15px;
+    color: white;
+    border-color: white;
+}
+
 #columnNameLabel {
     font-size: 15px;
     border: 1px solid black;

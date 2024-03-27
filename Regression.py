@@ -136,15 +136,13 @@ class Regression:
 
     def calculateEvalMetrics(self, predictions, y_test):
         mse = mean_squared_error(y_test, predictions)
-        rmse = np.sqrt(mse)
         mae = mean_absolute_error(y_test, predictions)
         mape = mean_absolute_percentage_error(y_test, predictions) * 100
         r2 = r2_score(y_test, predictions)
-        return mse, rmse, mae, mape, r2
+        return mse, mae, mape, r2
 
-    def printEvaluation(self, mse, rmse, mae, mape, r2):
+    def printEvaluation(self, mse, mae, mape, r2):
         print(f'MSE: {mse}')
-        print(f'RMSE: {rmse}')
         print(f'MAE: {mae}')
         print(f'MAPE: {mape}%')
         print(f'R-squared: {r2}\n')
