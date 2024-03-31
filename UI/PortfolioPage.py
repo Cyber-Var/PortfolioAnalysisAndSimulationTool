@@ -1,5 +1,6 @@
 import re
 
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox,
                              QScrollArea, QDialog, QLineEdit)
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -31,7 +32,26 @@ class PortfolioPage(QWidget, Page):
         self.algorithm_6 = None
         self.algorithms = [False] * 6
 
-        self.ranking_vbox = None
+        self.ranking_vbox = QVBoxLayout()
+        self.rankings = self.controller.handle_ranking()
+        ranking_label = QLabel("Ranking:")
+        ranking_label.setObjectName("rankingLabel")
+        ranking_label.setFixedWidth(150)
+        ranking_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.ranking_vbox.addWidget(ranking_label)
+
+        for algorithm in self.rankings["1d"]:
+            ranking_result_label = QLabel()
+            ranking_result_label.setObjectName("rankingLabelResult")
+            ranking_result_label.setFixedWidth(150)
+            ranking_result_label.setAlignment(QtCore.Qt.AlignCenter)
+            self.ranking_vbox.addWidget(ranking_result_label)
+
+        update_ranking_button = QPushButton("Update Ranking")
+        update_ranking_button.setObjectName('addStockButton')
+        update_ranking_button.setFixedWidth(150)
+        update_ranking_button.clicked.connect(self.show_ranking_time_warning_window)
+        self.ranking_vbox.addWidget(update_ranking_button)
 
         self.portfolio_results = []
         self.portfolio_amount = None
@@ -116,13 +136,7 @@ class PortfolioPage(QWidget, Page):
         algorithms_vbox.addWidget(self.algorithm_5)
         algorithms_vbox.addWidget(self.algorithm_6)
 
-        self.ranking_vbox = QVBoxLayout()
         input_hbox.addLayout(self.ranking_vbox)
-
-        for i in range(6):
-            ranking_label = QLabel()
-            ranking_label.setObjectName('rankingLabel')
-            self.ranking_vbox.addWidget(ranking_label)
 
         self.results_vbox = QVBoxLayout()
 
@@ -168,7 +182,6 @@ class PortfolioPage(QWidget, Page):
         add_stock_button = QPushButton("+ Add Stock")
         add_stock_button.setObjectName('addStockButton')
         add_stock_button.clicked.connect(self.show_add_stock_window)
-        # self.results_vbox.addWidget(add_stock_button)
 
         scrollable_area = QScrollArea()
         scrollable_area.setWidgetResizable(True)
@@ -289,13 +302,22 @@ class PortfolioPage(QWidget, Page):
         if checked:
             if self.hold_duration_1d.isChecked():
                 self.hold_duration = "1d"
+                self.update_ranking_display()
                 self.update_shares_results()
             elif self.hold_duration_1w.isChecked():
                 self.hold_duration = "1w"
+                self.update_ranking_display()
                 self.update_shares_results()
             elif self.hold_duration_1m.isChecked():
                 self.hold_duration = "1m"
+                self.update_ranking_display()
                 self.update_shares_results()
+
+    def update_ranking_display(self):
+        for alg_index, algorithm in enumerate(self.rankings[self.hold_duration]):
+            ranking_label = QLabel(algorithm)
+            ranking_label.setObjectName('rankingLabel')
+            self.ranking_vbox.itemAt(alg_index + 1).widget().setText(algorithm)
 
     def result_to_string(self, result):
         if result > 0:
@@ -360,6 +382,16 @@ class PortfolioPage(QWidget, Page):
         popup = AddStockPopUp()
         popup.valid_ticker_entered.connect(self.add_ticker)
         popup.exec_()
+
+    def show_ranking_time_warning_window(self):
+        popup = RankingTimeWarningPopUp()
+        popup.decision_made.connect(self.process_ranking_request)
+        popup.exec_()
+
+    def process_ranking_request(self, should_process):
+        if should_process:
+            self.rankings = self.controller.handle_ranking(True)
+            self.update_ranking_display()
 
     def add_ticker(self, ticker, investment, is_long):
         self.controller.add_ticker(ticker, float(investment), is_long)
@@ -473,13 +505,13 @@ class AddStockPopUp(QDialog):
 
         buttons_hbox = QHBoxLayout()
 
-        ok_button = QPushButton("OK")
-        ok_button.clicked.connect(self.validate_ticker)
-        buttons_hbox.addWidget(ok_button)
-
         cancel_button = QPushButton("Cancel")
         cancel_button.clicked.connect(self.close)
         buttons_hbox.addWidget(cancel_button)
+
+        ok_button = QPushButton("OK")
+        ok_button.clicked.connect(self.validate_ticker)
+        buttons_hbox.addWidget(ok_button)
 
         layout.addWidget(ticker_label)
         layout.addWidget(self.ticker_name)
@@ -516,3 +548,42 @@ class AddStockPopUp(QDialog):
 
     def hide_invalid_label(self):
         self.invalid_label.hide()
+
+
+class RankingTimeWarningPopUp(QDialog):
+    decision_made = pyqtSignal(bool)
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Time Warning")
+
+        layout = QVBoxLayout()
+
+        # TODO: replace X with number (do this when I have good internet, maybe back in UK)
+        warning_label = QLabel("Ranking process will take approximately X minutes.")
+        warning_label_2 = QLabel("Do you still want to continue?")
+
+        buttons_hbox = QHBoxLayout()
+
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.process_cancel_decision)
+        buttons_hbox.addWidget(cancel_button)
+
+        continue_button = QPushButton("Continue")
+        continue_button.clicked.connect(self.process_continue_decision)
+        buttons_hbox.addWidget(continue_button)
+
+        layout.addWidget(warning_label)
+        layout.addWidget(warning_label_2)
+        layout.addLayout(buttons_hbox)
+
+        self.setLayout(layout)
+
+    def process_cancel_decision(self):
+        self.decision_made.emit(False)
+        self.close()
+
+    def process_continue_decision(self):
+        self.decision_made.emit(True)
+        self.close()
+

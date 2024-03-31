@@ -7,26 +7,17 @@ from UI.MainWindow import MainWindow
 from UI.MenuPage import MenuPage
 
 
-controller = Controller()
-controller.add_ticker("AAPL", 1000, True)
-controller.add_ticker("TSLA", 2000, False)
-controller.handle_ranking()
-# controller.add_ticker("NVDA", 3000, True)
-# controller.run_lstm("AAPL", "1m")
-# controller.calculate_risk_metrics("AAPL", "1d")
-# portfolio_vol, port_cat = controller.get_portfolio_volatility("1d")
-# print(controller.get_portfolio_VaR("1d", portfolio_vol))
-# controller.calculate_risk_metrics("TSLA", "1d")
-# controller.calculate_risk_metrics("NVDA", "1d")
-
-
-# app = QApplication(sys.argv)
-#
 # controller = Controller()
-#
-# main_window = MainWindow()
-# menu_page = MenuPage(main_window, controller)
-# main_window.setCentralWidget(menu_page)
-#
-# main_window.show()
-# sys.exit(app.exec_())
+# controller.handle_ranking()
+
+
+app = QApplication(sys.argv)
+
+controller = Controller()
+
+main_window = MainWindow()
+menu_page = MenuPage(main_window, controller)
+main_window.setCentralWidget(menu_page)
+
+main_window.show()
+sys.exit(app.exec_())

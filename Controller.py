@@ -1,5 +1,6 @@
 import os
 
+import time
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -456,7 +457,7 @@ class Controller:
         plt.legend()
         plt.show()
 
-    def handle_ranking(self):
+    def handle_ranking(self, need_to_update=False):
         current_date = datetime.now()
         ranking_file_name = "ranking.txt"
 
@@ -464,27 +465,38 @@ class Controller:
         if os.path.exists(ranking_file_name):
             with open(ranking_file_name, 'r') as file:
                 last_date = file.readline().split()
-            if should_update or str(current_date.month) != last_date[0] or str(current_date.year) != last_date[1]:
+            if should_update or len(last_date) < 2 or str(current_date.month) != last_date[0] or str(current_date.year) != last_date[1]:
                 should_update = True
 
-        if not os.path.exists(ranking_file_name) or should_update:
-            self.update_ranking()
+        start_time = time.time()
+        if not os.path.exists(ranking_file_name) or should_update or need_to_update:
+            updated_rankings = self.update_ranking()
+            ranking_text = self.write_rankings_to_file(updated_rankings)
             with open(ranking_file_name, 'w') as file:
-                file.write(f"{current_date.month} {current_date.year}")
+                file.write(f"{current_date.month} {current_date.year}\n")
+                file.write(ranking_text)
+
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print("Program execution time:", execution_time, "seconds")
+            return updated_rankings
+
+        return self.read_rankings_from_file()
 
     def update_ranking(self):
         self.add_ticker("AAPL", 1000, True)
         self.add_ticker("TSLA", 2000, True)
         self.add_ticker("AMD", 1000, False)
 
-        # TODO: make range 6:
-        for algorithm_index in range(2):
+        for algorithm_index in range(6):
             for ticker in self.eval_tickers:
                 self.run_algorithm(ticker, algorithm_index, "1d", True)
                 self.run_algorithm(ticker, algorithm_index, "1w", True)
                 self.run_algorithm(ticker, algorithm_index, "1m", True)
 
         print(self.evaluations)
+
+        # Sum the MSE, MAE, MAPE and R^2 scores of each algorithm, separately for daily, weekly and monthly predictions:
 
         sums_mse = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
                       self.evaluations.keys()}
@@ -496,7 +508,7 @@ class Controller:
         sums_r2 = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
                       self.evaluations.keys()}
 
-        for algorithm in ["linear_regression", "random_forest"]:
+        for algorithm in self.algorithms:
             for hold_dur in self.evaluations[algorithm].keys():
                 for ticker in self.evaluations[algorithm][hold_dur].keys():
                     evals = self.evaluations[algorithm][hold_dur][ticker]
@@ -509,16 +521,17 @@ class Controller:
         print(sums_mape)
         print(sums_r2)
 
+        # Rank the algorithms based on MSE, MAE, MAPE and R^2 separately:
         rankings_mse = {}
         rankings_mae = {}
         rankings_mape = {}
         rankings_r2 = {}
         for duration in ["1d", "1w", "1m"]:
             # TODO: check that this is ranked correctly:
-            rankings_mse[duration] = sorted([alg for alg in sums_mse], key=lambda x: x[1])
-            rankings_mae[duration] = sorted([alg for alg in sums_mae], key=lambda x: x[1])
-            rankings_mape[duration] = sorted([alg for alg in sums_mape], key=lambda x: x[1])
-            rankings_r2[duration] = sorted([alg for alg in sums_r2], key=lambda x: x[1])
+            rankings_mse[duration] = sorted([(alg, sums_mse[alg][duration]) for alg in sums_mse], key=lambda x: x[1])
+            rankings_mae[duration] = sorted([(alg, sums_mae[alg][duration]) for alg in sums_mae], key=lambda x: x[1])
+            rankings_mape[duration] = sorted([(alg, sums_mape[alg][duration]) for alg in sums_mape], key=lambda x: x[1])
+            rankings_r2[duration] = sorted([(alg, sums_r2[alg][duration]) for alg in sums_r2], key=lambda x: x[1])
 
         print("MSE rankings:")
         print(rankings_mse)
@@ -529,53 +542,52 @@ class Controller:
         print("R^2 rankings:")
         print(rankings_r2)
 
-        rankings = {}
+        # rankings_mse = {'1d': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 71.26391312326031), ('random_forest', 336.60440620615987)], '1w': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 391.2276127608421), ('random_forest', 1029.9607039232037)], '1m': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 1939.2227765348366), ('random_forest', 2022.090700119813)]}
+        # rankings_mae = {'1d': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 9.901447382031126), ('random_forest', 20.37349078540057)], '1w': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 25.37079207073901), ('random_forest', 39.775791630646296)], '1m': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('random_forest', 56.33070692269658), ('linear_regression', 57.41482192776909)]}
+        # rankings_mape = {'1d': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 5.611251397569742), ('random_forest', 11.247492211399885)], '1w': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 14.398992372770188), ('random_forest', 22.664536036295004)], '1m': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('random_forest', 32.07457392072242), ('linear_regression', 32.339696113892124)]}
+        # rankings_r2 = {'1d': [('linear_regression', -2.8833572878522746), ('random_forest', -2.4412863500683883), ('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0)], '1w': [('linear_regression', -2.2314029569409657), ('random_forest', -0.9757240123007211), ('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0)], '1m': [('random_forest', -0.32377661629677823), ('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 0.37209943095992204)]}
 
+        # Combine the separate rankings based on MSE, MAE, MAPE and R^2 into one final ranking:
 
-        return rankings_mse
+        all_rankings = {"MSE": rankings_mse, "MAE": rankings_mae, "MAPE": rankings_mape, "R^2": rankings_r2}
 
-        # self.evaluations = {
-        #     "linear_regression": self.linear_regression_evaluation,
-        #     "random_forest": self.random_forest_evaluation,
-        #     "bayesian": self.bayesian_evaluation,
-        #     "monte_carlo": self.monte_carlo_evaluation,
-        #     "lstm": self.lstm_evaluation,
-        #     "arima": self.arima_evaluation,
-        # }
-        # eval_one_value = {"AAPL": None, "TSLA": None, "AMD": None}
-        # eval_list = {"1d": eval_one_value.copy(), "1w": eval_one_value.copy(), "1m": eval_one_value.copy()}
-        # self.linear_regression_evaluation = eval_list.copy()
+        final_rankings = {"1d": {algorithm: 0 for algorithm in self.algorithms},
+                          "1w": {algorithm: 0 for algorithm in self.algorithms},
+                          "1m": {algorithm: 0 for algorithm in self.algorithms}}
+        for metric, durations in all_rankings.items():
+            for dur, rank in durations.items():
+                ranking = [pair[0] for pair in rank]
+                for position, algorithm in enumerate(ranking, start=1):
+                    final_rankings[dur][algorithm] += position
+
+        final_rankings["1d"] = sorted(final_rankings["1d"].items(), key=lambda x: x[1])
+        final_rankings["1w"] = sorted(final_rankings["1w"].items(), key=lambda x: x[1])
+        final_rankings["1m"] = sorted(final_rankings["1m"].items(), key=lambda x: x[1])
+
+        final_rankings["1d"] = [pair[0] for pair in final_rankings["1d"]]
+        final_rankings["1w"] = [pair[0] for pair in final_rankings["1w"]]
+        final_rankings["1m"] = [pair[0] for pair in final_rankings["1m"]]
+
+        print(final_rankings)
+        return final_rankings
 
     def write_rankings_to_file(self, rankings):
-        with open("ranking.txt", 'a') as file:
-            for hold_dur in rankings.keys():
-                file.write(','.join(map(str, rankings[hold_dur])) + "\n")
+        result_str = ""
+        for hold_dur in rankings.keys():
+            result_str += ','.join(rankings[hold_dur]) + "\n"
+        return result_str
 
+    def read_rankings_from_file(self):
+        rankings_read = {}
 
-
-    def get_current_rankings(self):
         with open("ranking.txt", 'r') as file:
-            lines = []
-            for line in file:
-                lines.append(line)
-            for i in range(1, 7):
-                algorithm_evals = lines[i].split("|")
-                evals_1d = algorithm_evals.split(",")
+            last_date = file.readline()
+            ranking_1d = file.readline().strip().split(",")
+            ranking_1w = file.readline().strip().split(",")
+            ranking_1m = file.readline().strip().split(",")
 
+            rankings_read["1d"] = ranking_1d
+            rankings_read["1w"] = ranking_1w
+            rankings_read["1m"] = ranking_1m
 
-        # if algorithm_index == 0:
-        #     return self.run_linear_regression(ticker, hold_duration)
-        # elif algorithm_index == 1:
-        #     return self.run_random_forest(ticker, hold_duration)
-        # elif algorithm_index == 2:
-        #     return self.run_bayesian(ticker, hold_duration)
-        # elif algorithm_index == 3:
-        #     return self.run_monte_carlo(ticker, hold_duration)
-        # elif algorithm_index == 4:
-        #     return self.run_lstm(ticker, hold_duration)
-        # elif algorithm_index == 5:
-        #     return self.run_arima(ticker, hold_duration)
-
-
-
-# calc = Controller("1m")
+        return rankings_read
