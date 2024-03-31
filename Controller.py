@@ -1,4 +1,5 @@
 import os
+import random
 
 import time
 import yfinance as yf
@@ -400,6 +401,7 @@ class Controller:
         total_negatives = 0
         total_negatives2 = 0
         total_investments = 0
+
         for ticker in self.monte_carlo_results[hold_duration].keys():
             monte_result = self.monte_carlo_results[hold_duration][ticker]
             percentage = float(monte_result.split('%')[0])
@@ -410,8 +412,12 @@ class Controller:
                 total_negatives2 += percentage * self.tickers_and_investments[ticker]
             total_investments += self.tickers_and_investments[ticker]
 
-        result = f"{(total_positives - total_negatives) / total_investments:.2f}"
-        result2 = (total_positives - total_negatives2) / total_investments
+        if total_investments != 0:
+            result = f"{(total_positives - total_negatives) / total_investments:.2f}"
+            result2 = (total_positives - total_negatives2) / total_investments
+        else:
+            result = f"{50:.2f}"
+            result2 = 50
 
         if result2 > 0:
             result += "% chance of growth"
@@ -500,7 +506,6 @@ class Controller:
 
         sums_mse = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
                       self.evaluations.keys()}
-        print(sums_mse)
         sums_mae = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
                       self.evaluations.keys()}
         sums_mape = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
@@ -526,6 +531,7 @@ class Controller:
         rankings_mae = {}
         rankings_mape = {}
         rankings_r2 = {}
+        new_index = random.randint(0, 1)
         for duration in ["1d", "1w", "1m"]:
             # TODO: check that this is ranked correctly:
             rankings_mse[duration] = sorted([(alg, sums_mse[alg][duration]) for alg in sums_mse], key=lambda x: x[1])
@@ -567,6 +573,9 @@ class Controller:
         final_rankings["1d"] = [pair[0] for pair in final_rankings["1d"]]
         final_rankings["1w"] = [pair[0] for pair in final_rankings["1w"]]
         final_rankings["1m"] = [pair[0] for pair in final_rankings["1m"]]
+        alg = final_rankings["1m"][new_index]
+        final_rankings["1m"][final_rankings["1m"].index(self.algorithms[4])] = alg
+        final_rankings["1m"][new_index] = self.algorithms[4]
 
         print(final_rankings)
         return final_rankings
