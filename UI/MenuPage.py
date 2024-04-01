@@ -25,6 +25,8 @@ class MenuPage(QWidget, Page):
         self.setLayout(self.layout)
 
     def build_page(self):
+        self.logger.info('Opening the Main Menu Page')
+
         title_label = self.get_title_label("Portfolio Analysis and Simulation Tool")
         self.layout.addWidget(title_label)
         self.layout.addStretch()

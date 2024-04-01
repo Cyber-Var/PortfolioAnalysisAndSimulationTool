@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 import yfinance as yf
 
 from UI.Page import Page
+from UI.SingleStockPage import SingleStockPage
 
 
 class PortfolioPage(QWidget, Page):
@@ -95,6 +96,8 @@ class PortfolioPage(QWidget, Page):
         self.setLayout(self.layout)
 
     def build_page(self):
+        self.logger.info('Building the Portfolio Page')
+
         title_label = self.get_title_label("Portfolio Analysis and Simulation Tool")
 
         input_hbox = QHBoxLayout()
@@ -195,11 +198,16 @@ class PortfolioPage(QWidget, Page):
         scrollable_widget.setLayout(scrollable_layout)
         scrollable_area.setWidget(scrollable_widget)
 
+        back_button = QPushButton("Back")
+        back_button.setObjectName("addStockButton")
+        back_button.clicked.connect(self.open_menu_page)
+
         self.show_portfolio_results()
 
         self.layout.addWidget(title_label)
         self.layout.addLayout(input_hbox)
         self.layout.addWidget(scrollable_area)
+        self.layout.addWidget(back_button)
 
     def show_portfolio_results(self):
         portfolio_hbox = QHBoxLayout()
@@ -300,6 +308,7 @@ class PortfolioPage(QWidget, Page):
 
     def hold_duration_button_toggled(self, checked):
         if checked:
+            self.logger.info('Handling the change in hold duration.')
             if self.hold_duration_1d.isChecked():
                 self.hold_duration = "1d"
                 self.update_ranking_display()
@@ -336,6 +345,7 @@ class PortfolioPage(QWidget, Page):
                 self.update_portfolio_results()
 
     def update_algorithm_values(self, index):
+        self.logger.info('Updating the Algorithmic results')
         algorithm_name = self.controller.algorithms_with_indices[index]
         algorithmic_results = self.controller.results[algorithm_name][self.hold_duration]
         for ticker in self.controller.tickers_and_investments.keys():
@@ -352,6 +362,7 @@ class PortfolioPage(QWidget, Page):
             self.update_portfolio_results()
 
     def update_portfolio_results(self):
+        self.logger.info('Updating the Portfolio results')
         self.portfolio_amount.setText(str(sum(self.controller.tickers_and_investments.values())) + "$")
         for index, is_chosen in enumerate(self.algorithms):
             if is_chosen:
@@ -393,8 +404,11 @@ class PortfolioPage(QWidget, Page):
             self.rankings = self.controller.handle_ranking(True)
             self.update_ranking_display()
 
-    def add_ticker(self, ticker, investment, is_long):
-        self.controller.add_ticker(ticker, float(investment), is_long)
+    def add_ticker(self, ticker, one_share_price, num_shares, is_long):
+        self.logger.info('Adding new stock to portfolio.')
+
+        investment = round(one_share_price * num_shares, 2)
+        self.controller.add_ticker(ticker, investment, is_long)
 
         results_hbox = QHBoxLayout()
 
@@ -462,21 +476,29 @@ class PortfolioPage(QWidget, Page):
         self.update_portfolio_results()
 
         more_info_button = QPushButton("--->")
-        more_info_button.clicked.connect((lambda state, ticker_name=ticker: self.show_single_share_page(ticker_name)))
         more_info_button.setObjectName("moreInfoButton")
         more_info_button.setFixedHeight(50)
+        more_info_button.clicked.connect(lambda: self.open_single_stock_page(ticker, stock_name, one_share_price, num_shares))
         results_hbox.addWidget(more_info_button)
 
         self.results_vbox.addLayout(results_hbox)
         self.results_map[ticker] = results_hbox
 
-    def show_single_share_page(self, ticker_name):
-        print(f"Show {ticker_name} page")
-        pass
+    def open_menu_page(self):
+        # TODO: create logic
+        self.logger.info(f'Opening the Main Menu Page')
+
+    def open_single_stock_page(self, ticker, stock_name, one_share_price, num_shares):
+        self.logger.info(f'Opening the {ticker} Page')
+        single_stock_page = SingleStockPage(self.main_window, self.controller, ticker, stock_name,
+                                            one_share_price, num_shares, self.hold_duration)
+        self.main_window.setCentralWidget(single_stock_page)
 
 
 class AddStockPopUp(QDialog):
-    valid_ticker_entered = pyqtSignal(str, str, bool)
+    valid_ticker_entered = pyqtSignal(str, float, int, bool)
+    ticker = None
+    share_price = None
 
     def __init__(self):
         super().__init__()
@@ -485,21 +507,48 @@ class AddStockPopUp(QDialog):
         layout = QVBoxLayout()
 
         ticker_label = QLabel("Please enter the stock ticker to add:")
+
+        ticker_hbox = QHBoxLayout()
         self.ticker_name = QLineEdit()
+        self.ticker_name.returnPressed.connect(self.validate_ticker)
+        ticker_hbox.addWidget(self.ticker_name)
+        self.ticker_enter_button = QPushButton("Enter")
+        self.ticker_enter_button.clicked.connect(self.validate_ticker)
+        ticker_hbox.addWidget(self.ticker_enter_button)
 
-        self.invalid_label = QLabel("Invalid")
-        self.invalid_label.hide()
-        self.invalid_label.setStyleSheet("color: red;")
-        self.ticker_name.textChanged.connect(self.hide_invalid_label)
+        self.invalid_ticker_label = QLabel("Invalid ticker entered")
+        self.invalid_ticker_label.hide()
+        self.invalid_ticker_label.setStyleSheet("color: red;")
+        self.ticker_name.textChanged.connect(self.hide_invalid_labels)
 
-        investment_label = QLabel("and the investment amount:")
+        self.share_price_label = QLabel()
+        self.share_price_label.hide()
+
+        self.investment_label = QLabel("Enter the amount of shares:")
+        self.investment_label.hide()
+
+        investment_hbox = QHBoxLayout()
         self.investment = QLineEdit()
-        self.investment.textChanged.connect(self.hide_invalid_label)
+        self.investment.textChanged.connect(self.hide_invalid_investment_label)
+        self.investment.returnPressed.connect(self.validate_investment)
+        self.investment.hide()
+        investment_hbox.addWidget(self.investment)
+        self.investment_enter_button = QPushButton("Enter")
+        self.investment_enter_button.clicked.connect(self.validate_investment)
+        self.investment_enter_button.hide()
+        investment_hbox.addWidget(self.investment_enter_button)
+
+        self.invalid_investment_label = QLabel("The amount of shares has to be a positive integer.")
+        self.invalid_investment_label.hide()
+        self.invalid_investment_label.setStyleSheet("color: red;")
+        self.ticker_name.textChanged.connect(self.hide_invalid_investment_label)
 
         long_short_layout = QHBoxLayout()
         self.investment_long = QRadioButton("Long")
-        self.investment_short = QRadioButton("Short")
         self.investment_long.setChecked(True)
+        self.investment_long.hide()
+        self.investment_short = QRadioButton("Short")
+        self.investment_short.hide()
         long_short_layout.addWidget(self.investment_long)
         long_short_layout.addWidget(self.investment_short)
 
@@ -509,15 +558,13 @@ class AddStockPopUp(QDialog):
         cancel_button.clicked.connect(self.close)
         buttons_hbox.addWidget(cancel_button)
 
-        ok_button = QPushButton("OK")
-        ok_button.clicked.connect(self.validate_ticker)
-        buttons_hbox.addWidget(ok_button)
-
         layout.addWidget(ticker_label)
-        layout.addWidget(self.ticker_name)
-        layout.addWidget(investment_label)
-        layout.addWidget(self.investment)
-        layout.addWidget(self.invalid_label)
+        layout.addLayout(ticker_hbox)
+        layout.addWidget(self.invalid_ticker_label)
+        layout.addWidget(self.share_price_label)
+        layout.addWidget(self.investment_label)
+        layout.addLayout(investment_hbox)
+        layout.addWidget(self.invalid_investment_label)
         layout.addLayout(long_short_layout)
         layout.addLayout(buttons_hbox)
 
@@ -525,29 +572,58 @@ class AddStockPopUp(QDialog):
 
     def validate_ticker(self):
         ticker = self.ticker_name.text()
+        is_valid, price = self.is_valid_ticker(ticker)
+        print(is_valid, price)
+        if is_valid:
+            self.ticker = ticker
+
+            share_price = round(price.iloc[0], 2)
+            self.share_price = share_price
+            self.share_price_label.setText(f"Price of 1 share = ${share_price}")
+            self.share_price_label.show()
+
+            self.investment_label.show()
+            self.investment.show()
+            self.investment.setFocus()
+            self.investment_enter_button.show()
+        else:
+            self.invalid_ticker_label.show()
+
+    def is_valid_ticker(self, ticker):
+        try:
+            if not re.match(r'^[A-Za-z0-9]+$', ticker):
+                return False, -1
+            data = yf.Ticker(ticker)
+            one_day_data = data.history(period="1d")
+            if len(one_day_data) > 0:
+                return True, one_day_data["Close"]
+            return False, -1
+        except Exception:
+            return False, -1
+
+    def validate_investment(self):
         investment = self.investment.text()
-        if self.is_valid(ticker, investment):
+        if bool(re.match(r'^[1-9]\d*$', investment)):
             if self.investment_long.isChecked():
                 is_long = True
             else:
                 is_long = False
-            self.valid_ticker_entered.emit(ticker.upper(), investment, is_long)
+            self.valid_ticker_entered.emit(self.ticker.upper(), self.share_price, int(investment), is_long)
             self.close()
         else:
-            self.invalid_label.show()
+            self.invalid_investment_label.show()
 
-    def is_valid(self, ticker, investment):
-        try:
-            data = yf.Ticker(ticker)
-            one_day_data = data.history(period="1d")
-            if len(one_day_data) > 0 and bool(re.match(r'^\d*\.?\d+$', investment)) and float(investment) > 0:
-                return True
-            return False
-        except Exception:
-            return False
+    def hide_invalid_labels(self):
+        self.invalid_ticker_label.hide()
+        self.invalid_investment_label.hide()
 
-    def hide_invalid_label(self):
-        self.invalid_label.hide()
+        self.share_price_label.hide()
+        self.investment_label.hide()
+        self.investment.hide()
+        self.investment_enter_button.hide()
+
+    def hide_invalid_investment_label(self):
+        self.invalid_investment_label.hide()
 
 
 class RankingTimeWarningPopUp(QDialog):

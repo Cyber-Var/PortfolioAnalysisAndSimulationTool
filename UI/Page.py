@@ -16,10 +16,10 @@ class Page:
         self.setWindowTitle(page_name)
 
     def get_title_label(self, text):
-        title = QLabel(text)
-        title.setObjectName('titleLabel')
-        title.setAlignment(Qt.AlignCenter)
-        return title
+        title_label = QLabel(text)
+        title_label.setObjectName('titleLabel')
+        title_label.setAlignment(Qt.AlignCenter)
+        return title_label
 
     def load_stylesheet(self):
         with open("UI/style.css", "r") as f:
