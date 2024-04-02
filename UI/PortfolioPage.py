@@ -355,8 +355,14 @@ class PortfolioPage(QWidget, Page):
             label = self.results_map[ticker].itemAt(3 + index).widget()
             if ticker not in algorithmic_results.keys():
                 self.controller.run_algorithm(ticker, index, self.hold_duration)
-            if index == 3:
+            if index == 2:
+                label.setText(f"{self.result_to_string(algorithmic_results[ticker])} +/- "
+                              f"{self.controller.bayesian_confidences[self.hold_duration][ticker][1]:.2f}")
+            elif index == 3:
                 label.setText(algorithmic_results[ticker])
+            elif index == 5:
+                label.setText(f"{self.result_to_string(algorithmic_results[ticker])} +/- "
+                              f"{self.controller.arima_confidences[self.hold_duration][ticker][1]:.2f}")
             else:
                 result = algorithmic_results[ticker]
                 label.setText(self.result_to_string(result))
@@ -448,7 +454,8 @@ class PortfolioPage(QWidget, Page):
         if self.algorithms[2]:
             self.bayesian_col_name.show()
             bayesian_prediction = self.controller.run_bayesian(ticker, self.hold_duration)
-            results_hbox.itemAt(5).widget().setText(self.result_to_string(bayesian_prediction))
+            results_hbox.itemAt(5).widget().setText(f"{self.result_to_string(bayesian_prediction)}"
+                                                    f" +/- {self.controller.bayesian_confidences[self.hold_duration][ticker][1]:.2f}")
             results_hbox.itemAt(5).widget().show()
         if self.algorithms[3]:
             self.monte_carlo_col_name.show()
@@ -464,7 +471,8 @@ class PortfolioPage(QWidget, Page):
         if self.algorithms[5]:
             self.arima_col_name.show()
             arima_prediction = self.controller.run_arima(ticker, self.hold_duration)
-            results_hbox.itemAt(8).widget().setText(self.result_to_string(arima_prediction))
+            results_hbox.itemAt(8).widget().setText(f"{self.result_to_string(arima_prediction)}"
+                                                    f" +/- {self.controller.arima_confidences[self.hold_duration][ticker][1]:.2f}")
             results_hbox.itemAt(8).widget().show()
 
         volatility, volatility_category = self.controller.get_volatility(ticker, self.hold_duration)

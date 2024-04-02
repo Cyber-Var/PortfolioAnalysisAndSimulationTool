@@ -41,8 +41,10 @@ class BayesianRegressionAlgorithm(Regression):
         prediction, confidence = self.makeFinalPrediction(X_train, y_train, X_test)
         profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
         print(f"Predicted price: {prediction[0][0]} +/- {confidence[0][0]} pounds.")
-        print(f"Predicted profit/loss: {profit_loss_amount} +/- {confidence[0][0]} pounds.")
-        return profit_loss_amount
+
+        profit_loss_confidence = (confidence[0][0] / prediction[0][0]) * profit_loss_amount
+        print(f"Predicted profit/loss: {profit_loss_amount} +/- {profit_loss_confidence} pounds.")
+        return profit_loss_amount, prediction, confidence, profit_loss_confidence
 
     def makeFinalPrediction(self, X_train, y_train, X_test):
         scaler_X = StandardScaler()

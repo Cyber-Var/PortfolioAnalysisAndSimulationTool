@@ -149,15 +149,13 @@ class Regression:
 
     def calculate_profit_or_loss(self, predicted_price, investment_amount, confidence=False):
         current_price = self.data.iloc[-1]["Adj Close"]
-        if not confidence:
-            percentage_change = (predicted_price - current_price) / current_price
-        else:
-            percentage_change = predicted_price / current_price
+        # if not confidence:
+        percentage_change = (predicted_price - current_price) / current_price
+        # else:
+        #     percentage_change = predicted_price / current_price
         profit_or_loss_value = investment_amount * percentage_change
         if not self.is_long:
             profit_or_loss_value = -profit_or_loss_value
         print(current_price)
         print(predicted_price)
         return profit_or_loss_value
-
-

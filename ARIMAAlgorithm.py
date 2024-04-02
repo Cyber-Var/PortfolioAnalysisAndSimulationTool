@@ -56,10 +56,11 @@ class ARIMAAlgorithm(Regression):
         print(f"Tomorrow's predicted closing price: {prediction}")
         confidence = abs(prediction - confidence_interval[0])
         print(f"95% confidence interval: between {confidence_interval[0]} and {confidence_interval[1]} \n")
-        profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
-        print(f"Profit / loss: {profit_loss_amount} +/- {confidence} \n")
 
-        return profit_loss_amount, predicted_price
+        profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
+        profit_loss_confidence = (confidence_interval[0] / prediction) * profit_loss_amount
+        print(f"Predicted profit/loss: {profit_loss_amount} +/- {profit_loss_confidence} pounds.")
+        return profit_loss_amount, predicted_price, confidence, profit_loss_confidence
 
     def setup_model(self, data, auto):
         # TODO: remove auto ?

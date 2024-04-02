@@ -48,7 +48,7 @@ class LSTMAlgorithm(Regression):
 
         prediction = self.make_prediction(X_train, y_train, X_test, True)
         profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
-        return profit_loss_amount
+        return profit_loss_amount, prediction
 
     def process_features(self, li):
         result = li["Adj Close"].values.tolist()

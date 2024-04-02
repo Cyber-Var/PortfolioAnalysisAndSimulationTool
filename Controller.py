@@ -81,11 +81,20 @@ class Controller:
         self.linear_regression_results = {"1d": {}, "1w": {}, "1m": {}}
         self.random_forest_results = {"1d": {}, "1w": {}, "1m": {}}
         self.bayesian_results = {"1d": {}, "1w": {}, "1m": {}}
+        self.bayesian_confidences =  {"1d": {}, "1w": {}, "1m": {}}
         self.monte_carlo_results = {"1d": {}, "1w": {}, "1m": {}}
         self.montes = {"1d": {}, "1w": {}, "1m": {}}
         self.lstm_results = {"1d": {}, "1w": {}, "1m": {}}
         self.arima_results = {"1d": {}, "1w": {}, "1m": {}}
         self.arimas = {"1d": {}, "1w": {}, "1m": {}}
+        self.arima_confidences = {"1d": {}, "1w": {}, "1m": {}}
+
+        self.linear_regression_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
+        self.random_forest_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
+        self.bayesian_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
+        self.monte_carlo_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
+        self.lstm_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
+        self.arima_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
 
         self.volatilities = {}
         self.sharpe_ratios = {}
@@ -169,11 +178,12 @@ class Controller:
                                                       self.start_dates[hold_duration], (False,),
                                                       self.tickers_and_long_or_short[ticker],
                                                       self.tickers_and_investments[ticker])
-        prediction = self.run_model(linear_regression, "Linear Regression")
+        prediction, predicted_price = self.run_model(linear_regression)
         self.linear_regression_results[hold_duration][ticker] = prediction
+        self.linear_regression_predicted_prices[hold_duration][ticker] = predicted_price
         if evaluate:
             self.linear_regression_evaluation[hold_duration][ticker] = linear_regression.evaluateModel()
-        print(self.linear_regression_evaluation)
+            print(self.linear_regression_evaluation)
         return prediction
 
     def run_random_forest(self, ticker, hold_duration, evaluate=False):
@@ -188,8 +198,9 @@ class Controller:
         random_forest = RandomForestAlgorithm(hold_duration, data, self.prediction_dates[hold_duration],
                                               self.start_dates[hold_duration], params,
                                               self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
-        prediction = self.run_model(random_forest, "Random Forest Regression")
+        prediction, predicted_price = self.run_model(random_forest)
         self.random_forest_results[hold_duration][ticker] = prediction
+        self.random_forest_predicted_prices[hold_duration][ticker] = predicted_price
         if evaluate:
             self.random_forest_evaluation[hold_duration][ticker] = random_forest.evaluateModel()
             print(self.random_forest_evaluation)
@@ -206,8 +217,10 @@ class Controller:
                                                self.start_dates[hold_duration], (100, tol, 0.0001, 1e-6, 1e-6,
                                                                                  1e-4, True, False, True),
                                                self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
-        prediction = self.run_model(bayesian, "Bayesian Ridge Regression")
-        self.bayesian_results[hold_duration][ticker] = prediction
+        prediction, predicted_price, conf, conf_profit_loss = bayesian.predict_price()
+        self.bayesian_results[hold_duration][ticker] = prediction[0][0]
+        self.bayesian_predicted_prices[hold_duration][ticker] = predicted_price[0][0]
+        self.bayesian_confidences[hold_duration][ticker] = (conf[0][0], conf_profit_loss[0][0])
         if evaluate:
             self.bayesian_evaluation[hold_duration][ticker] = bayesian.evaluateModel()
             print(self.bayesian_evaluation)
@@ -228,8 +241,11 @@ class Controller:
         # monte.printProbabilities(plot_labels, results, s_0)
         result = monte.displayResults(results, s_0)
 
+        print(results)
+
         self.monte_carlo_results[hold_duration][ticker] = result
         self.montes[hold_duration][ticker] = (monte, s_0, results)
+        self.monte_carlo_predicted_prices[hold_duration][ticker] = np.mean(results)
         if evaluate:
             self.monte_carlo_evaluation[hold_duration][ticker] = monte.evaluateModel()
             print(self.monte_carlo_evaluation)
@@ -249,12 +265,13 @@ class Controller:
         # mse, mae, mape, r2 = lstm.evaluateModel()
         # print("LSTM Evaluation:")
         # lstm.printEvaluation(mse, mae, mape, r2)
-        prediction = lstm.predict_price(lstm.get_data_for_prediction())[0][0]
-        self.lstm_results[hold_duration][ticker] = prediction
+        prediction, predicted_price = lstm.predict_price(lstm.get_data_for_prediction())
+        self.lstm_results[hold_duration][ticker] = prediction[0][0]
+        self.lstm_predicted_prices[hold_duration][ticker] = predicted_price[0][0]
         if evaluate:
             self.lstm_evaluation[hold_duration][ticker] = lstm.evaluateModel()
             print(self.lstm_evaluation)
-        return prediction
+        return prediction[0][0]
 
     def run_arima(self, ticker, hold_duration, evaluate=False):
         # ARIMA:
@@ -274,10 +291,13 @@ class Controller:
         # mse, mae, mape, r2 = arima.evaluateModel()
         # arima.printEvaluation(mse, mae, mape, r2)
         data_for_prediction = arima.get_data_for_prediction()
-        predictions, pred = arima.predict_price(data_for_prediction)
-        self.arimas[hold_duration][ticker] = (arima, pred)
+        predictions, predicted_price, conf, conf_profit_loss = arima.predict_price(data_for_prediction)
 
         self.arima_results[hold_duration][ticker] = predictions
+        self.arimas[hold_duration][ticker] = (arima, predicted_price)
+        self.arima_predicted_prices[hold_duration][ticker] = predicted_price.iloc[-1]
+        self.arima_confidences[hold_duration][ticker] = (conf, conf_profit_loss)
+        print(self.arima_confidences)
         if evaluate:
             self.arima_evaluation[hold_duration][ticker] = arima.evaluateModel()
             print(self.arima_evaluation)
@@ -377,13 +397,13 @@ class Controller:
         portfolio_VaR = risk_metrics.calculatePortfolioVaR(hold_duration, 0.95, portfolio_vol)
         return portfolio_VaR
 
-    def run_model(self, model, model_name):
+    def run_model(self, model):
         # mse, mae, mape, r2 = model.evaluateModel()
         # print(model_name, "Evaluation:")
         # model.printEvaluation(mse, mae, mape, r2)
-        predicted_price = model.predict_price()
-        print(predicted_price)
-        return predicted_price[0][0]  # , mse, mae, mape, r2
+        predicted_profit_loss, predicted_price = model.predict_price()
+        # print(predicted_price)
+        return predicted_profit_loss[0][0], predicted_price[0][0]  # , mse, mae, mape, r2
 
     def calculate_portfolio_result(self, index, hold_duration):
         algorithm_name = self.algorithms_with_indices[index]

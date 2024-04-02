@@ -13,6 +13,7 @@ from UI.Page import Page
 class SingleStockPage(QWidget, Page):
 
     back_to_portfolio_page = pyqtSignal()
+    algorithm_names = ["Linear Regression", "Random Forest", "Bayesian", "Monte Carlo", "LSTM", "ARIMA"]
 
     def __init__(self, main_window, controller, dpi):
         super().__init__()
@@ -32,13 +33,15 @@ class SingleStockPage(QWidget, Page):
         self.right_vbox = None
 
         self.overall_price_label = None
-        self.num_shares_combo = None
+        # self.num_shares_combo = None
 
         self.hold_duration_1d = None
         self.hold_duration_1w = None
         self.hold_duration_1m = None
 
         self.graph_canvas = None
+
+        self.algorithms_combo = None
 
         self.setStyleSheet(self.load_stylesheet())
 
@@ -97,7 +100,7 @@ class SingleStockPage(QWidget, Page):
         self.draw_info_and_manipulation_box()
         self.draw_algorithm_results_box()
         self.draw_graphs_box()
-        # self.draw_risk_metrics_box()
+        self.draw_risk_metrics_box()
 
         back_button = QPushButton("Back")
         back_button.setObjectName("addStockButton")
@@ -138,22 +141,27 @@ class SingleStockPage(QWidget, Page):
         spacer_left = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
         spacer_right = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.num_shares_combo = CustomComboBox()
-        self.num_shares_combo.setFixedWidth(50)
-        self.num_shares_combo.setEditable(True)
-        self.num_shares_combo.addItem('1')
-        self.num_shares_combo.addItem('2')
-        self.num_shares_combo.addItem('3')
-        self.num_shares_combo.addItem('4')
-        self.num_shares_combo.addItem('5')
-        self.num_shares_combo.setCurrentIndex(self.num_shares - 1)
-        self.num_shares_combo.lineEdit().setPlaceholderText(f'{self.num_shares}')
-        self.num_shares_combo.activated.connect(self.num_shares_changed)
-        self.num_shares_combo.lineEdit().textChanged.connect(self.num_shares_changed)
+        # self.num_shares_combo = CustomComboBox()
+        # self.num_shares_combo.setFixedWidth(50)
+        # self.num_shares_combo.setEditable(True)
+        # self.num_shares_combo.addItem('1')
+        # self.num_shares_combo.addItem('2')
+        # self.num_shares_combo.addItem('3')
+        # self.num_shares_combo.addItem('4')
+        # self.num_shares_combo.addItem('5')
+        # self.num_shares_combo.setCurrentIndex(self.num_shares - 1)
+        # self.num_shares_combo.lineEdit().setPlaceholderText(f'{self.num_shares}')
+        # self.num_shares_combo.activated.connect(self.num_shares_changed)
+        # self.num_shares_combo.lineEdit().textChanged.connect(self.num_shares_changed)
+
+        num_shares_result_label = QLabel(f"{self.num_shares}")
+        num_shares_result_label.setObjectName("infoLabelSingleStock")
+        num_shares_result_label.setAlignment(Qt.AlignCenter)
+        info_and_manipulation_vbox.addWidget(num_shares_result_label)
 
         num_shares_hbox.addItem(spacer_left)
         num_shares_hbox.addWidget(num_shares_label)
-        num_shares_hbox.addWidget(self.num_shares_combo)
+        num_shares_hbox.addWidget(num_shares_result_label)
         num_shares_hbox.addItem(spacer_right)
 
         self.overall_price_label = QLabel(f"Overall price: ${self.investment}")
@@ -197,6 +205,54 @@ class SingleStockPage(QWidget, Page):
         algorithm_results_widget.setFixedSize(475, 465)
         algorithm_results_vbox = QVBoxLayout(algorithm_results_widget)
         self.left_vbox.addWidget(algorithm_results_widget)
+
+        self.algorithms_combo = CustomComboBox()
+        self.algorithms_combo.addItem("Please select an algorithm")
+        for algorithm_name in self.algorithm_names:
+            self.algorithms_combo.addItem(algorithm_name)
+        # self.algorithms_combo.addItem('Linear Regression')
+        # self.algorithms_combo.addItem('Random Forest')
+        # self.algorithms_combo.addItem('Bayesian')
+        # self.algorithms_combo.addItem('Monte Carlo')
+        # self.algorithms_combo.addItem('LSTM')
+        # self.algorithms_combo.addItem('ARIMA')
+        self.algorithms_combo.activated.connect(self.algorithm_changed)
+        self.algorithms_combo.setCurrentIndex(0)
+        self.algorithms_combo.setFixedSize(200, 50)
+        algorithm_results_vbox.addWidget(self.algorithms_combo)
+
+        self.algorithm_results = [self.controller.linear_regression_results, self.controller.random_forest_results,
+                                  self.controller.bayesian_results, self.controller.monte_carlo_results,
+                                  self.controller.lstm_results, self.controller.arima_results]
+        self.algorithm_predicted_prices = [self.controller.linear_regression_predicted_prices, self.controller.random_forest_predicted_prices,
+                                  self.controller.bayesian_predicted_prices, self.controller.monte_carlo_predicted_prices,
+                                  self.controller.lstm_predicted_prices, self.controller.arima_predicted_prices]
+
+        predicted_price_hbox = QHBoxLayout()
+        algorithm_results_vbox.addLayout(predicted_price_hbox)
+
+        self.predicted_price_label = QLabel("Predicted Price:")
+        self.predicted_price_label.setObjectName("algorithmResultSingleStock")
+        self.predicted_price_label.hide()
+        predicted_price_hbox.addWidget(self.predicted_price_label)
+
+        self.predicted_price_result_label = QLabel()
+        self.predicted_price_result_label.setObjectName("algorithmResultSingleStock")
+        self.predicted_price_result_label.hide()
+        predicted_price_hbox.addWidget(self.predicted_price_result_label)
+
+        profit_loss_hbox = QHBoxLayout()
+        algorithm_results_vbox.addLayout(profit_loss_hbox)
+
+        self.profit_loss_label = QLabel()
+        self.profit_loss_label.setObjectName("algorithmResultSingleStock")
+        self.profit_loss_label.hide()
+        profit_loss_hbox.addWidget(self.profit_loss_label)
+
+        self.profit_loss_result_label = QLabel()
+        self.profit_loss_result_label.setObjectName("algorithmResultSingleStock")
+        self.profit_loss_result_label.hide()
+        profit_loss_hbox.addWidget(self.profit_loss_result_label)
 
     def draw_graphs_box(self):
         graphs_widget = QWidget()
@@ -271,12 +327,15 @@ class SingleStockPage(QWidget, Page):
             if self.hold_duration_1d.isChecked():
                 self.hold_duration = "1d"
                 self.update_graph()
+                self.algorithm_changed()
             elif self.hold_duration_1w.isChecked():
                 self.hold_duration = "1w"
                 self.update_graph()
+                self.algorithm_changed()
             elif self.hold_duration_1m.isChecked():
                 self.hold_duration = "1m"
                 self.update_graph()
+                self.algorithm_changed()
 
     def graphs_choice_button_toggled(self, checked):
         if checked:
@@ -301,15 +360,68 @@ class SingleStockPage(QWidget, Page):
             self.controller.plot_monte_carlo(self.ticker, self.hold_duration, self.graph_figure)
         self.graph_canvas.draw()
 
-    def num_shares_changed(self):
-        num_shares_entered = self.num_shares_combo.currentText()
-        if num_shares_entered == "":
-            self.overall_price_label.setText(f"Overall price: -")
-            # TODO: when this is -, do not allow calculations or anything - make pop up error message if user tries
+    # def num_shares_changed(self):
+    #     num_shares_entered = self.num_shares_combo.currentText()
+    #     if num_shares_entered == "":
+    #         self.overall_price_label.setText(f"Overall price: -")
+    #         # TODO: when this is -, do not allow calculations or anything - make pop up error message if user tries
+    #     else:
+    #         self.num_shares = int(num_shares_entered)
+    #         self.investment = round(self.one_share_price * self.num_shares, 2)
+    #         self.overall_price_label.setText(f"Overall price: ${self.investment}")
+    #
+    #         self.controller.update_investment_amount(self.ticker, self.investment)
+
+    def algorithm_changed(self):
+        algorithm_entered = self.algorithms_combo.currentText()
+
+        if algorithm_entered == "Please select an algorithm":
+            self.predicted_price_label.hide()
+            self.predicted_price_result_label.hide()
+            self.profit_loss_label.hide()
+            self.profit_loss_result_label.hide()
         else:
-            self.num_shares = int(num_shares_entered)
-            self.investment = round(self.one_share_price * self.num_shares, 2)
-            self.overall_price_label.setText(f"Overall price: ${self.investment}")
+            algorithm_index = self.algorithm_names.index(algorithm_entered)
+
+            if self.ticker not in self.algorithm_results[algorithm_index][self.hold_duration].keys():
+                self.controller.run_algorithm(self.ticker, algorithm_index, self.hold_duration)
+
+            if algorithm_index == 2:
+                self.predicted_price_result_label.setText(
+                    f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}"
+                    f" +/- {self.controller.bayesian_confidences[self.hold_duration][self.ticker][0]:.2f}")
+            elif algorithm_index == 5:
+                self.predicted_price_result_label.setText(
+                    f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}"
+                    f" +/- {self.controller.arima_confidences[self.hold_duration][self.ticker][0]:.2f}")
+            else:
+                self.predicted_price_result_label.setText(
+                    f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}")
+
+            if algorithm_index == 3:
+                self.profit_loss_result_label.setText(self.algorithm_results[algorithm_index][self.hold_duration][self.ticker])
+            else:
+                profit_loss = self.algorithm_results[algorithm_index][self.hold_duration][self.ticker]
+                if profit_loss >= 0:
+                    self.profit_loss_label.setText("Profit amount:")
+                    self.profit_loss_result_label.setText(f"+${profit_loss:.2f}")
+                else:
+                    self.profit_loss_label.setText("Loss amount:")
+                    self.profit_loss_result_label.setText(f"-${abs(profit_loss):.2f}")
+
+                if algorithm_index == 2:
+                    self.profit_loss_result_label.setText(
+                        f"{self.algorithm_results[algorithm_index][self.hold_duration][self.ticker]:.2f}"
+                        f" +/- {abs(self.controller.bayesian_confidences[self.hold_duration][self.ticker][1]):.2f}")
+                elif algorithm_index == 5:
+                    self.profit_loss_result_label.setText(
+                        f"{self.algorithm_results[algorithm_index][self.hold_duration][self.ticker]:.2f}"
+                        f" +/- {abs(self.controller.arima_confidences[self.hold_duration][self.ticker][1]):.2f}")
+                self.profit_loss_label.show()
+
+            self.predicted_price_label.show()
+            self.predicted_price_result_label.show()
+            self.profit_loss_result_label.show()
 
     def open_menu_page(self):
         # TODO: create logic
