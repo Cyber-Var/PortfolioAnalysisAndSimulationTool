@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGraphicsDropShadowEffect
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QPalette, QColor
 
 import logging
@@ -9,6 +9,9 @@ from UI.PortfolioPage import PortfolioPage
 
 
 class MenuPage(QWidget, Page):
+
+    open_portfolio_page = pyqtSignal()
+
     def __init__(self, main_window, controller):
         super().__init__()
 
@@ -39,7 +42,8 @@ class MenuPage(QWidget, Page):
         settings_button = self.create_menu_button('Settings')
         exit_button = self.create_menu_button('Exit')
 
-        portfolio_button.clicked.connect(self.open_portfolio_page)
+        # portfolio_button.clicked.connect(self.open_portfolio_page)
+        portfolio_button.clicked.connect(self.open_portfolio_page.emit)
         manual_button.clicked.connect(self.open_manual_page)
         settings_button.clicked.connect(self.open_settings_page)
         exit_button.clicked.connect(self.quit_app)
@@ -56,10 +60,10 @@ class MenuPage(QWidget, Page):
         button.setObjectName('menuButton')
         return button
 
-    def open_portfolio_page(self):
-        self.logger.info('Opening the Portfolio Page')
-        portfolio_page = PortfolioPage(self.main_window, self.controller)
-        self.main_window.setCentralWidget(portfolio_page)
+    # def open_portfolio_page(self):
+    #     self.logger.info('Opening the Portfolio Page')
+    #     portfolio_page = PortfolioPage(self.main_window, self.controller)
+    #     self.main_window.setCentralWidget(portfolio_page)
 
     def open_manual_page(self):
         self.logger.info('Opening the User Manual Page')

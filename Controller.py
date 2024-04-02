@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QVBoxLayout
 import sys
+from matplotlib.figure import Figure
 
 from ARIMAAlgorithm import ARIMAAlgorithm
 from BayesianRegressionAlgorithm import BayesianRegressionAlgorithm
@@ -20,9 +21,7 @@ from RandomForest import RandomForestAlgorithm
 from LinearRegressionAlgorithm import LinearRegressionAlgorithm
 from EthicalScore import ESGScores
 from LSTM import LSTMAlgorithm
-from UI.MainWindow import MainWindow
-from UI.MenuPage import MenuPage
-from UI.PortfolioPage import PortfolioPage
+
 
 import logging
 
@@ -83,8 +82,10 @@ class Controller:
         self.random_forest_results = {"1d": {}, "1w": {}, "1m": {}}
         self.bayesian_results = {"1d": {}, "1w": {}, "1m": {}}
         self.monte_carlo_results = {"1d": {}, "1w": {}, "1m": {}}
+        self.montes = {"1d": {}, "1w": {}, "1m": {}}
         self.lstm_results = {"1d": {}, "1w": {}, "1m": {}}
         self.arima_results = {"1d": {}, "1w": {}, "1m": {}}
+        self.arimas = {"1d": {}, "1w": {}, "1m": {}}
 
         self.volatilities = {}
         self.sharpe_ratios = {}
@@ -224,42 +225,15 @@ class Controller:
         # mse, mae, mape, r2 = monte.evaluateModel()
         # monte.printEvaluation(mse, mae, mape, r2)
         results, s_0 = monte.makeMCPrediction(monte.get_data_for_prediction())
-        # plot_labels = monte.plotSimulation(results, s_0)
         # monte.printProbabilities(plot_labels, results, s_0)
         result = monte.displayResults(results, s_0)
 
         self.monte_carlo_results[hold_duration][ticker] = result
+        self.montes[hold_duration][ticker] = (monte, s_0, results)
         if evaluate:
             self.monte_carlo_evaluation[hold_duration][ticker] = monte.evaluateModel()
             print(self.monte_carlo_evaluation)
         return result
-
-    def run_arima(self, ticker, hold_duration, evaluate=False):
-        # ARIMA:
-        data = self.getDataForTicker(ticker, self.data[hold_duration])
-        aapl = yf.Ticker(ticker)
-        today_data = aapl.history(period="1d")
-        if hold_duration == "1d":
-            params = (20, 2, 1, 1)
-        elif hold_duration == "1w":
-            params = (20, 2, 1, 2)
-        else:
-            params = (20, 0, 1, 0)
-        arima = ARIMAAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
-                               today_data, params, self.tickers_and_long_or_short[ticker],
-                               self.tickers_and_investments[ticker])
-        # print("ARIMA Evaluation:")
-        # mse, mae, mape, r2 = arima.evaluateModel()
-        # arima.printEvaluation(mse, mae, mape, r2)
-        data_for_prediction = arima.get_data_for_prediction()
-        predictions = arima.predict_price(data_for_prediction)
-        # arima.plot_arima(predictions, data_for_prediction)
-
-        self.arima_results[hold_duration][ticker] = predictions
-        if evaluate:
-            self.arima_evaluation[hold_duration][ticker] = arima.evaluateModel()
-            print(self.arima_evaluation)
-        return predictions
 
     def run_lstm(self, ticker, hold_duration, evaluate=False):
         # LSTM:
@@ -281,6 +255,33 @@ class Controller:
             self.lstm_evaluation[hold_duration][ticker] = lstm.evaluateModel()
             print(self.lstm_evaluation)
         return prediction
+
+    def run_arima(self, ticker, hold_duration, evaluate=False):
+        # ARIMA:
+        data = self.getDataForTicker(ticker, self.data[hold_duration])
+        aapl = yf.Ticker(ticker)
+        today_data = aapl.history(period="1d")
+        if hold_duration == "1d":
+            params = (20, 2, 1, 1)
+        elif hold_duration == "1w":
+            params = (20, 2, 1, 2)
+        else:
+            params = (20, 0, 1, 0)
+        arima = ARIMAAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
+                               today_data, params, self.tickers_and_long_or_short[ticker],
+                               self.tickers_and_investments[ticker])
+        # print("ARIMA Evaluation:")
+        # mse, mae, mape, r2 = arima.evaluateModel()
+        # arima.printEvaluation(mse, mae, mape, r2)
+        data_for_prediction = arima.get_data_for_prediction()
+        predictions, pred = arima.predict_price(data_for_prediction)
+        self.arimas[hold_duration][ticker] = (arima, pred)
+
+        self.arima_results[hold_duration][ticker] = predictions
+        if evaluate:
+            self.arima_evaluation[hold_duration][ticker] = arima.evaluateModel()
+            print(self.arima_evaluation)
+        return predictions
 
     def get_esg_scores(self):
         # ESG Scores:
@@ -314,13 +315,6 @@ class Controller:
         print("Volatility:", cat, "(" + str(vol) + ")")
         print("Sharpe Ratio:", sharpe_ratio, sharpe_ratio_cat)
         print("VaR: " + str(VaR))
-
-        # portfolio_vol, portfolio_vol_cat = risk_metrics.calculatePortfolioVolatility()
-        # portfolio_sharpe, portfolio_sharpe_cat = risk_metrics.calculatePortfolioSharpeRatio(portfolio_vol)
-        # portfolio_VaR = risk_metrics.calculatePortfolioVaR(0.95, portfolio_vol, hold_duration)
-        # print("Portfolio Volatility:", portfolio_vol, portfolio_vol_cat)
-        # print("Portfolio Sharpe Ratio:", portfolio_sharpe, portfolio_sharpe_cat)
-        # print("Portfolio VaR:", portfolio_VaR)
 
         # TODO: maybe different sharpe ratio and VaR should be calculated for 1d, 1w and 1m ?
         self.volatilities[ticker] = (vol, cat)
@@ -454,18 +448,48 @@ class Controller:
                                      freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
         return len(weekdays)
 
-    # TODO: moving_avg_value set by user
-    def plotMovingAverage(self, data, ticker, hold_duration):
-        data["MA"] = data["Adj Close"].rolling(window=self.moving_avg_values[hold_duration]).mean()
+    def plot_historical_price_data(self, ticker, hold_duration, figure):
+        # figure = Figure(figsize=size, dpi=dpi)
+        ax = figure.add_subplot(111)
 
-        plt.plot(data.index, data["MA"], color='green',
-                 label=f'{self.moving_avg_values[hold_duration]}-Day Moving Average')
-        plt.title(f'Moving Average of {ticker} stock')
-        plt.xlabel('Date')
-        plt.ylabel('Moving Average of Adjusted Close Price')
-        plt.xticks(fontsize=9, rotation=340)
-        plt.legend()
-        plt.show()
+        data = self.getDataForTicker(ticker, self.data[hold_duration])
+
+        ax.plot(data.index, data['Close'], color='blue')
+        ax.set_title(f'Historical Price Graph of {ticker}')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Adjusted Close Price (in USD)')
+        ax.grid(True)
+
+        return figure
+
+    # TODO: moving_avg_value set by user
+    def plotMovingAverage(self, ticker, hold_duration, figure):
+        ax = figure.add_subplot(111)
+
+        data = self.getDataForTicker(ticker, self.data[hold_duration])["Adj Close"].rolling(
+            window=self.moving_avg_values[hold_duration]).mean()
+        ax.plot(self.data[hold_duration].index, data, color='green',
+                label=f'{self.moving_avg_values[hold_duration]}-Day Moving Average')
+        ax.set_title(f'Moving Average of {ticker} stock')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Moving Average of Adjusted Close Price')
+        for label in ax.get_xticklabels():
+            label.set_fontsize(9)
+            label.set_rotation(340)
+        ax.legend()
+
+        return figure
+
+    def plotARIMA(self, ticker, hold_duration, figure):
+        arima, predicted_prices = self.arimas[hold_duration][ticker]
+        data_for_prediction = arima.get_data_for_prediction()
+        figure = arima.plot_arima(predicted_prices, data_for_prediction, figure)
+        return figure
+
+    def plot_monte_carlo(self, ticker, hold_duration, figure):
+        monte, s_0, results = self.montes[hold_duration][ticker]
+        _, figure =  monte.plotSimulation(results, s_0, figure)
+        return figure
 
     def handle_ranking(self, need_to_update=False):
         current_date = datetime.now()

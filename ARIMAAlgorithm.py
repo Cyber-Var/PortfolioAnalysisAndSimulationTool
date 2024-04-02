@@ -59,7 +59,7 @@ class ARIMAAlgorithm(Regression):
         profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
         print(f"Profit / loss: {profit_loss_amount} +/- {confidence} \n")
 
-        return profit_loss_amount
+        return profit_loss_amount, predicted_price
 
     def setup_model(self, data, auto):
         # TODO: remove auto ?
@@ -151,7 +151,9 @@ class ARIMAAlgorithm(Regression):
 
         return super().calculateEvalMetrics(all_predictions, all_tests)
 
-    def plot_arima(self, predictions, data):
+    def plot_arima(self, predictions, data, figure):
+        print(data)
+        print(predictions)
         data.index = data["Date"]
 
         historical_dates = data.index[-self.historical_range_for_graph:]
@@ -176,20 +178,29 @@ class ARIMAAlgorithm(Regression):
 
         historical_prices = data['Adj Close'][-self.historical_range_for_graph:]
 
-        plt.plot(historical_dates, historical_prices, color='blue', label='Historical Adj Close')
-        plt.plot(future_dates, y_axis, color='red', label='ARIMA Forecast')
+        ax = figure.add_subplot(111)
 
-        plt.title('ARIMA Stock Price Prediction')
-        plt.xlabel('Date')
-        plt.ylabel('Adjusted Close Price')
+        print(future_dates)
+        print(y_axis)
+
+        ax.plot(historical_dates, historical_prices, color='blue', label='Historical Adj Close')
+        ax.plot(future_dates, y_axis, color='red', label='ARIMA Forecast')
+
+        ax.set_title('ARIMA Stock Price Prediction')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Adjusted Close Price')
 
         if self.hold_duration == "1d":
             ticks = x_axis[::10].union(future_dates)
         else:
             ticks = x_axis[::10].union(pd.Series([today, self.prediction_date]))
-        plt.xticks(ticks, fontsize=9, rotation=330)
-        plt.ylim(bottom=min(historical_prices.min(), y_axis.min()) * 0.99,
+        # plt.xticks(ticks, fontsize=9, rotation=330)
+        ax.set_xticks(ticks)
+        tick_labels = [str(tick) for tick in ticks]
+        ax.set_xticklabels(labels=tick_labels, fontsize=9, rotation=330)
+        ax.set_ylim(bottom=min(historical_prices.min(), y_axis.min()) * 0.99,
                  top=max(historical_prices.max(), y_axis.max()) * 1.01)
 
-        plt.legend()
-        plt.show()
+        ax.legend()
+
+        return figure

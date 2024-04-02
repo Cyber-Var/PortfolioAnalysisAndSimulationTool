@@ -1,23 +1,32 @@
 from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout, QLabel, QRadioButton, QLineEdit, QComboBox, QSpacerItem, \
     QSizePolicy, QPushButton
-from PyQt5.QtCore import Qt, QEvent, QSize
+from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSignal
+
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from UI.Page import Page
 
 
 class SingleStockPage(QWidget, Page):
 
-    def __init__(self, main_window, controller, ticker, stock_name, one_share_price, num_shares, hold_duration):
+    back_to_portfolio_page = pyqtSignal()
+
+    def __init__(self, main_window, controller, dpi):
         super().__init__()
 
         self.main_window = main_window
         self.controller = controller
-        self.ticker = ticker
-        self.stock_name = stock_name
-        self.one_share_price = one_share_price
-        self.num_shares = num_shares
-        self.hold_duration = hold_duration
+        self.dpi = dpi
+
+        self.ticker = None
+        self.stock_name = None
+        self.one_share_price = None
+        self.num_shares = None
+        self.investment = None
+        self.hold_duration = None
 
         self.left_vbox = None
         self.right_vbox = None
@@ -29,21 +38,42 @@ class SingleStockPage(QWidget, Page):
         self.hold_duration_1w = None
         self.hold_duration_1m = None
 
-        self.investment = round(one_share_price * num_shares, 2)
+        self.graph_canvas = None
 
         self.setStyleSheet(self.load_stylesheet())
 
         self.layout = QVBoxLayout()
         self.init_page("Portfolio Analysis")
 
-        self.build_page()
-
         self.setStyleSheet(self.load_stylesheet())
 
         self.setLayout(self.layout)
 
+    def set_parameters(self, ticker, stock_name, one_share_price, num_shares, hold_duration):
+        self.ticker = ticker
+        self.stock_name = stock_name
+        self.one_share_price = one_share_price
+        self.num_shares = num_shares
+        self.investment = round(one_share_price * num_shares, 2)
+        self.hold_duration = hold_duration
+        self.build_page()
+
+    def clear_layout(self, layout):
+        if layout is None:
+            print("None!!!")
+        else:
+            while layout.count():
+                print("a")
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is None:
+                    self.clear_layout(item.layout())
+                else:
+                    widget.deleteLater()
+
     def build_page(self):
         self.logger.info('Building the Single Stock Page')
+        self.clear_layout(self.layout)
 
         title_label = self.get_title_label(f'{self.ticker} ({self.stock_name})')
         title_label.setFixedSize(1300, 50)
@@ -51,10 +81,6 @@ class SingleStockPage(QWidget, Page):
 
         main_hbox = QHBoxLayout()
         self.layout.addLayout(main_hbox)
-
-        # line_widget = LineDrawingWidget()
-        # line_widget.setFixedSize(1300, 850)
-        # self.layout.addWidget(line_widget)
 
         left_widget = QWidget()
         left_widget.setObjectName("singleStockVBox")
@@ -71,11 +97,11 @@ class SingleStockPage(QWidget, Page):
         self.draw_info_and_manipulation_box()
         self.draw_algorithm_results_box()
         self.draw_graphs_box()
-        self.draw_risk_metrics_box()
+        # self.draw_risk_metrics_box()
 
         back_button = QPushButton("Back")
         back_button.setObjectName("addStockButton")
-        back_button.clicked.connect(self.open_menu_page)
+        back_button.clicked.connect(self.back_to_portfolio_page.emit)
         self.layout.addWidget(back_button)
 
         self.layout.addStretch()
@@ -108,7 +134,6 @@ class SingleStockPage(QWidget, Page):
         num_shares_label = QLabel(f"Number of shares:")
         num_shares_label.setObjectName("infoLabelSingleStock")
         num_shares_label.setAlignment(Qt.AlignCenter)
-        # num_shares_hbox.addWidget(num_shares_label)
 
         spacer_left = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
         spacer_right = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -116,16 +141,15 @@ class SingleStockPage(QWidget, Page):
         self.num_shares_combo = CustomComboBox()
         self.num_shares_combo.setFixedWidth(50)
         self.num_shares_combo.setEditable(True)
-        self.num_shares_combo.lineEdit().setPlaceholderText(f'{self.num_shares}')
         self.num_shares_combo.addItem('1')
         self.num_shares_combo.addItem('2')
         self.num_shares_combo.addItem('3')
         self.num_shares_combo.addItem('4')
         self.num_shares_combo.addItem('5')
-        self.num_shares_combo.setCurrentIndex(self.num_shares)
+        self.num_shares_combo.setCurrentIndex(self.num_shares - 1)
+        self.num_shares_combo.lineEdit().setPlaceholderText(f'{self.num_shares}')
         self.num_shares_combo.activated.connect(self.num_shares_changed)
         self.num_shares_combo.lineEdit().textChanged.connect(self.num_shares_changed)
-        # num_shares_hbox.addWidget(self.num_shares_combo)
 
         num_shares_hbox.addItem(spacer_left)
         num_shares_hbox.addWidget(num_shares_label)
@@ -144,18 +168,12 @@ class SingleStockPage(QWidget, Page):
 
         self.hold_duration_1d = QRadioButton("1 day")
         self.hold_duration_1d.setObjectName('inputLabel')
-        self.hold_duration_1d.toggled.connect(self.hold_duration_button_toggled)
-        info_and_manipulation_vbox.addWidget(self.hold_duration_1d)
 
         self.hold_duration_1w = QRadioButton("1 week")
         self.hold_duration_1w.setObjectName('inputLabel')
-        self.hold_duration_1w.toggled.connect(self.hold_duration_button_toggled)
-        info_and_manipulation_vbox.addWidget(self.hold_duration_1w)
 
         self.hold_duration_1m = QRadioButton("1 month")
         self.hold_duration_1m.setObjectName('inputLabel')
-        self.hold_duration_1m.toggled.connect(self.hold_duration_button_toggled)
-        info_and_manipulation_vbox.addWidget(self.hold_duration_1m)
 
         if self.hold_duration == "1d":
             self.hold_duration_1d.setChecked(True)
@@ -163,6 +181,15 @@ class SingleStockPage(QWidget, Page):
             self.hold_duration_1w.setChecked(True)
         else:
             self.hold_duration_1m.setChecked(True)
+
+        self.hold_duration_1d.toggled.connect(self.hold_duration_button_toggled)
+        info_and_manipulation_vbox.addWidget(self.hold_duration_1d)
+
+        self.hold_duration_1w.toggled.connect(self.hold_duration_button_toggled)
+        info_and_manipulation_vbox.addWidget(self.hold_duration_1w)
+
+        self.hold_duration_1m.toggled.connect(self.hold_duration_button_toggled)
+        info_and_manipulation_vbox.addWidget(self.hold_duration_1m)
 
     def draw_algorithm_results_box(self):
         algorithm_results_widget = QWidget()
@@ -177,6 +204,39 @@ class SingleStockPage(QWidget, Page):
         graphs_widget.setFixedSize(775, 645)
         graphs_vbox = QVBoxLayout(graphs_widget)
         self.right_vbox.addWidget(graphs_widget)
+
+        graphs_choice_hbox = QHBoxLayout()
+        graphs_vbox.addLayout(graphs_choice_hbox)
+
+        self.history_graph_radio = QRadioButton("Historical Price")
+        self.history_graph_radio.setObjectName('inputLabel')
+        self.history_graph_radio.setFixedSize(200, 50)
+        self.history_graph_radio.setChecked(True)
+        self.history_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
+        graphs_choice_hbox.addWidget(self.history_graph_radio)
+
+        self.moving_average_graph_radio = QRadioButton("Moving Average")
+        self.moving_average_graph_radio.setObjectName('inputLabel')
+        self.moving_average_graph_radio.setFixedSize(200, 50)
+        self.moving_average_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
+        graphs_choice_hbox.addWidget(self.moving_average_graph_radio)
+
+        self.arima_graph_radio = QRadioButton("ARIMA")
+        self.arima_graph_radio.setObjectName('inputLabel')
+        self.arima_graph_radio.setFixedSize(200, 50)
+        self.arima_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
+        graphs_choice_hbox.addWidget(self.arima_graph_radio)
+
+        self.monte_carlo_graph_radio = QRadioButton("Monte Carlo Simulation")
+        self.monte_carlo_graph_radio.setObjectName('inputLabel')
+        self.monte_carlo_graph_radio.setFixedSize(200, 50)
+        self.monte_carlo_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
+        graphs_choice_hbox.addWidget(self.monte_carlo_graph_radio)
+
+        self.graph_figure = Figure(figsize=(700, 550), dpi=self.dpi)
+        self.graph_figure = self.controller.plot_historical_price_data(self.ticker, self.hold_duration, self.graph_figure)
+        self.graph_canvas = FigureCanvas(self.graph_figure)
+        graphs_vbox.addWidget(self.graph_canvas)
 
     def draw_risk_metrics_box(self):
         risk_metrics_widget = QWidget()
@@ -209,14 +269,37 @@ class SingleStockPage(QWidget, Page):
         if checked:
             self.logger.info('Handling the change in hold duration.')
             if self.hold_duration_1d.isChecked():
-                print("d")
                 self.hold_duration = "1d"
+                self.update_graph()
             elif self.hold_duration_1w.isChecked():
-                print("w")
                 self.hold_duration = "1w"
+                self.update_graph()
             elif self.hold_duration_1m.isChecked():
-                print("m")
                 self.hold_duration = "1m"
+                self.update_graph()
+
+    def graphs_choice_button_toggled(self, checked):
+        if checked:
+            self.logger.info('Handling the change in choice of graph.')
+            if (self.history_graph_radio.isChecked() or self.moving_average_graph_radio.isChecked() or
+                    self.arima_graph_radio.isChecked() or self.monte_carlo_graph_radio.isChecked()):
+                self.update_graph()
+
+    def update_graph(self):
+        self.graph_figure.clear()
+        if self.history_graph_radio.isChecked():
+            self.graph_figure = self.controller.plot_historical_price_data(self.ticker, self.hold_duration, self.graph_figure)
+        elif self.moving_average_graph_radio.isChecked():
+            self.graph_figure = self.controller.plotMovingAverage(self.ticker, self.hold_duration, self.graph_figure)
+        elif self.arima_graph_radio.isChecked():
+            if self.ticker not in self.controller.arima_results[self.hold_duration].keys():
+                self.controller.run_arima(self.ticker, self.hold_duration)
+            self.controller.plotARIMA(self.ticker, self.hold_duration, self.graph_figure)
+        else:
+            if self.ticker not in self.controller.monte_carlo_results[self.hold_duration].keys():
+                self.controller.run_monte_carlo(self.ticker, self.hold_duration)
+            self.controller.plot_monte_carlo(self.ticker, self.hold_duration, self.graph_figure)
+        self.graph_canvas.draw()
 
     def num_shares_changed(self):
         num_shares_entered = self.num_shares_combo.currentText()
@@ -252,37 +335,3 @@ class CustomComboBox(QComboBox):
                 if not (48 <= key <= 57):
                     return True
         return super().eventFilter(obj, event)
-
-# class LineDrawingWidget(QWidget):
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self.main_hbox = QHBoxLayout(self)
-#         self.setLayout(self.main_hbox)
-#         self.setMinimumSize(QSize(1300, 850))
-#
-#     def paintEvent(self, event):
-#         super().paintEvent(event)
-#         print("Drawable size:", self.width(), self.height())
-#         painter = QPainter(self)
-#         painter.setPen(QPen(Qt.white, 2, Qt.SolidLine))
-#         painter.drawLine(500, 0, 500, self.height())
-
-
-# class LineDrawer(QWidget):
-#     coordinates = None
-#
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self.coordinates = (0, 0, 100, 100)
-#
-#     def setCoordinates(self, x0, y0, x1, y1):
-#         self.coordinates = (x0, y0, x1, y1)
-#         self.update()
-#
-#     def paintEvent(self, event):
-#         if self.coordinates:
-#             painter = QPainter(self)
-#             painter.setPen(QPen(Qt.white, 2, Qt.SolidLine))
-#             painter.drawLine(*self.coordinates)
-
-

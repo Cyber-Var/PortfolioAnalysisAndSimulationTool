@@ -12,6 +12,9 @@ from UI.SingleStockPage import SingleStockPage
 
 class PortfolioPage(QWidget, Page):
 
+    back_to_menu_page = pyqtSignal()
+    open_single_stock_page = pyqtSignal(str, str, float, int, str)
+
     def __init__(self, main_window, controller):
         super().__init__()
 
@@ -200,7 +203,7 @@ class PortfolioPage(QWidget, Page):
 
         back_button = QPushButton("Back")
         back_button.setObjectName("addStockButton")
-        back_button.clicked.connect(self.open_menu_page)
+        back_button.clicked.connect(self.back_to_menu_page.emit)
 
         self.show_portfolio_results()
 
@@ -478,21 +481,22 @@ class PortfolioPage(QWidget, Page):
         more_info_button = QPushButton("--->")
         more_info_button.setObjectName("moreInfoButton")
         more_info_button.setFixedHeight(50)
-        more_info_button.clicked.connect(lambda: self.open_single_stock_page(ticker, stock_name, one_share_price, num_shares))
+        more_info_button.clicked.connect(lambda: self.open_single_stock_page.emit(ticker, stock_name, one_share_price,
+                                                                                  num_shares, self.hold_duration))
         results_hbox.addWidget(more_info_button)
 
         self.results_vbox.addLayout(results_hbox)
         self.results_map[ticker] = results_hbox
 
-    def open_menu_page(self):
-        # TODO: create logic
-        self.logger.info(f'Opening the Main Menu Page')
+    # def open_menu_page(self):
+    #     # TODO: create logic
+    #     self.logger.info(f'Opening the Main Menu Page')
 
-    def open_single_stock_page(self, ticker, stock_name, one_share_price, num_shares):
-        self.logger.info(f'Opening the {ticker} Page')
-        single_stock_page = SingleStockPage(self.main_window, self.controller, ticker, stock_name,
-                                            one_share_price, num_shares, self.hold_duration)
-        self.main_window.setCentralWidget(single_stock_page)
+    # def open_single_stock_page(self, ticker, stock_name, one_share_price, num_shares):
+    #     self.logger.info(f'Opening the {ticker} Page')
+    #     single_stock_page = SingleStockPage(self.main_window, self.controller, ticker, stock_name,
+    #                                         one_share_price, num_shares, self.hold_duration)
+    #     self.main_window.setCentralWidget(single_stock_page)
 
 
 class AddStockPopUp(QDialog):

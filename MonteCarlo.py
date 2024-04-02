@@ -98,7 +98,9 @@ class MonteCarloSimulation(Regression):
 
         return monte
 
-    def plotSimulation(self, monte, s_0):
+    def plotSimulation(self, monte, s_0, figure):
+        ax = figure.add_subplot(111)
+
         # Add starting point to each path:
         monte2 = np.hstack((np.array([[s_0] for _ in range(self.num_of_simulations)]), monte))
 
@@ -110,29 +112,33 @@ class MonteCarloSimulation(Regression):
 
         # Draw the simulation graph:
         for i in range(self.num_of_simulations):
-            plt.plot(x_axis, monte2[i], alpha=0.5)
+            ax.plot(x_axis, monte2[i], alpha=0.5)
 
-        plt.ylabel('Price in USD')
-        plt.xlabel('Prediction Days')
-        plt.xticks(fontsize=9)
-        plt.xticks(rotation=340)
+        ax.set_ylabel('Price in USD')
+        ax.set_xlabel('Prediction Days')
+        # ax.xticks(fontsize=9)
+        # plt.xticks(rotation=340)
+        for label in ax.get_xticklabels():
+            label.set_fontsize(9)
+            label.set_rotation(340)
 
         if self.hold_duration == "1d" or self.hold_duration == "1w":
-            plt.xticks(x_axis)
+            ax.set_xticks(x_axis)
 
-        plt.axhline(y=s_0, color='r', linestyle='-')
+        ax.axhline(y=s_0, color='r', linestyle='-')
 
-        _, labels = plt.yticks()
-        plt.show()
+        # _, labels = plt.yticks()
+        labels = ax.get_yticklabels()
+        label_texts = [label.get_text() for label in labels]
 
         prices = []
-        for label in labels:
+        for label in label_texts:
             try:
                 prices.append(float(label.get_text()))
             except Exception:
                 continue
 
-        return prices
+        return prices, figure
 
     def printProbabilities(self, labels, monte, s_0):
         start_price = s_0
