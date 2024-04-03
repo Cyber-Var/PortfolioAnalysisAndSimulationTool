@@ -131,6 +131,8 @@ class Controller:
             self.algorithms_with_indices[index] = name
         # print(self.algorithms_with_indices)
 
+        self.top_companies_df = pd.read_csv('top_esg_companies.csv', sep=';')
+
         self.portfolio_results = {}
 
     def add_ticker(self, ticker, investment, is_long):
@@ -240,8 +242,6 @@ class Controller:
         results, s_0 = monte.makeMCPrediction(monte.get_data_for_prediction())
         # monte.printProbabilities(plot_labels, results, s_0)
         result = monte.displayResults(results, s_0)
-
-        print(results)
 
         self.monte_carlo_results[hold_duration][ticker] = result
         self.montes[hold_duration][ticker] = (monte, s_0, results)
@@ -648,3 +648,5 @@ class Controller:
             rankings_read["1m"] = ranking_1m
 
         return rankings_read
+
+

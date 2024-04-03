@@ -1,0 +1,51 @@
+index;ticker;stock_name;industry
+1;MSFT;Microsoft Corporation;Computer Software - Desktop
+2;AMAT;Applied Materials, Inc.;Electronics - Semiconductor Equipment
+3;WWD;Woodward, Inc.;Aerospace/Defense
+4;VRSK;Verisk Analytics, Inc.;Commercial Services - Market Research
+5;MA;Mastercard Incorporated;Finance - Credit Card/Payment Processing
+6;CAT;Caterpillar Inc.;Machinery - Construction/Mining
+7;MPC;Marathon Petroleum Corporation;Oil & Gas - Refining/Marketing
+8;NVDA;NVIDIA Corporation;Electronics - Semiconductor Mfg
+9;DOV;Dover Corporation;Machinery - General Industrial
+10;MSI;Motorola Solutions, Inc.;Telecom - Consumer Products
+11;BG;Bunge Global SA;Agricultural Operations
+12;SHW;The Sherwin-Williams Company;Chemicals - Paints
+13;DELL;Dell Technologies Inc.;Computer Hardware - Peripherals
+14;ADBE;Adobe Inc.;Computer Software - Desktop
+15;MDLZ;Mondelez International, Inc.;Food - Confectionary
+16;CHD;Church & Dwight Co., Inc.;Soap & Cleaning Preparations
+17;META;Meta Platforms, Inc.;Internet - Content
+18;APD;Air Products and Chemicals, Inc.;Chemicals - Specialty
+19;IT;Gartner, Inc.;Commercial Services - Market Research
+20;AJG;Arthur J. Gallagher & Co.;Insurance - Brokers
+21;LRCX;Lam Research Corporation;Electronics - Semiconductor Equipment
+22;TJX;The TJX Companies, Inc.;Retail - Apparel/Shoes Accessories
+23;OC;Owens Corning;Building - Construction Products MSC
+24;JBL;Jabil Inc.;Electronics - Contract Mfg
+25;GOOGL;Alphabet Inc.;Internet - Content
+26;DECK;Deckers Outdoor Corporation;Apparel - Shoes & Related Mfg
+27;ANET;Arista Networks, Inc.;Computer - Networking
+28;ON;ON Semiconductor Corporation;Electronics - Semiconductor Equipment
+29;TTEK;Tetra Tech, Inc.;Pollution Control
+30;MAR.;Marriott International, Inc.;Leisure - Lodging
+31;LLY;Eli Lilly and Company;Medical - Diversified
+32;J;Jacobs Solutions Inc.;Building - Heavy Construction
+33;V;Visa Inc.;Finance - Credit Card/Payment Processing
+34;CMC;Commercial Metals Company;Metals - Processing & Fabrication
+35;FSS;Federal Signal Corporation;Security/Safety
+36;FTNT;Fortinet, Inc.;Computer Software - Security
+37;ZTS;Zoetis Inc.;Medical - Ethical Drugs
+38;CDNS;Cadence Design Systems, Inc.;Computer Software - Design
+39;CLH;Clean Harbors, Inc.;Pollution Control
+40;WDAY;Workday, Inc.;Computer Software - Enterprise
+41;MCHP;Microchip Technology Incorporated;Electronics - Semiconductor Mfg
+42;CSGP;CoStar Group, Inc.;Commercial Services - Market Research
+43;CMG;Chipotle Mexican Grill, Inc.;Retail - Restaurants
+44;PLD;Prologis, Inc.;Finance - Property REITs
+45;HUBS;HubSpot, Inc.;Computer Software - Specialty Enterprise
+46;BKNG;Booking Holdings Inc.;Leisure - Travel Booking
+47;WTS;Watts Water Technologies, Inc.;Building - Construction Products/MSC
+48;APPF;AppFolio, Inc.;Computer Software - Specialty Enterprise
+49;AMH;American Homes 4 Rent;Finance - Property REITs
+50;IRM;Iron Mountain Incorporated;Commercial Services - Document Management

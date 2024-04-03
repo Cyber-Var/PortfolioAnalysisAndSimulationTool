@@ -351,13 +351,17 @@ class SingleStockPage(QWidget, Page):
         elif self.moving_average_graph_radio.isChecked():
             self.graph_figure = self.controller.plotMovingAverage(self.ticker, self.hold_duration, self.graph_figure)
         elif self.arima_graph_radio.isChecked():
-            if self.ticker not in self.controller.arima_results[self.hold_duration].keys():
-                self.controller.run_arima(self.ticker, self.hold_duration)
-            self.controller.plotARIMA(self.ticker, self.hold_duration, self.graph_figure)
+            self.algorithms_combo.setCurrentIndex(6)
+            self.algorithm_changed()
+            # if self.ticker not in self.controller.arima_results[self.hold_duration].keys():
+            #     self.controller.run_arima(self.ticker, self.hold_duration)
+            self.graph_figure = self.controller.plotARIMA(self.ticker, self.hold_duration, self.graph_figure)
         else:
-            if self.ticker not in self.controller.monte_carlo_results[self.hold_duration].keys():
-                self.controller.run_monte_carlo(self.ticker, self.hold_duration)
-            self.controller.plot_monte_carlo(self.ticker, self.hold_duration, self.graph_figure)
+            self.algorithms_combo.setCurrentIndex(4)
+            self.algorithm_changed()
+            # if self.ticker not in self.controller.monte_carlo_results[self.hold_duration].keys():
+            #     self.controller.run_monte_carlo(self.ticker, self.hold_duration)
+            self.graph_figure = self.controller.plot_monte_carlo(self.ticker, self.hold_duration, self.graph_figure)
         self.graph_canvas.draw()
 
     # def num_shares_changed(self):
@@ -391,6 +395,7 @@ class SingleStockPage(QWidget, Page):
                     f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}"
                     f" +/- {self.controller.bayesian_confidences[self.hold_duration][self.ticker][0]:.2f}")
             elif algorithm_index == 5:
+                self.arima_graph_radio.setChecked(True)
                 self.predicted_price_result_label.setText(
                     f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}"
                     f" +/- {self.controller.arima_confidences[self.hold_duration][self.ticker][0]:.2f}")
@@ -399,6 +404,7 @@ class SingleStockPage(QWidget, Page):
                     f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}")
 
             if algorithm_index == 3:
+                self.monte_carlo_graph_radio.setChecked(True)
                 self.profit_loss_result_label.setText(self.algorithm_results[algorithm_index][self.hold_duration][self.ticker])
             else:
                 profit_loss = self.algorithm_results[algorithm_index][self.hold_duration][self.ticker]
@@ -415,7 +421,7 @@ class SingleStockPage(QWidget, Page):
                         f" +/- {abs(self.controller.bayesian_confidences[self.hold_duration][self.ticker][1]):.2f}")
                 elif algorithm_index == 5:
                     self.profit_loss_result_label.setText(
-                        f"{self.algorithm_results[algorithm_index][self.hold_duration][self.ticker]:.2f}"
+                        f"${self.algorithm_results[algorithm_index][self.hold_duration][self.ticker]:.2f}"
                         f" +/- {abs(self.controller.arima_confidences[self.hold_duration][self.ticker][1]):.2f}")
                 self.profit_loss_label.show()
 
