@@ -20,6 +20,7 @@ class PortfolioPage(QWidget, Page):
 
         self.main_window = main_window
         self.controller = controller
+        self.tickers = []
 
         self.hold_duration = "1d"
         self.hold_duration_label = None
@@ -150,24 +151,37 @@ class PortfolioPage(QWidget, Page):
         # results_vbox.addLayout(column_names_hbox)
 
         self.ticker_col_name = self.create_column_names_labels("Ticker")
+        self.ticker_col_name.setFixedSize(60, 50)
         self.stock_name_col_name = self.create_column_names_labels("Name")
-        self.amount_col_name = self.create_column_names_labels("Investment Amount")
-        self.lin_reg_col_name = self.create_column_names_labels("Linear Regression")
+        self.stock_name_col_name.setFixedSize(160, 50)
+        self.amount_col_name = self.create_column_names_labels("Investment\nAmount")
+        self.amount_col_name.setFixedSize(100, 50)
+        self.lin_reg_col_name = self.create_column_names_labels("Linear\nRegression")
+        self.lin_reg_col_name.setFixedSize(85, 50)
         self.lin_reg_col_name.hide()
-        self.random_forest_col_name = self.create_column_names_labels("Random Forest")
+        self.random_forest_col_name = self.create_column_names_labels("Random\nForest")
+        self.random_forest_col_name.setFixedSize(80, 50)
         self.random_forest_col_name.hide()
         self.bayesian_col_name = self.create_column_names_labels("Bayesian")
+        self.bayesian_col_name.setFixedSize(120, 50)
         self.bayesian_col_name.hide()
         self.monte_carlo_col_name = self.create_column_names_labels("Monte Carlo")
+        self.monte_carlo_col_name.setFixedSize(210, 50)
         self.monte_carlo_col_name.hide()
         self.lstm_col_name = self.create_column_names_labels("LSTM")
+        self.lstm_col_name.setFixedSize(80, 50)
         self.lstm_col_name.hide()
         self.arima_col_name = self.create_column_names_labels("ARIMA")
+        self.arima_col_name.setFixedSize(120, 50)
         self.arima_col_name.hide()
         self.volatility_col_name = self.create_column_names_labels("Volatility")
-        self.sharpe_ratio_col_name = self.create_column_names_labels("Sharpe Ratio")
-        self.VaR_col_name = self.create_column_names_labels("Value at Risk")
-        self.more_info_col_name = self.create_column_names_labels("More Info")
+        self.volatility_col_name.setFixedSize(80, 50)
+        self.sharpe_ratio_col_name = self.create_column_names_labels("Sharpe\nRatio")
+        self.sharpe_ratio_col_name.setFixedSize(80, 50)
+        self.VaR_col_name = self.create_column_names_labels("Value\nat Risk")
+        self.VaR_col_name.setFixedSize(60, 50)
+        self.more_info_col_name = self.create_column_names_labels("More\nInfo")
+        self.more_info_col_name.setFixedSize(50, 50)
         self.result_col_names = [self.lin_reg_col_name, self.random_forest_col_name, self.bayesian_col_name,
                                  self.monte_carlo_col_name, self.lstm_col_name, self.arima_col_name]
 
@@ -188,6 +202,8 @@ class PortfolioPage(QWidget, Page):
         add_stock_button = QPushButton("+ Add Stock")
         add_stock_button.setObjectName('addStockButton')
         add_stock_button.clicked.connect(self.show_add_stock_window)
+
+        column_names_hbox.addStretch(1)
 
         scrollable_area = QScrollArea()
         scrollable_area.setWidgetResizable(True)
@@ -215,24 +231,26 @@ class PortfolioPage(QWidget, Page):
     def show_portfolio_results(self):
         portfolio_hbox = QHBoxLayout()
 
-        portfolio_ticker_label = QLabel("-")
-        portfolio_ticker_label.setObjectName("resultLabel")
-        portfolio_ticker_label.setFixedHeight(70)
-
-        portfolio_label = QLabel("Portfolio")
+        portfolio_label = QLabel("Overall Portfolio results")
         portfolio_label.setObjectName("resultLabel")
-        portfolio_label.setFixedHeight(70)
+        portfolio_label.setFixedSize(228, 70)
 
         self.portfolio_amount = QLabel("-")
         self.portfolio_amount.setObjectName("resultLabel")
-        self.portfolio_amount.setFixedHeight(70)
+        self.portfolio_amount.setFixedSize(100, 70)
 
         self.portfolio_linear_regression = QLabel("")
+        self.portfolio_linear_regression.setFixedSize(85, 70)
         self.portfolio_random_forest = QLabel("")
+        self.portfolio_random_forest.setFixedSize(80, 70)
         self.portfolio_bayesian = QLabel("")
+        self.portfolio_bayesian.setFixedSize(120, 70)
         self.portfolio_monte_carlo = QLabel("")
+        self.portfolio_monte_carlo.setFixedSize(210, 70)
         self.portfolio_lstm = QLabel("")
+        self.portfolio_lstm.setFixedSize(80, 70)
         self.portfolio_arima = QLabel("")
+        self.portfolio_arima.setFixedSize(120, 70)
 
         self.portfolio_linear_regression.setObjectName("resultLabel")
         self.portfolio_random_forest.setObjectName("resultLabel")
@@ -261,21 +279,20 @@ class PortfolioPage(QWidget, Page):
 
         self.portfolio_volatility = QLabel("")
         self.portfolio_volatility.setObjectName("resultLabel")
-        self.portfolio_volatility.setFixedHeight(70)
+        self.portfolio_volatility.setFixedSize(80, 70)
 
         self.portfolio_sharpe_ratio = QLabel("")
         self.portfolio_sharpe_ratio.setObjectName("resultLabel")
-        self.portfolio_sharpe_ratio.setFixedHeight(70)
+        self.portfolio_sharpe_ratio.setFixedSize(80, 70)
 
         self.portfolio_VaR = QLabel("")
         self.portfolio_VaR.setObjectName("resultLabel")
-        self.portfolio_VaR.setFixedHeight(70)
+        self.portfolio_VaR.setFixedSize(60, 70)
 
         portfolio_more_info_label = QLabel("-")
         portfolio_more_info_label.setObjectName("resultLabel")
-        portfolio_more_info_label.setFixedHeight(70)
+        portfolio_more_info_label.setFixedSize(50, 70)
 
-        portfolio_hbox.addWidget(portfolio_ticker_label)
         portfolio_hbox.addWidget(portfolio_label)
         portfolio_hbox.addWidget(self.portfolio_amount)
         portfolio_hbox.addWidget(self.portfolio_linear_regression)
@@ -289,6 +306,7 @@ class PortfolioPage(QWidget, Page):
         portfolio_hbox.addWidget(self.portfolio_VaR)
         portfolio_hbox.addWidget(portfolio_more_info_label)
 
+        portfolio_hbox.addStretch(1)
         self.results_vbox.addLayout(portfolio_hbox)
 
     def create_hold_duration_button(self, name):
@@ -306,7 +324,6 @@ class PortfolioPage(QWidget, Page):
     def create_column_names_labels(self, name):
         label = QLabel(name)
         label.setObjectName('columnNameLabel')
-        label.setFixedHeight(50)
         return label
 
     def hold_duration_button_toggled(self, checked):
@@ -359,7 +376,14 @@ class PortfolioPage(QWidget, Page):
                 label.setText(f"{self.result_to_string(algorithmic_results[ticker])} +/- "
                               f"{self.controller.bayesian_confidences[self.hold_duration][ticker][1]:.2f}")
             elif index == 3:
-                label.setText(algorithmic_results[ticker])
+                res = algorithmic_results[ticker]
+                growth_fall = res.split()
+                is_long = self.controller.tickers_and_long_or_short[ticker]
+                if (growth_fall == "growth" and is_long) or (growth_fall == "fall" and not is_long):
+                    res += " (profit)"
+                else:
+                    res += " (loss)"
+                label.setText(res)
             elif index == 5:
                 label.setText(f"{self.result_to_string(algorithmic_results[ticker])} +/- "
                               f"{self.controller.arima_confidences[self.hold_duration][ticker][1]:.2f}")
@@ -386,10 +410,10 @@ class PortfolioPage(QWidget, Page):
                 self.portfolio_results[index].hide()
 
         portfolio_vol, portfolio_vol_cat = self.controller.get_portfolio_volatility(self.hold_duration)
-        self.portfolio_volatility.setText(f'{portfolio_vol} {portfolio_vol_cat}')
+        self.portfolio_volatility.setText(f'{portfolio_vol:.2f} {portfolio_vol_cat}')
 
         portfolio_sharpe, portfolio_share_cat = self.controller.get_portfolio_sharpe_ratio(self.hold_duration, portfolio_vol)
-        self.portfolio_sharpe_ratio.setText(f'{portfolio_sharpe} {portfolio_share_cat}')
+        self.portfolio_sharpe_ratio.setText(f'{portfolio_sharpe:.2f} {portfolio_share_cat}')
 
         self.portfolio_VaR.setText(str(self.controller.get_portfolio_VaR(self.hold_duration, portfolio_vol)))
 
@@ -413,21 +437,36 @@ class PortfolioPage(QWidget, Page):
             self.rankings = self.controller.handle_ranking(True)
             self.update_ranking_display()
 
+    widths = [60, 160, 100, 85, 80, 120, 210, 80, 120, 80, 80, 60]
+
     def add_ticker(self, ticker, one_share_price, num_shares, is_long):
         self.logger.info('Adding new stock to portfolio.')
 
         investment = round(one_share_price * num_shares, 2)
         self.controller.add_ticker(ticker, investment, is_long)
+        self.controller.tickers_and_num_shares[ticker] = num_shares
 
         results_hbox = QHBoxLayout()
+        results_hbox.setSpacing(8)
 
         for i in range(12):
             label = QLabel()
             label.setObjectName("resultLabel")
-            label.setFixedHeight(50)
+            label.setFixedSize(self.widths[i], 50)
             if 3 <= i <= 8:
                 label.hide()
             results_hbox.addWidget(label)
+
+        more_info_button = QPushButton("--->")
+        more_info_button.setObjectName("moreInfoButton")
+        more_info_button.setFixedSize(50, 50)
+        more_info_button.clicked.connect(lambda: self.open_single_stock_page.emit(ticker, stock_name, one_share_price,
+                                                                                  num_shares, self.hold_duration))
+        edit_button = QPushButton("Edit")
+        edit_button.setObjectName("moreInfoButton")
+        edit_button.setFixedSize(50, 50)
+        edit_button.clicked.connect(lambda: self.edit_stock(ticker, stock_name, one_share_price))
+        results_hbox.addWidget(edit_button)
 
         results_hbox.itemAt(0).widget().setText(ticker)
 
@@ -454,13 +493,18 @@ class PortfolioPage(QWidget, Page):
         if self.algorithms[2]:
             self.bayesian_col_name.show()
             bayesian_prediction = self.controller.run_bayesian(ticker, self.hold_duration)
-            results_hbox.itemAt(5).widget().setText(f"{self.result_to_string(bayesian_prediction)}"
+            results_hbox.itemAt(5).widget().setText(f"{self.result_to_string(bayesian_prediction[0][0])}"
                                                     f" +/- {self.controller.bayesian_confidences[self.hold_duration][ticker][1]:.2f}")
             results_hbox.itemAt(5).widget().show()
         if self.algorithms[3]:
             self.monte_carlo_col_name.show()
             # TODO: num_of_simulations set by user ??
             monte_carlo_prediction = self.controller.run_monte_carlo(ticker, self.hold_duration)
+            growth_fall = monte_carlo_prediction.split()
+            if (growth_fall == "growth" and is_long) or (growth_fall == "fall" and not is_long):
+                monte_carlo_prediction += " (profit)"
+            else:
+                monte_carlo_prediction += " (loss)"
             results_hbox.itemAt(6).widget().setText(monte_carlo_prediction)
             results_hbox.itemAt(6).widget().show()
         if self.algorithms[4]:
@@ -485,16 +529,50 @@ class PortfolioPage(QWidget, Page):
         results_hbox.itemAt(11).widget().setText(f"{VaR:.2f}")
 
         self.update_portfolio_results()
+        self.tickers.append(ticker)
 
-        more_info_button = QPushButton("--->")
-        more_info_button.setObjectName("moreInfoButton")
-        more_info_button.setFixedHeight(50)
-        more_info_button.clicked.connect(lambda: self.open_single_stock_page.emit(ticker, stock_name, one_share_price,
-                                                                                  num_shares, self.hold_duration))
-        results_hbox.addWidget(more_info_button)
-
+        results_hbox.addStretch(1)
         self.results_vbox.addLayout(results_hbox)
         self.results_map[ticker] = results_hbox
+
+    def edit_stock(self, ticker, stock_name, one_share_price):
+        is_long = self.controller.tickers_and_long_or_short[ticker]
+        num_shares = self.controller.tickers_and_num_shares[ticker]
+        popup = EditStockPopUp(ticker, stock_name, one_share_price, num_shares, is_long)
+        popup.perform_change.connect(self.stock_change)
+        popup.exec_()
+
+    def delete_layout(self, layout):
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self.delete_layout(item.layout())
+        if layout.parentWidget():
+            layout.setParent(None)
+
+    def stock_change(self, ticker, num_shares, investment, is_long):
+        print(ticker, investment, is_long, self.results_vbox.count())
+        print(self.tickers)
+        index = self.tickers.index(ticker)
+        ticker_layout = self.results_vbox.itemAt(index + 1)
+        if investment == -1:
+            self.controller.tickers_and_num_shares.pop(ticker, None)
+            self.controller.remove_ticker(ticker)
+            if ticker_layout.layout():
+                self.delete_layout(ticker_layout.layout())
+                self.results_vbox.removeItem(ticker_layout)
+            self.tickers.remove(ticker)
+        else:
+            self.controller.tickers_and_num_shares[ticker] = num_shares
+            algorithm_indices = [index for index, value in enumerate(self.algorithms) if value]
+            self.controller.update_stock_info(ticker, investment, is_long, algorithm_indices)
+            for index in algorithm_indices:
+                self.update_algorithm_values(index)
+        print(self.tickers)
+        print()
+
 
     # def open_menu_page(self):
     #     # TODO: create logic
@@ -509,8 +587,10 @@ class PortfolioPage(QWidget, Page):
 
 class AddStockPopUp(QDialog):
     valid_ticker_entered = pyqtSignal(str, float, int, bool)
-    ticker = None
+    ticker = ""
     share_price = None
+    num_shares = ""
+    should_validate = False
 
     def __init__(self):
         super().__init__()
@@ -536,18 +616,21 @@ class AddStockPopUp(QDialog):
         self.share_price_label = QLabel()
         self.share_price_label.hide()
 
+        investment_hbox = QHBoxLayout()
+
         self.investment_label = QLabel("Enter the amount of shares:")
         self.investment_label.hide()
 
-        investment_hbox = QHBoxLayout()
-        self.investment = QLineEdit()
-        self.investment.textChanged.connect(self.hide_invalid_investment_label)
-        self.investment.returnPressed.connect(self.validate_investment)
-        self.investment.hide()
-        investment_hbox.addWidget(self.investment)
         self.investment_enter_button = QPushButton("Enter")
         self.investment_enter_button.clicked.connect(self.validate_investment)
         self.investment_enter_button.hide()
+
+        self.investment = QLineEdit()
+        self.investment.textChanged.connect(self.hide_invalid_investment_label)
+        self.investment.mousePressEvent = self.investment_enter_button.setFocus()
+        self.investment.returnPressed.connect(self.investment_entered)
+        self.investment.hide()
+        investment_hbox.addWidget(self.investment)
         investment_hbox.addWidget(self.investment_enter_button)
 
         self.invalid_investment_label = QLabel("The amount of shares has to be a positive integer.")
@@ -570,14 +653,19 @@ class AddStockPopUp(QDialog):
         cancel_button.clicked.connect(self.close)
         buttons_hbox.addWidget(cancel_button)
 
+        self.add_button = QPushButton("Add")
+        self.add_button.clicked.connect(self.validate_investment)
+        self.add_button.hide()
+        buttons_hbox.addWidget(self.add_button)
+
         layout.addWidget(ticker_label)
         layout.addLayout(ticker_hbox)
         layout.addWidget(self.invalid_ticker_label)
         layout.addWidget(self.share_price_label)
+        layout.addLayout(long_short_layout)
         layout.addWidget(self.investment_label)
         layout.addLayout(investment_hbox)
         layout.addWidget(self.invalid_investment_label)
-        layout.addLayout(long_short_layout)
         layout.addLayout(buttons_hbox)
 
         self.setLayout(layout)
@@ -596,8 +684,12 @@ class AddStockPopUp(QDialog):
 
             self.investment_label.show()
             self.investment.show()
+            self.add_button.show()
+            self.investment_long.show()
+            self.investment_short.show()
             self.investment.setFocus()
             self.investment_enter_button.show()
+            self.investment_enter_button.setFocus()
         else:
             self.invalid_ticker_label.show()
 
@@ -614,28 +706,147 @@ class AddStockPopUp(QDialog):
             return False, -1
 
     def validate_investment(self):
-        investment = self.investment.text()
-        if bool(re.match(r'^[1-9]\d*$', investment)):
+        num_shares = self.investment.text()
+        if self.is_valid_investment(num_shares):
+            self.num_shares = num_shares
+        else:
+            self.invalid_investment_label.show()
+            self.investment.setFocus()
+
+    def is_valid_investment(self, inv):
+        return bool(re.match(r'^[1-9]\d*$', inv))
+
+    def add_ticker_to_portfolio(self):
+        if self.is_valid_investment(self.num_shares):
             if self.investment_long.isChecked():
                 is_long = True
             else:
                 is_long = False
-            self.valid_ticker_entered.emit(self.ticker.upper(), self.share_price, int(investment), is_long)
+            self.valid_ticker_entered.emit(self.ticker.upper(), self.share_price, int(self.num_shares), is_long)
             self.close()
         else:
             self.invalid_investment_label.show()
+            self.investment.setFocus()
 
     def hide_invalid_labels(self):
         self.invalid_ticker_label.hide()
         self.invalid_investment_label.hide()
 
         self.share_price_label.hide()
+        self.investment_long.hide()
+        self.investment_short.hide()
         self.investment_label.hide()
         self.investment.hide()
-        self.investment_enter_button.hide()
+        self.add_button.hide()
 
     def hide_invalid_investment_label(self):
         self.invalid_investment_label.hide()
+
+    def investment_entered(self):
+        self.add_button.setFocus()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            event.accept()
+            self.add_button.setFocus()
+        else:
+            super().keyPressEvent(event)
+
+
+class EditStockPopUp(QDialog):
+    perform_change = pyqtSignal(str, int, float, bool)
+
+    def __init__(self, ticker, stock_name, one_share_price, num_shares, is_long):
+        super().__init__()
+        self.setWindowTitle(f"Edit {ticker} shares")
+
+        self.ticker = ticker
+        self.one_share_price = one_share_price
+        self.is_long = is_long
+
+        layout = QVBoxLayout()
+
+        self.stock_name_label = QLabel(stock_name)
+        self.share_price_label = QLabel(f"Price of 1 share = ${one_share_price}")
+
+        investment_hbox = QHBoxLayout()
+
+        self.investment_label = QLabel("Number of shares in portfolio:")
+        investment_hbox.addWidget(self.investment_label)
+
+        self.investment = QLineEdit(str(num_shares))
+        self.investment.textChanged.connect(self.hide_invalid_investment_label)
+        investment_hbox.addWidget(self.investment)
+
+        self.invalid_investment_label = QLabel("The amount of shares has to be a positive integer.")
+        self.invalid_investment_label.hide()
+        self.invalid_investment_label.setStyleSheet("color: red;")
+
+        long_short_layout = QHBoxLayout()
+        self.investment_long = QRadioButton("Long")
+        self.investment_short = QRadioButton("Short")
+        if is_long:
+            self.investment_long.setChecked(True)
+        else:
+            self.investment_short.setChecked(True)
+        self.investment_long.toggled.connect(self.long_short_changed)
+        self.investment_short.toggled.connect(self.long_short_changed)
+        long_short_layout.addWidget(self.investment_long)
+        long_short_layout.addWidget(self.investment_short)
+
+        buttons_hbox = QHBoxLayout()
+
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.close)
+        buttons_hbox.addWidget(cancel_button)
+
+        self.save_changes_button = QPushButton("Save Changes")
+        self.save_changes_button.clicked.connect(self.save_changes)
+        self.save_changes_button.hide()
+        buttons_hbox.addWidget(self.save_changes_button)
+
+        self.delete_button = QPushButton(f"Delete {ticker} from portfolio")
+        self.delete_button.clicked.connect(self.delete_stock)
+        buttons_hbox.addWidget(self.delete_button)
+
+        layout.addWidget(self.stock_name_label)
+        layout.addWidget(self.share_price_label)
+        layout.addLayout(investment_hbox)
+        layout.addWidget(self.invalid_investment_label)
+        layout.addLayout(long_short_layout)
+        layout.addLayout(buttons_hbox)
+
+        self.setLayout(layout)
+
+    def hide_invalid_investment_label(self):
+        self.invalid_investment_label.hide()
+        self.save_changes_button.show()
+
+    def long_short_changed(self, checked):
+        if checked:
+            if self.investment_long.isChecked():
+                self.is_long = True
+            else:
+                self.is_long = False
+            self.save_changes_button.show()
+
+    def save_changes(self):
+        num_shares = self.investment.text()
+        if bool(re.match(r'^[1-9]\d*$', num_shares)):
+            self.perform_change.emit(self.ticker, int(num_shares), int(num_shares) * self.one_share_price, self.is_long)
+            self.close()
+        else:
+            self.invalid_investment_label.show()
+
+    def delete_stock(self):
+        self.perform_change.emit(self.ticker, -1, True)
+        self.close()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            event.accept()
+        else:
+            super().keyPressEvent(event)
 
 
 class RankingTimeWarningPopUp(QDialog):

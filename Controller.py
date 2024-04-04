@@ -77,6 +77,7 @@ class Controller:
 
         self.tickers_and_investments = {}
         self.tickers_and_long_or_short = {}
+        self.tickers_and_num_shares = {}
 
         self.linear_regression_results = {"1d": {}, "1w": {}, "1m": {}}
         self.random_forest_results = {"1d": {}, "1w": {}, "1m": {}}
@@ -129,7 +130,7 @@ class Controller:
         self.algorithms_with_indices = {}
         for index, name in enumerate(self.results.keys()):
             self.algorithms_with_indices[index] = name
-        # print(self.algorithms_with_indices)
+        print(self.algorithms_with_indices)
 
         self.top_companies_df = pd.read_csv('top_esg_companies.csv', sep=';')
 
@@ -157,6 +158,16 @@ class Controller:
                 "1w": pd.DataFrame(),
                 "1m": pd.DataFrame()
             }
+
+    def update_stock_info(self, ticker, investment, is_long, algorithm_indices):
+        self.tickers_and_investments[ticker] = investment
+        self.tickers_and_long_or_short[ticker] = is_long
+        for algorithm in algorithm_indices:
+            alg_results = self.results[self.algorithms_with_indices[algorithm]]
+            for hold_dur in alg_results:
+                if ticker in alg_results[hold_dur]:
+                    self.run_algorithm(ticker, algorithm, hold_dur)
+
 
     def run_algorithm(self, ticker, algorithm_index, hold_duration, evaluate=False):
         print("called", algorithm_index, ticker, hold_duration, evaluate)
