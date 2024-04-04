@@ -101,6 +101,12 @@ class Controller:
         self.sharpe_ratios = {}
         self.VaRs = {}
 
+        self.risk_metrics = {
+            "volatility": self.volatilities,
+            "sharpe_ratio": self.sharpe_ratios,
+            "VaR": self.VaRs,
+        }
+
         self.results = {
             "linear_regression": self.linear_regression_results,
             "random_forest": self.random_forest_results,
@@ -130,17 +136,22 @@ class Controller:
         self.algorithms_with_indices = {}
         for index, name in enumerate(self.results.keys()):
             self.algorithms_with_indices[index] = name
-        print(self.algorithms_with_indices)
+        # print(self.algorithms_with_indices)
 
         self.top_companies_df = pd.read_csv('top_esg_companies.csv', sep=';')
 
         self.portfolio_results = {}
 
-    def add_ticker(self, ticker, investment, is_long):
+    def add_ticker(self, ticker, num_shares, investment, is_long):
         ticker = ticker.upper()
+        if investment is None:
+            data = yf.Ticker(ticker)
+            one_day_data = data.history(period="1d")
+            investment = round(one_day_data["Close"].iloc[0], 2) * num_shares
         if ticker not in self.tickers_and_investments.keys():
             self.tickers_and_investments[ticker] = investment
             self.tickers_and_long_or_short[ticker] = is_long
+            self.tickers_and_num_shares[ticker] = num_shares
             # Retrieve historical data from Yahoo! Finance:
             for hold_dur in self.start_dates.keys():
                 self.data[hold_dur] = self.downloadData(self.start_dates[hold_dur], self.end_date)
@@ -148,6 +159,7 @@ class Controller:
     def remove_ticker(self, ticker):
         del self.tickers_and_investments[ticker]
         del self.tickers_and_long_or_short[ticker]
+        del self.tickers_and_num_shares[ticker]
         if len(self.tickers_and_investments) > 0:
             for hold_dur in self.start_dates.keys():
                 # self.data[hold_dur].drop(ticker, axis=1, inplace=True)
@@ -159,9 +171,10 @@ class Controller:
                 "1m": pd.DataFrame()
             }
 
-    def update_stock_info(self, ticker, investment, is_long, algorithm_indices):
+    def update_stock_info(self, ticker, num_shares, investment, is_long, algorithm_indices):
         self.tickers_and_investments[ticker] = investment
         self.tickers_and_long_or_short[ticker] = is_long
+        self.tickers_and_num_shares[ticker] = num_shares
         for algorithm in algorithm_indices:
             alg_results = self.results[self.algorithms_with_indices[algorithm]]
             for hold_dur in alg_results:
@@ -362,9 +375,9 @@ class Controller:
         # data = self.data[hold_duration][(self.today - relativedelta(months=6)):]["Adj Close"]
         risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
                                    self.tickers_and_long_or_short.values(), data)
-        volatility = risk_metrics.calculateVolatility(ticker)
-        self.volatilities[ticker] = volatility
-        return volatility
+        vol, cat = risk_metrics.calculateVolatility(ticker)
+        self.volatilities[ticker] = (vol, cat)
+        return (vol, cat)
 
     def get_sharpe_ratio(self, ticker, hold_duration):
         data = self.data[hold_duration]["Adj Close"]

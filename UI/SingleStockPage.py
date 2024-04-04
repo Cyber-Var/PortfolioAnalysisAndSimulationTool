@@ -347,16 +347,20 @@ class SingleStockPage(QWidget, Page):
     def update_graph(self):
         self.graph_figure.clear()
         if self.history_graph_radio.isChecked():
+            self.logger.info("Displaying the History Price graph.")
             self.graph_figure = self.controller.plot_historical_price_data(self.ticker, self.hold_duration, self.graph_figure)
         elif self.moving_average_graph_radio.isChecked():
+            self.logger.info("Displaying the Moving Average graph.")
             self.graph_figure = self.controller.plotMovingAverage(self.ticker, self.hold_duration, self.graph_figure)
         elif self.arima_graph_radio.isChecked():
+            self.logger.info("Displaying the ARIMA graph.")
             self.algorithms_combo.setCurrentIndex(6)
             self.algorithm_changed()
             # if self.ticker not in self.controller.arima_results[self.hold_duration].keys():
             #     self.controller.run_arima(self.ticker, self.hold_duration)
             self.graph_figure = self.controller.plotARIMA(self.ticker, self.hold_duration, self.graph_figure)
         else:
+            self.logger.info("Displaying the Monte Carlo Simulation graph.")
             self.algorithms_combo.setCurrentIndex(4)
             self.algorithm_changed()
             # if self.ticker not in self.controller.monte_carlo_results[self.hold_duration].keys():
@@ -386,6 +390,7 @@ class SingleStockPage(QWidget, Page):
             self.profit_loss_result_label.hide()
         else:
             algorithm_index = self.algorithm_names.index(algorithm_entered)
+            self.logger.info(f"Displaying results for algorithm with index {algorithm_index}")
 
             if self.ticker not in self.algorithm_results[algorithm_index][self.hold_duration].keys():
                 self.controller.run_algorithm(self.ticker, algorithm_index, self.hold_duration)
@@ -428,10 +433,6 @@ class SingleStockPage(QWidget, Page):
             self.predicted_price_label.show()
             self.predicted_price_result_label.show()
             self.profit_loss_result_label.show()
-
-    def open_menu_page(self):
-        # TODO: create logic
-        self.logger.info(f'Opening the Portfolio Page')
 
 
 class CustomComboBox(QComboBox):

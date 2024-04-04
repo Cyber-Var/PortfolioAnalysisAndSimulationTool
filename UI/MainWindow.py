@@ -1,4 +1,7 @@
+import logging
+import os
 import sys
+from datetime import date
 
 import pandas as pd
 from PyQt5.QtCore import QEvent, Qt
@@ -14,8 +17,12 @@ from UI.SingleStockPage import SingleStockPage
 
 
 class MainWindow(QMainWindow):
+    user_activity_file_name = "user_activity.txt"
+
     def __init__(self, dpi):
         super().__init__()
+
+        self.logger = logging.getLogger(__name__)
 
         self.dpi = dpi
 
@@ -32,9 +39,10 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.stacked_widget)
 
         self.controller = Controller()
+        set_algorithms = self.set_up_controller()
 
         self.menu_page = MenuPage(self, self.controller)
-        self.portfolio_page = PortfolioPage(self, self.controller)
+        self.portfolio_page = PortfolioPage(self, self.controller, set_algorithms)
         self.single_stock_page = SingleStockPage(self, self.controller, dpi)
 
         self.stacked_widget.addWidget(self.menu_page)
@@ -61,6 +69,48 @@ class MainWindow(QMainWindow):
         exit_option.triggered.connect(self.close)
         options_menu.addAction(exit_option)
 
+    def set_up_controller(self):
+        self.logger.info(f'Reading previously saved user activity from file')
+        try:
+            with (open(self.user_activity_file_name, "r") as f):
+                last_date = f.readline().strip()
+                set_algorithms = [False, False, False, False, False, False]
+                while True:
+                    lines = [f.readline() for _ in range(5)]
+
+                    if all(not line for line in lines):
+                        break
+
+                    one_stock_data = lines[0].strip().split(",")
+                    ticker = one_stock_data[0]
+                    self.controller.add_ticker(ticker, int(one_stock_data[1]), None,
+                                               bool(one_stock_data[2]))
+
+                    alg_results_1d = lines[1].strip().split(",")[:6]
+                    alg_results_1w = lines[2].strip().split(",")[:6]
+                    alg_results_1m = lines[3].strip().split(",")[:6]
+                    for index in range(len(lines[1].strip().split(",")[:6])):
+                        if alg_results_1d[index] != "":
+                            set_algorithms[index] = True
+                            alg_name = self.controller.algorithms_with_indices[index]
+                            if index == 4:
+                                self.controller.results[alg_name]["1d"][ticker] = alg_results_1d[index]
+                            else:
+                                self.controller.results[alg_name]["1d"][ticker] = float(alg_results_1d[index])
+
+                    one_risk_metrics = lines[4].strip().split(",")
+                    if one_risk_metrics[0] != "":
+                        self.controller.volatilities[ticker] = (float(one_risk_metrics[0]), one_risk_metrics[1])
+                    if one_risk_metrics[2] != "":
+                        self.controller.sharpe_ratios[ticker] = (float(one_risk_metrics[2]), one_risk_metrics[3])
+                    if one_risk_metrics[4] != "":
+                        self.controller.VaRs[ticker] = float(one_risk_metrics[4])
+            return set_algorithms
+        except Exception:
+            self.logger.error("User activity failed to be read.")
+            return
+        print(self.controller.results)
+
     def changePage(self, page):
         currentIndex = self.stacked_widget.currentIndex()
         currentPage = self.stacked_widget.widget(currentIndex)
@@ -81,12 +131,65 @@ class MainWindow(QMainWindow):
         popup = TopESGPopUp()
         popup.exec_()
 
+    def closeEvent(self, event):
+        self.logger.info(f'Saving user activity to file.')
+        try:
+            with open(self.user_activity_file_name, 'w') as f:
+                today = date.today().strftime("%d.%m.%Y")
+                f.write(f"{today}\n")
+                for ticker in self.controller.tickers_and_investments.keys():
+                    f.write(f"{ticker},{self.controller.tickers_and_num_shares[ticker]},"
+                            f"{self.controller.tickers_and_long_or_short[ticker]}\n")
+
+                    alg_results_1d = ""
+                    alg_results_1w = ""
+                    alg_results_1m = ""
+                    print(self.controller.results)
+                    for algorithm in self.controller.results:
+                        alg_results = self.controller.results[algorithm]
+                        print(alg_results)
+                        if ticker in alg_results["1d"]:
+                            print("helo")
+                            alg_results_1d += str(alg_results["1d"][ticker]) + ","
+                        else:
+                            alg_results_1d += ","
+                        if ticker in alg_results["1w"]:
+                            alg_results_1w += str(alg_results["1w"][ticker]) + ","
+                        else:
+                            alg_results_1w += ","
+                        if ticker in alg_results["1m"]:
+                            alg_results_1m += str(alg_results["1m"][ticker]) + ","
+                        else:
+                            alg_results_1m += ","
+
+                    risk_metrics = ""
+                    if ticker in self.controller.risk_metrics["volatility"]:
+                        vol, cat = self.controller.risk_metrics["volatility"][ticker]
+                        risk_metrics += str(vol) + "," + cat + ","
+                    else:
+                        risk_metrics += ","
+                    if ticker in self.controller.risk_metrics["sharpe_ratio"]:
+                        vol, cat = self.controller.risk_metrics["sharpe_ratio"][ticker]
+                        risk_metrics += str(vol) + "," + cat + ","
+                    else:
+                        risk_metrics += ","
+                    if ticker in self.controller.risk_metrics["VaR"]:
+                        risk_metrics += str(self.controller.risk_metrics["VaR"][ticker])
+                    else:
+                        risk_metrics += "-"
+                    f.write(f"{alg_results_1d}\n{alg_results_1w}\n{alg_results_1m}\n{risk_metrics}\n")
+        except IOError:
+            self.logger.error("Saving user activity to file failed.")
+
 
 class TopESGPopUp(QDialog):
 
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Top ESG Companies")
+
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("Displaying the Top ESG companies page")
 
         self.previous_top_N = 0
         self.top_N = 5
@@ -169,6 +272,8 @@ class TopESGPopUp(QDialog):
     def display_top_esg_companies(self, not_first=True):
         if self.top_N == self.previous_top_N and not_first:
             return
+
+        self.logger.info(f"Displaying top {self.top_N} ESG companies.")
 
         top_companies = self.top_companies_df.head(self.top_N)
 
