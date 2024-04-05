@@ -135,7 +135,6 @@ class MainWindow(QMainWindow):
                     #             if index == 2:
                     #                 self.controller.bayesian_confidences["1m"][ticker] = (float(res[2]), float(res[3]))
 
-            print(self.controller.results)
             return set_algorithms, hold_duration
         except Exception as e:
             traceback.print_exc()
@@ -182,7 +181,6 @@ class MainWindow(QMainWindow):
 
                             if ticker in alg_results[hold_dur]:
                                 if algorithm == "monte_carlo" or algorithm == "arima":
-                                    print("YES")
                                     str_result += "a|"
                                 else:
                                     str_result += str(alg_results[hold_dur][ticker]) + "," + str(alg_predicted_prices[hold_dur][ticker]) + "|"
