@@ -98,9 +98,7 @@ class MonteCarloSimulation(Regression):
 
         return monte
 
-    def plotSimulation(self, monte, s_0, figure):
-        ax = figure.add_subplot(111)
-
+    def plotSimulation(self, monte, s_0):
         # Add starting point to each path:
         monte2 = np.hstack((np.array([[s_0] for _ in range(self.num_of_simulations)]), monte))
 
@@ -112,33 +110,28 @@ class MonteCarloSimulation(Regression):
 
         # Draw the simulation graph:
         for i in range(self.num_of_simulations):
-            ax.plot(x_axis, monte2[i], alpha=0.5)
+            plt.plot(x_axis, monte2[i], alpha=0.5)
 
-        ax.set_ylabel('Price in USD')
-        ax.set_xlabel('Prediction Days')
-        # ax.xticks(fontsize=9)
-        # plt.xticks(rotation=340)
-        for label in ax.get_xticklabels():
-            label.set_fontsize(9)
-            label.set_rotation(340)
+        plt.ylabel('Price in USD')
+        plt.xlabel('Prediction Days')
+        plt.xticks(fontsize=9)
+        plt.xticks(rotation=340)
 
         if self.hold_duration == "1d" or self.hold_duration == "1w":
-            ax.set_xticks(x_axis)
+            plt.xticks(x_axis)
 
-        ax.axhline(y=s_0, color='r', linestyle='-')
+        plt.axhline(y=s_0, color='r', linestyle='-')
 
-        # _, labels = plt.yticks()
-        labels = ax.get_yticklabels()
-        label_texts = [label.get_text() for label in labels]
+        labels = plt.gca().get_yticklabels()
 
         prices = []
-        for label in label_texts:
+        for label in labels:
             try:
                 prices.append(float(label.get_text()))
             except Exception:
                 continue
 
-        return prices, figure
+        return prices
 
     def printProbabilities(self, labels, monte, s_0):
         start_price = s_0
@@ -152,19 +145,20 @@ class MonteCarloSimulation(Regression):
         less = prices[prices < start_price]
         more = prices[prices > start_price]
         test_data = [mo[-1] for mo in monte]
-        results = []
+        growth_results = []
+        fall_results = []
         num = 100 / self.num_of_simulations
 
         for l in less:
-            percentage = (test_data < l).sum() * num
+            percentage = round((test_data < l).sum() * num, 2)
             if percentage > 0:
-                results.append("< " + str(l) + ": " + str(percentage))
+                growth_results.append("< " + str(l) + ": " + str(percentage) + "%")
         for m in more:
             percentage = (test_data > m).sum() * num
             if percentage > 0:
-                results.append("> " + str(m) + ": " + str(percentage))
-        print("Monte Carlo Simulation Price Probabilities:")
-        print(results, "\n")
+                fall_results.append("> " + str(m) + ": " + str(percentage) + "%")
+
+        return growth_results[::-1], fall_results
 
     def evaluateModel(self):
         # TODO: explain this sliding method clearly in report

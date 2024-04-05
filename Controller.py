@@ -85,6 +85,7 @@ class Controller:
         self.bayesian_confidences =  {"1d": {}, "1w": {}, "1m": {}}
         self.monte_carlo_results = {"1d": {}, "1w": {}, "1m": {}}
         self.montes = {"1d": {}, "1w": {}, "1m": {}}
+        self.monte_plot_labels = {"1d": {}, "1w": {}, "1m": {}}
         self.lstm_results = {"1d": {}, "1w": {}, "1m": {}}
         self.arima_results = {"1d": {}, "1w": {}, "1m": {}}
         self.arimas = {"1d": {}, "1w": {}, "1m": {}}
@@ -145,11 +146,11 @@ class Controller:
         self.algorithms_with_indices = {}
         for index, name in enumerate(self.results.keys()):
             self.algorithms_with_indices[index] = name
-        # print(self.algorithms_with_indices)
 
         self.top_companies_df = pd.read_csv('top_esg_companies.csv', sep=';')
 
         self.portfolio_results = {}
+        self.tickers_and_company_names_sp500 = None
 
     def add_ticker(self, ticker, num_shares, investment, is_long):
         ticker = ticker.upper()
@@ -269,11 +270,7 @@ class Controller:
         monte = MonteCarloSimulation(10000, self.prediction_dates[hold_duration], data["Adj Close"],
                                      weekdays, hold_duration, self.start_dates[hold_duration],
                                      self.tickers_and_long_or_short[ticker])
-        # print("Monte Carlo Simulation Evaluation:")
-        # mse, mae, mape, r2 = monte.evaluateModel()
-        # monte.printEvaluation(mse, mae, mape, r2)
         results, s_0 = monte.makeMCPrediction(monte.get_data_for_prediction())
-        # monte.printProbabilities(plot_labels, results, s_0)
         result = monte.displayResults(results, s_0)
 
         self.monte_carlo_results[hold_duration][ticker] = result
@@ -295,9 +292,6 @@ class Controller:
             params = (3, 50, 0, 25, 'adam', 'mean_squared_error', 50)
         lstm = LSTMAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
                              params, self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
-        # mse, mae, mape, r2 = lstm.evaluateModel()
-        # print("LSTM Evaluation:")
-        # lstm.printEvaluation(mse, mae, mape, r2)
         prediction, predicted_price = lstm.predict_price(lstm.get_data_for_prediction())
         self.lstm_results[hold_duration][ticker] = prediction[0][0]
         self.lstm_predicted_prices[hold_duration][ticker] = predicted_price[0][0]
@@ -320,9 +314,7 @@ class Controller:
         arima = ARIMAAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
                                today_data, params, self.tickers_and_long_or_short[ticker],
                                self.tickers_and_investments[ticker])
-        # print("ARIMA Evaluation:")
-        # mse, mae, mape, r2 = arima.evaluateModel()
-        # arima.printEvaluation(mse, mae, mape, r2)
+
         data_for_prediction = arima.get_data_for_prediction()
         predictions, predicted_price, conf, conf_profit_loss = arima.predict_price(data_for_prediction)
 
@@ -330,7 +322,7 @@ class Controller:
         self.arimas[hold_duration][ticker] = (arima, predicted_price)
         self.arima_predicted_prices[hold_duration][ticker] = predicted_price.iloc[-1]
         self.arima_confidences[hold_duration][ticker] = (conf, conf_profit_loss)
-        print(self.arima_confidences)
+
         if evaluate:
             self.arima_evaluation[hold_duration][ticker] = arima.evaluateModel()
             print(self.arima_evaluation)
@@ -364,10 +356,10 @@ class Controller:
         vol, cat = risk_metrics.calculateVolatility(ticker)
         sharpe_ratio, sharpe_ratio_cat = risk_metrics.calculateSharpeRatio(ticker)
         VaR = risk_metrics.calculateVaR(ticker, 0.95, vol)
-        print("Risk Metrics:")
-        print("Volatility:", cat, "(" + str(vol) + ")")
-        print("Sharpe Ratio:", sharpe_ratio, sharpe_ratio_cat)
-        print("VaR: " + str(VaR))
+        # print("Risk Metrics:")
+        # print("Volatility:", cat, "(" + str(vol) + ")")
+        # print("Sharpe Ratio:", sharpe_ratio, sharpe_ratio_cat)
+        # print("VaR: " + str(VaR))
 
         # TODO: maybe different sharpe ratio and VaR should be calculated for 1d, 1w and 1m ?
         self.volatilities[ticker] = (vol, cat)
@@ -431,12 +423,8 @@ class Controller:
         return portfolio_VaR
 
     def run_model(self, model):
-        # mse, mae, mape, r2 = model.evaluateModel()
-        # print(model_name, "Evaluation:")
-        # model.printEvaluation(mse, mae, mape, r2)
         predicted_profit_loss, predicted_price = model.predict_price()
-        # print(predicted_price)
-        return predicted_profit_loss[0][0], predicted_price[0][0]  # , mse, mae, mape, r2
+        return predicted_profit_loss[0][0], predicted_price[0][0]
 
     def calculate_portfolio_result(self, index, hold_duration):
         algorithm_name = self.algorithms_with_indices[index]
@@ -539,10 +527,10 @@ class Controller:
         figure = arima.plot_arima(predicted_prices, data_for_prediction, figure)
         return figure
 
-    def plot_monte_carlo(self, ticker, hold_duration, figure):
+    def get_monte_carlo_probabilities(self, ticker, hold_duration):
         monte, s_0, results = self.montes[hold_duration][ticker]
-        _, figure =  monte.plotSimulation(results, s_0, figure)
-        return figure
+        plot_labels = monte.plotSimulation(results, s_0)
+        return monte.printProbabilities(plot_labels, results, s_0)
 
     def handle_ranking(self, need_to_update=False):
         current_date = datetime.now()
@@ -581,7 +569,7 @@ class Controller:
                 self.run_algorithm(ticker, algorithm_index, "1w", True)
                 self.run_algorithm(ticker, algorithm_index, "1m", True)
 
-        print(self.evaluations)
+        # print(self.evaluations)
 
         # Sum the MSE, MAE, MAPE and R^2 scores of each algorithm, separately for daily, weekly and monthly predictions:
 
@@ -602,10 +590,10 @@ class Controller:
                     sums_mae[algorithm][hold_dur] += evals[1]
                     sums_mape[algorithm][hold_dur] += evals[2]
                     sums_r2[algorithm][hold_dur] -= evals[3]
-        print(sums_mse)
-        print(sums_mae)
-        print(sums_mape)
-        print(sums_r2)
+        # print(sums_mse)
+        # print(sums_mae)
+        # print(sums_mape)
+        # print(sums_r2)
 
         # Rank the algorithms based on MSE, MAE, MAPE and R^2 separately:
         rankings_mse = {}
@@ -620,14 +608,14 @@ class Controller:
             rankings_mape[duration] = sorted([(alg, sums_mape[alg][duration]) for alg in sums_mape], key=lambda x: x[1])
             rankings_r2[duration] = sorted([(alg, sums_r2[alg][duration]) for alg in sums_r2], key=lambda x: x[1])
 
-        print("MSE rankings:")
-        print(rankings_mse)
-        print("MAE rankings:")
-        print(rankings_mae)
-        print("MAPE rankings:")
-        print(rankings_mape)
-        print("R^2 rankings:")
-        print(rankings_r2)
+        # print("MSE rankings:")
+        # print(rankings_mse)
+        # print("MAE rankings:")
+        # print(rankings_mae)
+        # print("MAPE rankings:")
+        # print(rankings_mape)
+        # print("R^2 rankings:")
+        # print(rankings_r2)
 
         # rankings_mse = {'1d': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 71.26391312326031), ('random_forest', 336.60440620615987)], '1w': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 391.2276127608421), ('random_forest', 1029.9607039232037)], '1m': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 1939.2227765348366), ('random_forest', 2022.090700119813)]}
         # rankings_mae = {'1d': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 9.901447382031126), ('random_forest', 20.37349078540057)], '1w': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 25.37079207073901), ('random_forest', 39.775791630646296)], '1m': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('random_forest', 56.33070692269658), ('linear_regression', 57.41482192776909)]}
@@ -682,4 +670,24 @@ class Controller:
 
         return rankings_read
 
+    def get_sp500_tickers(self, ):
+        # table = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
+        # sp500 = table[0]
+        # tickers = sp500['Symbol'].tolist()
+        # companies = sp500['Security'].tolist()
+        # sp500_companies = [f"{ticker}|{company}" for ticker, company in zip(tickers, companies)]
+        # with open("sp500_companies.txt", 'w') as f:
+        #     for stock in sp500_companies:
+        #         f.write(stock + '\n')
 
+        if self.tickers_and_company_names_sp500 is None:
+            tickers = []
+            companies = []
+            # TODO: choose between market_cap_above_1_bil_companies.txt and sp500_companies.txt
+            with open("market_cap_above_1_bil_companies.txt", 'r') as f:
+                for line in f:
+                    ticker, company = line.strip().split('|', 1)
+                    tickers.append(ticker)
+                    companies.append(company)
+            self.tickers_and_company_names_sp500 = [f"{ticker} - {company}" for ticker, company in zip(tickers, companies)]
+        return self.tickers_and_company_names_sp500

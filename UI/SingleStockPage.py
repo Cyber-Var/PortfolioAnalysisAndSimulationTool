@@ -18,6 +18,7 @@ class SingleStockPage(QWidget, Page):
     def __init__(self, main_window, controller, dpi):
         super().__init__()
 
+        self.graph_figure = None
         self.main_window = main_window
         self.controller = controller
         self.dpi = dpi
@@ -210,12 +211,6 @@ class SingleStockPage(QWidget, Page):
         self.algorithms_combo.addItem("Please select an algorithm")
         for algorithm_name in self.algorithm_names:
             self.algorithms_combo.addItem(algorithm_name)
-        # self.algorithms_combo.addItem('Linear Regression')
-        # self.algorithms_combo.addItem('Random Forest')
-        # self.algorithms_combo.addItem('Bayesian')
-        # self.algorithms_combo.addItem('Monte Carlo')
-        # self.algorithms_combo.addItem('LSTM')
-        # self.algorithms_combo.addItem('ARIMA')
         self.algorithms_combo.activated.connect(self.algorithm_changed)
         self.algorithms_combo.setCurrentIndex(0)
         self.algorithms_combo.setFixedSize(200, 50)
@@ -254,6 +249,25 @@ class SingleStockPage(QWidget, Page):
         self.profit_loss_result_label.hide()
         profit_loss_hbox.addWidget(self.profit_loss_result_label)
 
+        monte_probabilities_hbox = QHBoxLayout()
+        self.growth_probabilities_vbox = QVBoxLayout()
+        self.fall_probabilities_vbox = QVBoxLayout()
+        monte_probabilities_hbox.addLayout(self.growth_probabilities_vbox)
+        monte_probabilities_hbox.addLayout(self.fall_probabilities_vbox)
+
+        for i in range(9):
+            probability_label_1 = QLabel()
+            probability_label_1.setObjectName("algorithmResultSingleStock")
+            probability_label_1.hide()
+            self.growth_probabilities_vbox.addWidget(probability_label_1)
+
+            probability_label_2 = QLabel()
+            probability_label_2.setObjectName("algorithmResultSingleStock")
+            probability_label_2.hide()
+            self.fall_probabilities_vbox.addWidget(probability_label_2)
+
+        algorithm_results_vbox.addLayout(monte_probabilities_hbox)
+
     def draw_graphs_box(self):
         graphs_widget = QWidget()
         graphs_widget.setObjectName("singleStockVBox")
@@ -283,11 +297,11 @@ class SingleStockPage(QWidget, Page):
         self.arima_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
         graphs_choice_hbox.addWidget(self.arima_graph_radio)
 
-        self.monte_carlo_graph_radio = QRadioButton("Monte Carlo Simulation")
-        self.monte_carlo_graph_radio.setObjectName('inputLabel')
-        self.monte_carlo_graph_radio.setFixedSize(200, 50)
-        self.monte_carlo_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
-        graphs_choice_hbox.addWidget(self.monte_carlo_graph_radio)
+        # self.monte_carlo_graph_radio = QRadioButton("Monte Carlo Simulation")
+        # self.monte_carlo_graph_radio.setObjectName('inputLabel')
+        # self.monte_carlo_graph_radio.setFixedSize(200, 50)
+        # self.monte_carlo_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
+        # graphs_choice_hbox.addWidget(self.monte_carlo_graph_radio)
 
         self.graph_figure = Figure(figsize=(700, 550), dpi=self.dpi)
         self.graph_figure = self.controller.plot_historical_price_data(self.ticker, self.hold_duration, self.graph_figure)
@@ -341,7 +355,7 @@ class SingleStockPage(QWidget, Page):
         if checked:
             self.logger.info('Handling the change in choice of graph.')
             if (self.history_graph_radio.isChecked() or self.moving_average_graph_radio.isChecked() or
-                    self.arima_graph_radio.isChecked() or self.monte_carlo_graph_radio.isChecked()):
+                    self.arima_graph_radio.isChecked()):
                 self.update_graph()
 
     def update_graph(self):
@@ -352,20 +366,18 @@ class SingleStockPage(QWidget, Page):
         elif self.moving_average_graph_radio.isChecked():
             self.logger.info("Displaying the Moving Average graph.")
             self.graph_figure = self.controller.plotMovingAverage(self.ticker, self.hold_duration, self.graph_figure)
-        elif self.arima_graph_radio.isChecked():
+        else:
             self.logger.info("Displaying the ARIMA graph.")
             self.algorithms_combo.setCurrentIndex(6)
             self.algorithm_changed()
-            # if self.ticker not in self.controller.arima_results[self.hold_duration].keys():
-            #     self.controller.run_arima(self.ticker, self.hold_duration)
             self.graph_figure = self.controller.plotARIMA(self.ticker, self.hold_duration, self.graph_figure)
-        else:
-            self.logger.info("Displaying the Monte Carlo Simulation graph.")
-            self.algorithms_combo.setCurrentIndex(4)
-            self.algorithm_changed()
-            # if self.ticker not in self.controller.monte_carlo_results[self.hold_duration].keys():
-            #     self.controller.run_monte_carlo(self.ticker, self.hold_duration)
-            self.graph_figure = self.controller.plot_monte_carlo(self.ticker, self.hold_duration, self.graph_figure)
+        # else:
+        #     self.logger.info("Displaying the Monte Carlo Simulation graph.")
+        #     if self.ticker not in self.controller.montes[self.hold_duration]:
+        #         self.controller.run_monte_carlo(self.ticker, self.hold_duration)
+        #     self.graph_figure = self.controller.plot_monte_carlo(self.ticker, self.hold_duration, self.graph_figure)
+        #     self.algorithms_combo.setCurrentIndex(4)
+        #     self.algorithm_changed()
         self.graph_canvas.draw()
 
     # def num_shares_changed(self):
@@ -382,6 +394,11 @@ class SingleStockPage(QWidget, Page):
 
     def algorithm_changed(self):
         algorithm_entered = self.algorithms_combo.currentText()
+
+        if self.growth_probabilities_vbox.itemAt(0).widget().isVisible():
+            for i in range(9):
+                self.growth_probabilities_vbox.itemAt(i).widget().hide()
+                self.fall_probabilities_vbox.itemAt(i).widget().hide()
 
         if algorithm_entered == "Please select an algorithm":
             self.predicted_price_label.hide()
@@ -409,8 +426,32 @@ class SingleStockPage(QWidget, Page):
                     f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}")
 
             if algorithm_index == 3:
-                self.monte_carlo_graph_radio.setChecked(True)
-                self.profit_loss_result_label.setText(self.algorithm_results[algorithm_index][self.hold_duration][self.ticker])
+                monte_result = self.algorithm_results[algorithm_index][self.hold_duration][self.ticker].split()
+                percentage = float(monte_result[0][:-1])
+                last_word = monte_result[-1]
+
+                if last_word == "growth":
+                    self.growth_probabilities_vbox.itemAt(0).widget().setText(f"Chance of growth: {percentage}")
+                    self.fall_probabilities_vbox.itemAt(0).widget().setText(f"Chance of fall: {100 - percentage}")
+                else:
+                    self.growth_probabilities_vbox.itemAt(0).widget().setText(f"Chance of growth: {100 - percentage}")
+                    self.fall_probabilities_vbox.itemAt(0).widget().setText(f"Chance of fall: {percentage}")
+                self.growth_probabilities_vbox.itemAt(0).widget().show()
+                self.fall_probabilities_vbox.itemAt(0).widget().show()
+
+                growth_probs, fall_probs = self.controller.get_monte_carlo_probabilities(self.ticker, self.hold_duration)
+                for i in range(len(growth_probs)):
+                    if i + 1 == 9:
+                        break
+                    self.growth_probabilities_vbox.itemAt(i + 1).widget().setText(growth_probs[i])
+                    self.growth_probabilities_vbox.itemAt(i + 1).widget().show()
+                for i in range(len(fall_probs)):
+                    if i + 1 == 9:
+                        break
+                    self.fall_probabilities_vbox.itemAt(i + 1).widget().setText(fall_probs[i])
+                    self.fall_probabilities_vbox.itemAt(i + 1).widget().show()
+                self.growth_probabilities_vbox.addStretch(1)
+                self.fall_probabilities_vbox.addStretch(1)
             else:
                 profit_loss = self.algorithm_results[algorithm_index][self.hold_duration][self.ticker]
                 if profit_loss >= 0:

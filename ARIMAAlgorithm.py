@@ -153,8 +153,6 @@ class ARIMAAlgorithm(Regression):
         return super().calculateEvalMetrics(all_predictions, all_tests)
 
     def plot_arima(self, predictions, data, figure):
-        print(data)
-        print(predictions)
         data.index = data["Date"]
 
         historical_dates = data.index[-self.historical_range_for_graph:]
@@ -180,9 +178,6 @@ class ARIMAAlgorithm(Regression):
         historical_prices = data['Adj Close'][-self.historical_range_for_graph:]
 
         ax = figure.add_subplot(111)
-
-        print(future_dates)
-        print(y_axis)
 
         ax.plot(historical_dates, historical_prices, color='blue', label='Historical Adj Close')
         ax.plot(future_dates, y_axis, color='red', label='ARIMA Forecast')

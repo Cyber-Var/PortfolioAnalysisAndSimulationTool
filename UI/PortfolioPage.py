@@ -2,7 +2,7 @@ import re
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox,
-                             QScrollArea, QDialog, QLineEdit)
+                             QScrollArea, QDialog, QLineEdit, QCompleter)
 from PyQt5.QtCore import Qt, pyqtSignal
 import yfinance as yf
 
@@ -166,7 +166,7 @@ class PortfolioPage(QWidget, Page):
         self.VaR_col_name.setFixedSize(60, 50)
         self.more_info_col_name = self.create_column_names_labels("More\nInfo")
         self.more_info_col_name.setFixedSize(50, 50)
-        self.edit_col_name = self.create_column_names_labels("More\nInfo")
+        self.edit_col_name = self.create_column_names_labels("Edit\nStock")
         self.edit_col_name.setFixedSize(50, 50)
         self.result_col_names = [self.lin_reg_col_name, self.random_forest_col_name, self.bayesian_col_name,
                                  self.monte_carlo_col_name, self.lstm_col_name, self.arima_col_name]
@@ -447,7 +447,7 @@ class PortfolioPage(QWidget, Page):
                 self.update_algorithm_values(index)
 
     def show_add_stock_window(self):
-        popup = AddStockPopUp()
+        popup = AddStockPopUp(self.controller.get_sp500_tickers())
         popup.valid_ticker_entered.connect(self.add_ticker)
         popup.exec_()
 
@@ -506,7 +506,7 @@ class PortfolioPage(QWidget, Page):
             long_short_str = "Long"
         else:
             long_short_str = "Short"
-        results_hbox.itemAt(2).widget().setText(str(investment) + "$ " + long_short_str)
+        results_hbox.itemAt(2).widget().setText("$ " + str(investment) + " " + long_short_str)
 
         if self.algorithms[0]:
             self.lin_reg_col_name.show()
@@ -585,7 +585,6 @@ class PortfolioPage(QWidget, Page):
         ticker_layout = self.results_vbox.itemAt(index + 1)
         if investment == -1:
             self.logger.info(f"Removing stock {ticker} from portfolio.")
-            self.controller.tickers_and_num_shares.pop(ticker, None)
             self.controller.remove_ticker(ticker)
             if ticker_layout.layout():
                 self.delete_layout(ticker_layout.layout())
@@ -594,21 +593,16 @@ class PortfolioPage(QWidget, Page):
         else:
             self.logger.info(f"Stock {ticker} changed to: num_shares={num_shares}, is_long={is_long}.")
             self.controller.tickers_and_num_shares[ticker] = num_shares
+
+            if is_long:
+                long_short_str = "Long"
+            else:
+                long_short_str = "Short"
+            self.results_map[ticker].itemAt(2).widget().setText("$ " + str(investment) + " " + long_short_str)
             algorithm_indices = [index for index, value in enumerate(self.algorithms) if value]
             self.controller.update_stock_info(ticker, num_shares, investment, is_long, algorithm_indices)
             for index in algorithm_indices:
                 self.update_algorithm_values(index)
-
-
-    # def open_menu_page(self):
-    #     # TODO: create logic
-    #     self.logger.info(f'Opening the Main Menu Page')
-
-    # def open_single_stock_page(self, ticker, stock_name, one_share_price, num_shares):
-    #     self.logger.info(f'Opening the {ticker} Page')
-    #     single_stock_page = SingleStockPage(self.main_window, self.controller, ticker, stock_name,
-    #                                         one_share_price, num_shares, self.hold_duration)
-    #     self.main_window.setCentralWidget(single_stock_page)
 
 
 class AddStockPopUp(QDialog):
@@ -617,7 +611,7 @@ class AddStockPopUp(QDialog):
     share_price = None
     should_validate = False
 
-    def __init__(self):
+    def __init__(self, tickers_and_company_names_sp500):
         super().__init__()
         self.setWindowTitle("Add Stock")
 
@@ -625,9 +619,14 @@ class AddStockPopUp(QDialog):
 
         ticker_label = QLabel("Please enter the stock ticker to add:")
 
+        self.completer = QCompleter(tickers_and_company_names_sp500, self)
+        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.completer.setFilterMode(Qt.MatchContains)
+
         ticker_hbox = QHBoxLayout()
-        self.ticker_name = QLineEdit()
+        self.ticker_name = CustomLineEdit(self.completer)
         self.ticker_name.returnPressed.connect(self.validate_ticker)
+        self.ticker_name.setCompleter(self.completer)
         ticker_hbox.addWidget(self.ticker_name)
         self.ticker_enter_button = QPushButton("Enter")
         self.ticker_enter_button.clicked.connect(self.validate_ticker)
@@ -700,7 +699,7 @@ class AddStockPopUp(QDialog):
         is_valid, price = self.is_valid_ticker(ticker)
 
         if is_valid:
-            self.ticker = ticker
+            self.ticker = ticker.split()[0]
 
             share_price = round(price.iloc[0], 2)
             self.share_price = share_price
@@ -719,6 +718,7 @@ class AddStockPopUp(QDialog):
 
     def is_valid_ticker(self, ticker):
         try:
+            ticker = ticker.split()[0]
             if not re.match(r'^[A-Za-z0-9]+$', ticker):
                 return False, -1
             data = yf.Ticker(ticker)
@@ -771,6 +771,25 @@ class AddStockPopUp(QDialog):
         if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
             event.accept()
             self.add_button.setFocus()
+        else:
+            super().keyPressEvent(event)
+
+
+class CustomLineEdit(QLineEdit):
+    enter_pressed = pyqtSignal()
+
+    def __init__(self, completer, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.completer = completer
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            if self.completer and self.completer.popup().isVisible():
+                if self.completer.currentCompletion():
+                    self.setText(self.completer.currentCompletion())
+                else:
+                    self.setText(self.completer.model().index(0, 0).data())
+            self.enter_pressed.emit()
         else:
             super().keyPressEvent(event)
 
@@ -861,7 +880,7 @@ class EditStockPopUp(QDialog):
             self.invalid_investment_label.show()
 
     def delete_stock(self):
-        self.perform_change.emit(self.ticker, -1, True)
+        self.perform_change.emit(self.ticker, -1, -1, True)
         self.close()
 
     def keyPressEvent(self, event):

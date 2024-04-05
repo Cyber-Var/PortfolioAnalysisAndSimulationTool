@@ -77,6 +77,11 @@ class MainWindow(QMainWindow):
         try:
             with (open(self.user_activity_file_name, "r") as f):
                 last_date = f.readline().strip()
+                if last_date != date.today().strftime("%d.%m.%Y"):
+                    should_update = True
+                else:
+                    should_update = False
+
                 hold_duration = f.readline().strip()
                 while True:
                     lines = [f.readline() for _ in range(4)]
@@ -99,7 +104,7 @@ class MainWindow(QMainWindow):
                         for index in range(len(alg_results[i])):
                             if alg_results[i][index] != "":
                                 set_algorithms[index] = True
-                                if index == 3 or index == 5:
+                                if index == 3 or index == 5 or should_update:
                                     self.controller.run_algorithm(ticker, index, hold_dur)
                                 else:
                                     alg_name = self.controller.algorithms_with_indices[index]
@@ -108,32 +113,6 @@ class MainWindow(QMainWindow):
                                     self.controller.predicted_prices[alg_name][hold_dur][ticker] = float(res[1])
                                     if index == 2:
                                         self.controller.bayesian_confidences[hold_dur][ticker] = (float(res[2]), float(res[3]))
-
-                    # for index in range(len(alg_results_1w)):
-                    #     if alg_results_1w[index] != "":
-                    #         set_algorithms[index] = True
-                    #         if index == 3 or index == 5:
-                    #             self.controller.run_algorithm(ticker, index, "1w")
-                    #         else:
-                    #             alg_name = self.controller.algorithms_with_indices[index]
-                    #             res = alg_results_1w[index].split(",")
-                    #             self.controller.results[alg_name]["1w"][ticker] = float(res[0])
-                    #             self.controller.predicted_prices[alg_name]["1w"][ticker] = float(res[1])
-                    #             if index == 2:
-                    #                 self.controller.bayesian_confidences["1w"][ticker] = (float(res[2]), float(res[3]))
-                    #
-                    # for index in range(len(alg_results_1m)):
-                    #     if alg_results_1m[index] != "":
-                    #         set_algorithms[index] = True
-                    #         if index == 3 or index == 5:
-                    #             self.controller.run_algorithm(ticker, index, "1m")
-                    #         else:
-                    #             alg_name = self.controller.algorithms_with_indices[index]
-                    #             res = alg_results_1m[index].split(",")
-                    #             self.controller.results[alg_name]["1m"][ticker] = float(res[0])
-                    #             self.controller.predicted_prices[alg_name]["1m"][ticker] = float(res[1])
-                    #             if index == 2:
-                    #                 self.controller.bayesian_confidences["1m"][ticker] = (float(res[2]), float(res[3]))
 
             return set_algorithms, hold_duration
         except Exception as e:
