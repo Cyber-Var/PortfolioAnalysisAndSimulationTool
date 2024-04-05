@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import traceback
 from datetime import date
 
 import pandas as pd
@@ -39,10 +40,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.stacked_widget)
 
         self.controller = Controller()
-        set_algorithms = self.set_up_controller()
+        self.hold_durations = ["1d", "1w", "1m"]
+        set_algorithms, hold_duration = self.set_up_controller()
 
         self.menu_page = MenuPage(self, self.controller)
-        self.portfolio_page = PortfolioPage(self, self.controller, set_algorithms)
+        self.portfolio_page = PortfolioPage(self, self.controller, set_algorithms, hold_duration)
         self.single_stock_page = SingleStockPage(self, self.controller, dpi)
 
         self.stacked_widget.addWidget(self.menu_page)
@@ -71,45 +73,74 @@ class MainWindow(QMainWindow):
 
     def set_up_controller(self):
         self.logger.info(f'Reading previously saved user activity from file')
+        set_algorithms = [False, False, False, False, False, False]
         try:
             with (open(self.user_activity_file_name, "r") as f):
                 last_date = f.readline().strip()
-                set_algorithms = [False, False, False, False, False, False]
+                hold_duration = f.readline().strip()
                 while True:
-                    lines = [f.readline() for _ in range(5)]
+                    lines = [f.readline() for _ in range(4)]
 
                     if all(not line for line in lines):
                         break
 
-                    one_stock_data = lines[0].strip().split(",")
+                    one_stock_data = lines[0].strip().split("|")
                     ticker = one_stock_data[0]
                     self.controller.add_ticker(ticker, int(one_stock_data[1]), None,
                                                bool(one_stock_data[2]))
 
-                    alg_results_1d = lines[1].strip().split(",")[:6]
-                    alg_results_1w = lines[2].strip().split(",")[:6]
-                    alg_results_1m = lines[3].strip().split(",")[:6]
-                    for index in range(len(lines[1].strip().split(",")[:6])):
-                        if alg_results_1d[index] != "":
-                            set_algorithms[index] = True
-                            alg_name = self.controller.algorithms_with_indices[index]
-                            if index == 4:
-                                self.controller.results[alg_name]["1d"][ticker] = alg_results_1d[index]
-                            else:
-                                self.controller.results[alg_name]["1d"][ticker] = float(alg_results_1d[index])
+                    alg_results_1d = lines[1].strip().split("|")[:6]
+                    alg_results_1w = lines[2].strip().split("|")[:6]
+                    alg_results_1m = lines[3].strip().split("|")[:6]
+                    alg_results = [alg_results_1d, alg_results_1w, alg_results_1m]
 
-                    one_risk_metrics = lines[4].strip().split(",")
-                    if one_risk_metrics[0] != "":
-                        self.controller.volatilities[ticker] = (float(one_risk_metrics[0]), one_risk_metrics[1])
-                    if one_risk_metrics[2] != "":
-                        self.controller.sharpe_ratios[ticker] = (float(one_risk_metrics[2]), one_risk_metrics[3])
-                    if one_risk_metrics[4] != "":
-                        self.controller.VaRs[ticker] = float(one_risk_metrics[4])
-            return set_algorithms
-        except Exception:
-            self.logger.error("User activity failed to be read.")
-            return
-        print(self.controller.results)
+                    for i in range(len(self.hold_durations)):
+                        hold_dur = self.hold_durations[i]
+                        for index in range(len(alg_results[i])):
+                            if alg_results[i][index] != "":
+                                set_algorithms[index] = True
+                                if index == 3 or index == 5:
+                                    self.controller.run_algorithm(ticker, index, hold_dur)
+                                else:
+                                    alg_name = self.controller.algorithms_with_indices[index]
+                                    res = alg_results[i][index].split(",")
+                                    self.controller.results[alg_name][hold_dur][ticker] = float(res[0])
+                                    self.controller.predicted_prices[alg_name][hold_dur][ticker] = float(res[1])
+                                    if index == 2:
+                                        self.controller.bayesian_confidences[hold_dur][ticker] = (float(res[2]), float(res[3]))
+
+                    # for index in range(len(alg_results_1w)):
+                    #     if alg_results_1w[index] != "":
+                    #         set_algorithms[index] = True
+                    #         if index == 3 or index == 5:
+                    #             self.controller.run_algorithm(ticker, index, "1w")
+                    #         else:
+                    #             alg_name = self.controller.algorithms_with_indices[index]
+                    #             res = alg_results_1w[index].split(",")
+                    #             self.controller.results[alg_name]["1w"][ticker] = float(res[0])
+                    #             self.controller.predicted_prices[alg_name]["1w"][ticker] = float(res[1])
+                    #             if index == 2:
+                    #                 self.controller.bayesian_confidences["1w"][ticker] = (float(res[2]), float(res[3]))
+                    #
+                    # for index in range(len(alg_results_1m)):
+                    #     if alg_results_1m[index] != "":
+                    #         set_algorithms[index] = True
+                    #         if index == 3 or index == 5:
+                    #             self.controller.run_algorithm(ticker, index, "1m")
+                    #         else:
+                    #             alg_name = self.controller.algorithms_with_indices[index]
+                    #             res = alg_results_1m[index].split(",")
+                    #             self.controller.results[alg_name]["1m"][ticker] = float(res[0])
+                    #             self.controller.predicted_prices[alg_name]["1m"][ticker] = float(res[1])
+                    #             if index == 2:
+                    #                 self.controller.bayesian_confidences["1m"][ticker] = (float(res[2]), float(res[3]))
+
+            print(self.controller.results)
+            return set_algorithms, hold_duration
+        except Exception as e:
+            traceback.print_exc()
+            self.logger.error(f"User activity failed to be read. {e}")
+            return set_algorithms, "1d"
 
     def changePage(self, page):
         currentIndex = self.stacked_widget.currentIndex()
@@ -132,52 +163,35 @@ class MainWindow(QMainWindow):
         popup.exec_()
 
     def closeEvent(self, event):
+
         self.logger.info(f'Saving user activity to file.')
         try:
-            with open(self.user_activity_file_name, 'w') as f:
+            with (open(self.user_activity_file_name, 'w') as f):
                 today = date.today().strftime("%d.%m.%Y")
                 f.write(f"{today}\n")
+                f.write(f"{self.portfolio_page.hold_duration}\n")
                 for ticker in self.controller.tickers_and_investments.keys():
-                    f.write(f"{ticker},{self.controller.tickers_and_num_shares[ticker]},"
+                    f.write(f"{ticker}|{self.controller.tickers_and_num_shares[ticker]}|"
                             f"{self.controller.tickers_and_long_or_short[ticker]}\n")
 
-                    alg_results_1d = ""
-                    alg_results_1w = ""
-                    alg_results_1m = ""
-                    print(self.controller.results)
-                    for algorithm in self.controller.results:
-                        alg_results = self.controller.results[algorithm]
-                        print(alg_results)
-                        if ticker in alg_results["1d"]:
-                            print("helo")
-                            alg_results_1d += str(alg_results["1d"][ticker]) + ","
-                        else:
-                            alg_results_1d += ","
-                        if ticker in alg_results["1w"]:
-                            alg_results_1w += str(alg_results["1w"][ticker]) + ","
-                        else:
-                            alg_results_1w += ","
-                        if ticker in alg_results["1m"]:
-                            alg_results_1m += str(alg_results["1m"][ticker]) + ","
-                        else:
-                            alg_results_1m += ","
+                    for hold_dur in self.hold_durations:
+                        str_result = ""
+                        for algorithm in self.controller.results:
+                            alg_results = self.controller.results[algorithm]
+                            alg_predicted_prices = self.controller.predicted_prices[algorithm]
 
-                    risk_metrics = ""
-                    if ticker in self.controller.risk_metrics["volatility"]:
-                        vol, cat = self.controller.risk_metrics["volatility"][ticker]
-                        risk_metrics += str(vol) + "," + cat + ","
-                    else:
-                        risk_metrics += ","
-                    if ticker in self.controller.risk_metrics["sharpe_ratio"]:
-                        vol, cat = self.controller.risk_metrics["sharpe_ratio"][ticker]
-                        risk_metrics += str(vol) + "," + cat + ","
-                    else:
-                        risk_metrics += ","
-                    if ticker in self.controller.risk_metrics["VaR"]:
-                        risk_metrics += str(self.controller.risk_metrics["VaR"][ticker])
-                    else:
-                        risk_metrics += "-"
-                    f.write(f"{alg_results_1d}\n{alg_results_1w}\n{alg_results_1m}\n{risk_metrics}\n")
+                            if ticker in alg_results[hold_dur]:
+                                if algorithm == "monte_carlo" or algorithm == "arima":
+                                    print("YES")
+                                    str_result += "a|"
+                                else:
+                                    str_result += str(alg_results[hold_dur][ticker]) + "," + str(alg_predicted_prices[hold_dur][ticker]) + "|"
+                                    if algorithm == "bayesian":
+                                        confidence = self.controller.bayesian_confidences[hold_dur][ticker]
+                                        str_result = str_result[:-1] + "," + str(confidence[0]) + "," + str(confidence[1]) + "|"
+                            else:
+                                str_result += "|"
+                        f.write(f"{str_result}\n")
         except IOError:
             self.logger.error("Saving user activity to file failed.")
 

@@ -97,6 +97,15 @@ class Controller:
         self.lstm_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
         self.arima_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
 
+        self.predicted_prices = {
+            "linear_regression": self.linear_regression_predicted_prices,
+            "random_forest": self.random_forest_predicted_prices,
+            "bayesian": self.bayesian_predicted_prices,
+            "monte_carlo": self.monte_carlo_predicted_prices,
+            "lstm": self.lstm_predicted_prices,
+            "arima": self.arima_predicted_prices,
+        }
+
         self.volatilities = {}
         self.sharpe_ratios = {}
         self.VaRs = {}

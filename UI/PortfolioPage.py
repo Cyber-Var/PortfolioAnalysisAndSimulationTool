@@ -15,7 +15,7 @@ class PortfolioPage(QWidget, Page):
     back_to_menu_page = pyqtSignal()
     open_single_stock_page = pyqtSignal(str, str, float, int, str)
 
-    def __init__(self, main_window, controller, set_algorithms):
+    def __init__(self, main_window, controller, set_algorithms, hold_duration):
         super().__init__()
 
         self.main_window = main_window
@@ -23,7 +23,7 @@ class PortfolioPage(QWidget, Page):
         self.set_algorithms = set_algorithms
         self.tickers = []
 
-        self.hold_duration = "1d"
+        self.hold_duration = hold_duration
         self.hold_duration_label = None
         self.hold_duration_1d = None
         self.hold_duration_1w = None
@@ -106,19 +106,21 @@ class PortfolioPage(QWidget, Page):
 
         title_label = self.get_title_label("Portfolio Analysis and Simulation Tool")
 
-        input_hbox = QHBoxLayout()
-
         self.hold_duration_label = self.get_title_label("Hold Duration:")
         self.hold_duration_label.setObjectName('inputLabel')
-        input_hbox.addWidget(self.hold_duration_label)
 
         hold_duration_vbox = QVBoxLayout()
-        input_hbox.addLayout(hold_duration_vbox)
 
         self.hold_duration_1d = self.create_hold_duration_button("1 day")
-        self.hold_duration_1d.setChecked(True)
         self.hold_duration_1w = self.create_hold_duration_button("1 week")
         self.hold_duration_1m = self.create_hold_duration_button("1 month")
+
+        if self.hold_duration == "1w":
+            self.hold_duration_1w.setChecked(True)
+        elif self.hold_duration == "1m":
+            self.hold_duration_1m.setChecked(True)
+        else:
+            self.hold_duration_1d.setChecked(True)
 
         hold_duration_vbox.addWidget(self.hold_duration_1d)
         hold_duration_vbox.addWidget(self.hold_duration_1w)
@@ -126,26 +128,6 @@ class PortfolioPage(QWidget, Page):
 
         self.algorithms_label = self.get_title_label("Algorithms:")
         self.algorithms_label.setObjectName('inputLabel')
-        input_hbox.addWidget(self.algorithms_label)
-
-        algorithms_vbox = QVBoxLayout()
-        input_hbox.addLayout(algorithms_vbox)
-
-        self.algorithm_1 = self.create_algorithm_checkbox("Linear Regression", 0)
-        self.algorithm_2 = self.create_algorithm_checkbox("Random Forest", 1)
-        self.algorithm_3 = self.create_algorithm_checkbox("Bayesian", 2)
-        self.algorithm_4 = self.create_algorithm_checkbox("Monte Carlo", 3)
-        self.algorithm_5 = self.create_algorithm_checkbox("LSTM", 4)
-        self.algorithm_6 = self.create_algorithm_checkbox("ARIMA", 5)
-
-        algorithms_vbox.addWidget(self.algorithm_1)
-        algorithms_vbox.addWidget(self.algorithm_2)
-        algorithms_vbox.addWidget(self.algorithm_3)
-        algorithms_vbox.addWidget(self.algorithm_4)
-        algorithms_vbox.addWidget(self.algorithm_5)
-        algorithms_vbox.addWidget(self.algorithm_6)
-
-        input_hbox.addLayout(self.ranking_vbox)
 
         self.results_vbox = QVBoxLayout()
 
@@ -234,6 +216,29 @@ class PortfolioPage(QWidget, Page):
             one_share_price = round(one_day_data["Close"].iloc[0], 2)
             self.add_ticker(ticker, one_share_price, self.controller.tickers_and_num_shares[ticker],
                             self.controller.tickers_and_long_or_short[ticker])
+
+        algorithms_vbox = QVBoxLayout()
+
+        self.algorithm_1 = self.create_algorithm_checkbox("Linear Regression", 0)
+        self.algorithm_2 = self.create_algorithm_checkbox("Random Forest", 1)
+        self.algorithm_3 = self.create_algorithm_checkbox("Bayesian", 2)
+        self.algorithm_4 = self.create_algorithm_checkbox("Monte Carlo", 3)
+        self.algorithm_5 = self.create_algorithm_checkbox("LSTM", 4)
+        self.algorithm_6 = self.create_algorithm_checkbox("ARIMA", 5)
+
+        algorithms_vbox.addWidget(self.algorithm_1)
+        algorithms_vbox.addWidget(self.algorithm_2)
+        algorithms_vbox.addWidget(self.algorithm_3)
+        algorithms_vbox.addWidget(self.algorithm_4)
+        algorithms_vbox.addWidget(self.algorithm_5)
+        algorithms_vbox.addWidget(self.algorithm_6)
+
+        input_hbox = QHBoxLayout()
+        input_hbox.addWidget(self.hold_duration_label)
+        input_hbox.addLayout(hold_duration_vbox)
+        input_hbox.addWidget(self.algorithms_label)
+        input_hbox.addLayout(algorithms_vbox)
+        input_hbox.addLayout(self.ranking_vbox)
 
         self.layout.addWidget(title_label)
         self.layout.addLayout(input_hbox)
@@ -335,9 +340,9 @@ class PortfolioPage(QWidget, Page):
     def create_algorithm_checkbox(self, name, ii):
         button = QCheckBox(name)
         button.setObjectName('inputLabel')
+        button.stateChanged.connect(lambda state, index=ii: self.algorithms_state_changed(state, index))
         if self.set_algorithms[ii]:
             button.setChecked(True)
-        button.stateChanged.connect(lambda state, index=ii: self.algorithms_state_changed(state, index))
         return button
 
     def create_column_names_labels(self, name):
@@ -458,12 +463,14 @@ class PortfolioPage(QWidget, Page):
 
     widths = [60, 160, 100, 85, 80, 120, 210, 80, 120, 80, 80, 60]
 
-    def add_ticker(self, ticker, one_share_price, num_shares, is_long):
+    def add_ticker(self, ticker, one_share_price, num_shares, is_long, not_initial=True):
         self.logger.info('Adding new stock to portfolio.')
 
         investment = round(one_share_price * num_shares, 2)
-        self.controller.add_ticker(ticker, num_shares, investment, is_long)
-        self.controller.tickers_and_num_shares[ticker] = num_shares
+
+        if not_initial:
+            self.controller.add_ticker(ticker, num_shares, investment, is_long)
+        # self.controller.tickers_and_num_shares[ticker] = num_shares
 
         results_hbox = QHBoxLayout()
         results_hbox.setSpacing(8)
