@@ -255,7 +255,7 @@ class SingleStockPage(QWidget, Page):
         monte_probabilities_hbox.addLayout(self.growth_probabilities_vbox)
         monte_probabilities_hbox.addLayout(self.fall_probabilities_vbox)
 
-        for i in range(9):
+        for i in range(12):
             probability_label_1 = QLabel()
             probability_label_1.setObjectName("algorithmResultSingleStock")
             probability_label_1.hide()
@@ -396,7 +396,7 @@ class SingleStockPage(QWidget, Page):
         algorithm_entered = self.algorithms_combo.currentText()
 
         if self.growth_probabilities_vbox.itemAt(0).widget().isVisible():
-            for i in range(9):
+            for i in range(12):
                 self.growth_probabilities_vbox.itemAt(i).widget().hide()
                 self.fall_probabilities_vbox.itemAt(i).widget().hide()
 
@@ -441,12 +441,12 @@ class SingleStockPage(QWidget, Page):
 
                 growth_probs, fall_probs = self.controller.get_monte_carlo_probabilities(self.ticker, self.hold_duration)
                 for i in range(len(growth_probs)):
-                    if i + 1 == 9:
+                    if i + 1 == 12:
                         break
                     self.growth_probabilities_vbox.itemAt(i + 1).widget().setText(growth_probs[i])
                     self.growth_probabilities_vbox.itemAt(i + 1).widget().show()
                 for i in range(len(fall_probs)):
-                    if i + 1 == 9:
+                    if i + 1 == 12:
                         break
                     self.fall_probabilities_vbox.itemAt(i + 1).widget().setText(fall_probs[i])
                     self.fall_probabilities_vbox.itemAt(i + 1).widget().show()

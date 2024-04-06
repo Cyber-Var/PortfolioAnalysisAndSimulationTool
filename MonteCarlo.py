@@ -97,6 +97,22 @@ class MonteCarloSimulation(Regression):
                           for _ in range(0, self.num_of_simulations)])
 
         return monte
+        # filtered_monte = monte[monte <= s_0 * 1.5]
+        #
+        # num_occurrences = len(monte) // len(filtered_monte)
+        # remainder = len(monte) % len(filtered_monte)
+        #
+        # result = []
+        #
+        # for num in filtered_monte:
+        #     result.extend([num] * num_occurrences)
+        #
+        # for i in range(remainder):
+        #     result.append(monte[i])
+        #
+        # print(s_0)
+        # print(monte)
+        # print(result)
 
     def plotSimulation(self, monte, s_0):
         # Add starting point to each path:
@@ -108,9 +124,11 @@ class MonteCarloSimulation(Regression):
         if today.weekday() >= 5:
             x_axis = pd.concat([pd.Series([today]), pd.Series(x_axis)], ignore_index=True)
 
+        filtered_simulations = [simulation for simulation in monte2 if all(price < s_0 * 2 for price in simulation)]
+
         # Draw the simulation graph:
-        for i in range(self.num_of_simulations):
-            plt.plot(x_axis, monte2[i], alpha=0.5)
+        for i in range(len(filtered_simulations)):
+            plt.plot(x_axis, filtered_simulations[i], alpha=0.2)
 
         plt.ylabel('Price in USD')
         plt.xlabel('Prediction Days')

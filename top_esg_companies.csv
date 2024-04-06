@@ -49,3 +49,53 @@ index;ticker;stock_name;industry
 48;APPF;AppFolio, Inc.;Computer Software - Specialty Enterprise
 49;AMH;American Homes 4 Rent;Finance - Property REITs
 50;IRM;Iron Mountain Incorporated;Commercial Services - Document Management
+51;PH;Parker-Hannifin;Machinery - General Industrial
+52;TMHC;Taylor Morrison;Building - Residential/Commercial
+53;ROK;Rockwell Automation;Electrical Power - Equipment
+54;MLM;Martin Marietta Materials;Building Materials - Cement/Concrete
+55;COST;Costco Wholesale;Retail - Major Discount Chains
+56;CTASCintas;Commercial Services - Outsourcing
+57;PAYX;Paychex;Commercial Services - Outsourcing
+58;INTU;Intuit;Computer Software - Financial
+59;BAH;Booz Allen Hamilton;Commercial Services - Consulting
+60;VMC;Vulcan Materials;Building Materials - Cement/Concrete
+61;IDXX;Idexx Laboratories;Medical - Systems/Equipment
+62;TREX;Trex;Building - Construction Products/MSC
+63;CEIX;Consol Energy;Energy - Coal
+64;FICO;Fair Isaac;Computer Software - Financial
+65;TPX;Tempur Sealy International;Household Office Furniture
+66;SYK;Stryker;Medical - Products
+67;VEEV;Veeva Systems;Computer Software - Medical
+68;MSA;MSA Safety;Security/Safety
+69;GGG;Graco;Machinery - General Industrial
+70;REGN;Regeneron Pharmaceuticals;Medical - Biotech
+71;MORN;Morningstar;Commercial Services - Market Research
+72;ITW;Illinois Tool Works;Machinery - General Industrial
+73;EME;Emcor;Building - Maintenance & Services
+74;SPGI;S&P Global;Commercial Services - Market Research
+75;MHO;M/I Homes;Building - Residential/Commercial
+76;LAD;Lithia Motors;Retail - Wholesale Auto
+77;KBH;KB Home;Building - Residential/Commercial
+78;ACM;Aecom Technology;Building - Heavy Construction
+79;RJF;Raymond James Financial;Financial - Investment Bank/Brokers
+80;VRTX;Vertex Pharmaceuticals;Medical - Biotech
+81;TEX;Terex;Machinery - Construction/Mining
+82;CASH;Pathward Financial;Financial - Savings & Loan
+83;PAYC;Paycom Software;Computer Software - Enterprise
+84;EXTR;Extreme Networks;Computer - Networking
+85;URI;United Rentals;Commercial Services - Leasing
+86;ATI;ATI;Steel - Specialty Alloys
+87;CASY;Casey's Retail;Retail - SPR/Mini markets
+88;WMT;Walmart;Retail - Major Discount Chains
+89;ITT;ITT;Machinery - General Industrial
+90;RBC;RBC Bearings;Metals - Processing & Fabrication
+91;HRI;Herc Holdings;Commercial Services - Leasing
+92;HLI;Houlihan Lokey;Financial - Investment Bank/Brokers
+93;LII;Lennox International;Building - A/C & Heating Products
+94;HWKN;Hawkins;Chemicals - Basic
+95;PCAR;Paccar;Trucks & Parts - Heavy Duty
+96;BZH;Beazer Homes;Building - Residential/Commercial
+97;IPAR;Inter Parfums;Cosmetics/Personal Care
+98;AVGO;Broadcom;Electronics - Semiconductor Mfg
+99;GPOR;Gulfport Energy;Oil & Gas - US Exploration & Discovery
+100;KAI;Kadant;Machinery - General Industrial

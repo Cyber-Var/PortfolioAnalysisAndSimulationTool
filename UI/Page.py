@@ -15,9 +15,9 @@ class Page:
         self.logger.info(f'Initializing the {page_name} Page')
         self.setWindowTitle(page_name)
 
-    def get_title_label(self, text):
+    def get_title_label(self, text, style_name):
         title_label = QLabel(text)
-        title_label.setObjectName('titleLabel')
+        title_label.setObjectName(style_name)
         title_label.setAlignment(Qt.AlignCenter)
         return title_label
 

@@ -1,23 +1,39 @@
-QLabel {
-    font-family: Arial, serif;
+* {
+    font-family: 'Arial', sans-serif;
 }
 
-#titleLabel {
+QLabel {
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#titleLabelMenu {
+    font-size: 50px;
+    font-weight: bold;
+    color: #EF2E38;
+    padding: 20px;
+    text-align: center;
+    margin: 100px;
+}
+
+#titleLabelPortfolio {
     font-size: 30px;
-    color: red;
+    font-weight: bold;
+    color: #EF2E38;
+    padding: 20px;
+    text-align: center;
 }
 
 #inputLabel {
-    font-size: 15px;
     color: white;
+    font-size: 15px;
+    font-weight: normal;
 }
 
-#rankingLabel {
-    font-size: 15px;
-    font-weight: bold;
-    color: white;
-    border: 1px solid white;
-    text-align: center;
+#inputHeaderLabel {
+    font-size: 20px;
 }
 
 #rankingLabelResult {
@@ -29,15 +45,18 @@ QLabel {
 
 #columnNameLabel {
     font-size: 15px;
-    border: 1px solid black;
+    color: black;
+    border: 2px solid black;
     background-color: white;
 }
 
 #resultLabel {
     font-size: 15px;
-    border: 1px solid white;
+    font-weight: normal;
+    border: 2px solid white;
     background-color: black;
     color: white;
+    padding: 0;
 }
 
 #infoLabelSingleStock {
@@ -63,30 +82,37 @@ QLabel {
     text-align: center;
 }
 
+
+
+
 QPushButton {
-    font-family: Arial, serif;
-    font-size: 16px;
+    background-color: black;
+    color: #FFF;
+    font-weight: bold;
+    outline: none;
+    text-align: center;
+}
+
+QPushButton:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, stop:1 #00DDEB);
+}
+
+QPushButton:pressed {
+    background-color: black;
 }
 
 #menuButton {
-    background-color: lightblue;
-    border-style: outset;
-    border-width: 2px;
-    border-radius: 15px;
-    border-color: beige;
-    min-width: 200px;
-    padding: 6px;
+    font-size: 25px;
+    padding: 15px;
+    border: 3px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, stop:1 #00DDEB);
 }
 
-#menuButton:hover {
-    background-color: cadetblue;
-    border-style: inset;
+#portfolioButton {
+    font-size: 15px;
+    padding: 5px;
+    border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, stop:1 #00DDEB);
 }
 
-#menuButton:pressed {
-    background-color: darkblue;
-    border-style: inset;
-}
 
 #addStockButton {
     font-size: 15px;
@@ -120,24 +146,49 @@ QComboBox QAbstractItemView {
 }
 
 QMenuBar {
-    background-color: #333;
-    color: white;
+    background-color: #555;
+    color: #FFF;
 }
 
 QMenuBar::item {
-    background-color: #333;
-    color: white;
+    background-color: #555;
+    padding: 4px 8px;
 }
 
 QMenuBar::item:selected {
-    background-color: #555;
+    background-color: #777;
 }
 
 QMenu {
-    background-color: #333;
-    color: white;
+    background-color: #555;
+    border: 1px solid #333;
+}
+
+QMenu::item {
+    padding: 4px 20px;
+    color: #FFF;
 }
 
 QMenu::item:selected {
-    background-color: #555;
+    background-color: #777;
 }
+
+
+QWidget {
+}
+
+#inputHBox {
+    border: 2px solid white;
+    padding: 30px;
+}
+
+#rankingHBox {
+    border: 2px solid white;
+    padding: 30px 50px;
+    /*margin-left: 70px;*/
+}
+
+
+
+
+

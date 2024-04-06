@@ -151,6 +151,7 @@ class Controller:
 
         self.portfolio_results = {}
         self.tickers_and_company_names_sp500 = None
+        self.top_esg_companies = None
 
     def add_ticker(self, ticker, num_shares, investment, is_long):
         ticker = ticker.upper()
@@ -214,6 +215,7 @@ class Controller:
                                                       self.start_dates[hold_duration], (False,),
                                                       self.tickers_and_long_or_short[ticker],
                                                       self.tickers_and_investments[ticker])
+
         prediction, predicted_price = self.run_model(linear_regression)
         self.linear_regression_results[hold_duration][ticker] = prediction
         self.linear_regression_predicted_prices[hold_duration][ticker] = predicted_price
@@ -235,6 +237,7 @@ class Controller:
                                               self.start_dates[hold_duration], params,
                                               self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         prediction, predicted_price = self.run_model(random_forest)
+
         self.random_forest_results[hold_duration][ticker] = prediction
         self.random_forest_predicted_prices[hold_duration][ticker] = predicted_price
         if evaluate:
@@ -254,6 +257,7 @@ class Controller:
                                                                                  1e-4, True, False, True),
                                                self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         prediction, predicted_price, conf, conf_profit_loss = bayesian.predict_price()
+
         self.bayesian_results[hold_duration][ticker] = prediction[0][0]
         self.bayesian_predicted_prices[hold_duration][ticker] = predicted_price[0][0]
         self.bayesian_confidences[hold_duration][ticker] = (conf[0][0], conf_profit_loss[0][0])
@@ -293,6 +297,7 @@ class Controller:
         lstm = LSTMAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
                              params, self.tickers_and_long_or_short[ticker], self.tickers_and_investments[ticker])
         prediction, predicted_price = lstm.predict_price(lstm.get_data_for_prediction())
+
         self.lstm_results[hold_duration][ticker] = prediction[0][0]
         self.lstm_predicted_prices[hold_duration][ticker] = predicted_price[0][0]
         if evaluate:
@@ -322,7 +327,6 @@ class Controller:
         self.arimas[hold_duration][ticker] = (arima, predicted_price)
         self.arima_predicted_prices[hold_duration][ticker] = predicted_price.iloc[-1]
         self.arima_confidences[hold_duration][ticker] = (conf, conf_profit_loss)
-
         if evaluate:
             self.arima_evaluation[hold_duration][ticker] = arima.evaluateModel()
             print(self.arima_evaluation)
@@ -420,6 +424,7 @@ class Controller:
         risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
                                    self.tickers_and_long_or_short.values(), data)
         portfolio_VaR = risk_metrics.calculatePortfolioVaR(hold_duration, 0.95, portfolio_vol)
+        print(portfolio_VaR)
         return portfolio_VaR
 
     def run_model(self, model):
@@ -670,7 +675,7 @@ class Controller:
 
         return rankings_read
 
-    def get_sp500_tickers(self, ):
+    def get_sp500_tickers(self):
         # table = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
         # sp500 = table[0]
         # tickers = sp500['Symbol'].tolist()
@@ -691,3 +696,15 @@ class Controller:
                     companies.append(company)
             self.tickers_and_company_names_sp500 = [f"{ticker} - {company}" for ticker, company in zip(tickers, companies)]
         return self.tickers_and_company_names_sp500
+
+    def get_top_50_esg_companies(self):
+        if self.top_esg_companies is None:
+            tickers = []
+            companies = []
+            with open("top_esg_companies.txt", "r") as f:
+                for line in f:
+                    ticker, company = line.strip().split('|', 1)
+                    tickers.append(ticker)
+                    companies.append(company)
+            self.top_esg_companies = [f"{ticker} - {company}" for ticker, company in zip(tickers, companies)]
+        return self.top_esg_companies

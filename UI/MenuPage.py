@@ -30,11 +30,13 @@ class MenuPage(QWidget, Page):
     def build_page(self):
         self.logger.info('Opening the Main Menu Page')
 
-        title_label = self.get_title_label("Portfolio Analysis and Simulation Tool")
+        self.layout.setSpacing(25)
+
+        title_label = self.get_title_label("Portfolio Analysis and Simulation Tool", "titleLabelMenu")
         self.layout.addWidget(title_label)
-        self.layout.addStretch()
 
         self.add_menu_buttons()
+        self.layout.addStretch(1)
 
     def add_menu_buttons(self):
         portfolio_button = self.create_menu_button('Portfolio Analysis')
@@ -42,22 +44,18 @@ class MenuPage(QWidget, Page):
         settings_button = self.create_menu_button('Settings')
         exit_button = self.create_menu_button('Exit')
 
-        # portfolio_button.clicked.connect(self.open_portfolio_page)
         portfolio_button.clicked.connect(self.open_portfolio_page.emit)
         manual_button.clicked.connect(self.open_manual_page)
         settings_button.clicked.connect(self.open_settings_page)
         exit_button.clicked.connect(self.quit_app)
-
-        self.layout.addWidget(portfolio_button)
-        self.layout.addWidget(manual_button)
-        self.layout.addWidget(settings_button)
-        self.layout.addWidget(exit_button)
 
         self.layout.addStretch()
 
     def create_menu_button(self, name):
         button = QPushButton(name)
         button.setObjectName('menuButton')
+        button.setFixedWidth(400)
+        self.layout.addWidget(button, alignment=Qt.AlignHCenter)
         return button
 
     # def open_portfolio_page(self):

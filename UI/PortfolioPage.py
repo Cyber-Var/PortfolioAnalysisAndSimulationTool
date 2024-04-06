@@ -2,8 +2,8 @@ import re
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox,
-                             QScrollArea, QDialog, QLineEdit, QCompleter)
-from PyQt5.QtCore import Qt, pyqtSignal
+                             QScrollArea, QDialog, QLineEdit, QCompleter, QSizePolicy)
+from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel
 import yfinance as yf
 
 from UI.Page import Page
@@ -38,26 +38,36 @@ class PortfolioPage(QWidget, Page):
         self.algorithm_6 = None
         self.algorithms = [False] * 6
 
+        self.outer_ranking_vbox = QVBoxLayout()
+        self.outer_ranking_vbox.setContentsMargins(0, 70, 0, 0)
+
         self.ranking_vbox = QVBoxLayout()
+        self.ranking_widget = QWidget()
+        self.ranking_widget.setObjectName("rankingHBox")
+        self.ranking_widget.setFixedSize(200, 250)
+        self.ranking_widget.setLayout(self.ranking_vbox)
+
+        self.outer_ranking_vbox.addWidget(self.ranking_widget)
+
         self.rankings = self.controller.handle_ranking()
         ranking_label = QLabel("Ranking:")
-        ranking_label.setObjectName("rankingLabel")
+        ranking_label.setObjectName("inputHeaderLabel")
         ranking_label.setFixedWidth(150)
         ranking_label.setAlignment(QtCore.Qt.AlignCenter)
         self.ranking_vbox.addWidget(ranking_label)
 
         for algorithm in self.rankings["1d"]:
             ranking_result_label = QLabel()
-            ranking_result_label.setObjectName("rankingLabelResult")
+            ranking_result_label.setObjectName("inputLabel")
             ranking_result_label.setFixedWidth(150)
             ranking_result_label.setAlignment(QtCore.Qt.AlignCenter)
             self.ranking_vbox.addWidget(ranking_result_label)
 
         update_ranking_button = QPushButton("Update Ranking")
-        update_ranking_button.setObjectName('addStockButton')
+        update_ranking_button.setObjectName('portfolioButton')
         update_ranking_button.setFixedWidth(150)
         update_ranking_button.clicked.connect(self.show_ranking_time_warning_window)
-        self.ranking_vbox.addWidget(update_ranking_button)
+        self.ranking_vbox.addWidget(update_ranking_button, alignment=Qt.AlignCenter)
 
         self.portfolio_results = []
         self.portfolio_amount = None
@@ -104,12 +114,18 @@ class PortfolioPage(QWidget, Page):
     def build_page(self):
         self.logger.info('Building the Portfolio Page')
 
-        title_label = self.get_title_label("Portfolio Analysis and Simulation Tool")
+        title_label = self.get_title_label("Portfolio Analysis and Simulation Tool", "titleLabelPortfolio")
 
-        self.hold_duration_label = self.get_title_label("Hold Duration:")
-        self.hold_duration_label.setObjectName('inputLabel')
+        self.hold_duration_label = QLabel("Hold Duration:")
+        self.hold_duration_label.setObjectName('inputHeaderLabel')
 
         hold_duration_vbox = QVBoxLayout()
+
+        hold_duration_hbox = QHBoxLayout()
+        hold_duration_widget = QWidget()
+        hold_duration_widget.setObjectName("inputHBox")
+        hold_duration_widget.setFixedSize(300, 200)
+        hold_duration_widget.setLayout(hold_duration_hbox)
 
         self.hold_duration_1d = self.create_hold_duration_button("1 day")
         self.hold_duration_1w = self.create_hold_duration_button("1 week")
@@ -126,20 +142,20 @@ class PortfolioPage(QWidget, Page):
         hold_duration_vbox.addWidget(self.hold_duration_1w)
         hold_duration_vbox.addWidget(self.hold_duration_1m)
 
-        self.algorithms_label = self.get_title_label("Algorithms:")
-        self.algorithms_label.setObjectName('inputLabel')
+        hold_duration_hbox.addWidget(self.hold_duration_label)
+        hold_duration_hbox.addLayout(hold_duration_vbox)
 
         self.results_vbox = QVBoxLayout()
 
         column_names_hbox = QHBoxLayout()
-        # results_vbox.addLayout(column_names_hbox)
+        column_names_hbox.setSpacing(3)
 
         self.ticker_col_name = self.create_column_names_labels("Ticker")
         self.ticker_col_name.setFixedSize(60, 50)
         self.stock_name_col_name = self.create_column_names_labels("Name")
         self.stock_name_col_name.setFixedSize(160, 50)
         self.amount_col_name = self.create_column_names_labels("Investment\nAmount")
-        self.amount_col_name.setFixedSize(100, 50)
+        self.amount_col_name.setFixedSize(105, 50)
         self.lin_reg_col_name = self.create_column_names_labels("Linear\nRegression")
         self.lin_reg_col_name.setFixedSize(85, 50)
         self.lin_reg_col_name.hide()
@@ -217,6 +233,15 @@ class PortfolioPage(QWidget, Page):
             self.add_ticker(ticker, one_share_price, self.controller.tickers_and_num_shares[ticker],
                             self.controller.tickers_and_long_or_short[ticker])
 
+        algrithms_hbox = QHBoxLayout()
+        algorithms_widget = QWidget()
+        algorithms_widget.setObjectName("inputHBox")
+        algorithms_widget.setFixedSize(300, 200)
+        algorithms_widget.setLayout(algrithms_hbox)
+
+        self.algorithms_label = QLabel("Algorithms:")
+        self.algorithms_label.setObjectName('inputHeaderLabel')
+
         algorithms_vbox = QVBoxLayout()
 
         self.algorithm_1 = self.create_algorithm_checkbox("Linear Regression", 0)
@@ -233,28 +258,39 @@ class PortfolioPage(QWidget, Page):
         algorithms_vbox.addWidget(self.algorithm_5)
         algorithms_vbox.addWidget(self.algorithm_6)
 
-        input_hbox = QHBoxLayout()
-        input_hbox.addWidget(self.hold_duration_label)
-        input_hbox.addLayout(hold_duration_vbox)
-        input_hbox.addWidget(self.algorithms_label)
-        input_hbox.addLayout(algorithms_vbox)
-        input_hbox.addLayout(self.ranking_vbox)
+        algrithms_hbox.addWidget(self.algorithms_label)
+        algrithms_hbox.addLayout(algorithms_vbox)
 
-        self.layout.addWidget(title_label)
-        self.layout.addLayout(input_hbox)
+        input_hbox = QHBoxLayout()
+        input_hbox.setSpacing(150)
+        input_hbox.addWidget(hold_duration_widget)
+        input_hbox.addWidget(algorithms_widget)
+
+        top_hbox = QHBoxLayout()
+
+        top_left_vbox = QVBoxLayout()
+        title_label.setAlignment(Qt.AlignRight)
+        top_left_vbox.addWidget(title_label)
+        top_left_vbox.addLayout(input_hbox)
+
+        top_hbox.addLayout(top_left_vbox)
+        top_hbox.addLayout(self.outer_ranking_vbox)
+
+        self.layout.addLayout(top_hbox)
         self.layout.addWidget(scrollable_area)
         self.layout.addWidget(back_button)
 
     def show_portfolio_results(self):
         portfolio_hbox = QHBoxLayout()
+        portfolio_hbox.setSpacing(3)
 
         portfolio_label = QLabel("Overall Portfolio results")
         portfolio_label.setObjectName("resultLabel")
-        portfolio_label.setFixedSize(228, 70)
+        portfolio_label.setFixedSize(223, 70)
 
         self.portfolio_amount = QLabel("-")
         self.portfolio_amount.setObjectName("resultLabel")
-        self.portfolio_amount.setFixedSize(100, 70)
+        self.portfolio_amount.setFixedSize(105, 70)
 
         self.portfolio_linear_regression = QLabel("")
         self.portfolio_linear_regression.setFixedSize(85, 70)
@@ -370,7 +406,7 @@ class PortfolioPage(QWidget, Page):
         for alg_index, algorithm in enumerate(self.rankings[self.hold_duration]):
             ranking_label = QLabel(algorithm)
             ranking_label.setObjectName('rankingLabel')
-            self.ranking_vbox.itemAt(alg_index + 1).widget().setText(algorithm)
+            self.ranking_vbox.itemAt(alg_index + 1).widget().setText(f"{alg_index + 1}. {algorithm}")
 
     def result_to_string(self, result):
         if result > 0:
@@ -390,6 +426,7 @@ class PortfolioPage(QWidget, Page):
 
     def update_algorithm_values(self, index):
         self.logger.info('Updating the Algorithmic results')
+
         algorithm_name = self.controller.algorithms_with_indices[index]
         algorithmic_results = self.controller.results[algorithm_name][self.hold_duration]
         for ticker in self.controller.tickers_and_investments.keys():
@@ -420,6 +457,21 @@ class PortfolioPage(QWidget, Page):
 
     def update_portfolio_results(self):
         self.logger.info('Updating the Portfolio results')
+
+        if len(self.controller.tickers_and_investments) == 0:
+            self.portfolio_amount.setText("-")
+            self.portfolio_volatility.setText("-")
+            self.portfolio_sharpe_ratio.setText("-")
+            self.portfolio_VaR.setText("-")
+
+            for col_name_label in self.result_col_names:
+                col_name_label.hide()
+
+            for index, is_chosen in enumerate(self.algorithms):
+                if is_chosen:
+                    self.portfolio_results[index].hide()
+            return
+
         self.portfolio_amount.setText(str(sum(self.controller.tickers_and_investments.values())) + "$")
         for index, is_chosen in enumerate(self.algorithms):
             if is_chosen:
@@ -432,6 +484,18 @@ class PortfolioPage(QWidget, Page):
                 self.portfolio_results[index].show()
             else:
                 self.portfolio_results[index].hide()
+
+        ticker_keys = self.controller.tickers_and_investments.keys()
+        if len(ticker_keys) == 1:
+            ticker = list(ticker_keys)[0]
+            portfolio_vol, portfolio_vol_cat = self.controller.volatilities[ticker]
+            self.portfolio_volatility.setText(f'{portfolio_vol:.2f} {portfolio_vol_cat}')
+
+            portfolio_sharpe, portfolio_share_cat = self.controller.sharpe_ratios[ticker]
+            self.portfolio_sharpe_ratio.setText(f'{portfolio_sharpe:.2f} {portfolio_share_cat}')
+
+            self.portfolio_VaR.setText(f"{self.controller.VaRs[ticker]:.2f}")
+            return
 
         portfolio_vol, portfolio_vol_cat = self.controller.get_portfolio_volatility(self.hold_duration)
         self.portfolio_volatility.setText(f'{portfolio_vol:.2f} {portfolio_vol_cat}')
@@ -447,7 +511,7 @@ class PortfolioPage(QWidget, Page):
                 self.update_algorithm_values(index)
 
     def show_add_stock_window(self):
-        popup = AddStockPopUp(self.controller.get_sp500_tickers())
+        popup = AddStockPopUp(self.controller.get_sp500_tickers(), self.controller.get_top_50_esg_companies())
         popup.valid_ticker_entered.connect(self.add_ticker)
         popup.exec_()
 
@@ -461,7 +525,7 @@ class PortfolioPage(QWidget, Page):
             self.rankings = self.controller.handle_ranking(True)
             self.update_ranking_display()
 
-    widths = [60, 160, 100, 85, 80, 120, 210, 80, 120, 80, 80, 60]
+    widths = [60, 160, 105, 85, 80, 120, 210, 80, 120, 80, 80, 60]
 
     def add_ticker(self, ticker, one_share_price, num_shares, is_long, not_initial=True):
         self.logger.info('Adding new stock to portfolio.')
@@ -473,7 +537,7 @@ class PortfolioPage(QWidget, Page):
         # self.controller.tickers_and_num_shares[ticker] = num_shares
 
         results_hbox = QHBoxLayout()
-        results_hbox.setSpacing(8)
+        results_hbox.setSpacing(3)
 
         for i in range(12):
             label = QLabel()
@@ -506,7 +570,7 @@ class PortfolioPage(QWidget, Page):
             long_short_str = "Long"
         else:
             long_short_str = "Short"
-        results_hbox.itemAt(2).widget().setText("$ " + str(investment) + " " + long_short_str)
+        results_hbox.itemAt(2).widget().setText("$" + str(investment) + " " + long_short_str)
 
         if self.algorithms[0]:
             self.lin_reg_col_name.show()
@@ -590,10 +654,10 @@ class PortfolioPage(QWidget, Page):
                 self.delete_layout(ticker_layout.layout())
                 self.results_vbox.removeItem(ticker_layout)
             self.tickers.remove(ticker)
+            self.update_portfolio_results()
         else:
             self.logger.info(f"Stock {ticker} changed to: num_shares={num_shares}, is_long={is_long}.")
             self.controller.tickers_and_num_shares[ticker] = num_shares
-
             if is_long:
                 long_short_str = "Long"
             else:
@@ -611,15 +675,29 @@ class AddStockPopUp(QDialog):
     share_price = None
     should_validate = False
 
-    def __init__(self, tickers_and_company_names_sp500):
+    def __init__(self, sp500_companies, top_50_esg_companies):
         super().__init__()
         self.setWindowTitle("Add Stock")
 
+        self.sp500_companies = sp500_companies
+        self.top_50_esg_companies = top_50_esg_companies
+
         layout = QVBoxLayout()
+
+        search_by_hbox = QHBoxLayout()
+        search_by_label = QLabel("Search by")
+        self.by_name_radio = QRadioButton("name")
+        self.by_name_radio.setChecked(True)
+        self.by_name_radio.toggled.connect(self.search_by_radio_toggled)
+        self.by_esg_radio = QRadioButton("top 50 best ESG score companies")
+        self.by_esg_radio.toggled.connect(self.search_by_radio_toggled)
+        search_by_hbox.addWidget(search_by_label)
+        search_by_hbox.addWidget(self.by_name_radio)
+        search_by_hbox.addWidget(self.by_esg_radio)
 
         ticker_label = QLabel("Please enter the stock ticker to add:")
 
-        self.completer = QCompleter(tickers_and_company_names_sp500, self)
+        self.completer = QCompleter(sp500_companies, self)
         self.completer.setCaseSensitivity(Qt.CaseInsensitive)
         self.completer.setFilterMode(Qt.MatchContains)
 
@@ -682,6 +760,7 @@ class AddStockPopUp(QDialog):
         self.add_button.hide()
         buttons_hbox.addWidget(self.add_button)
 
+        layout.addLayout(search_by_hbox)
         layout.addWidget(ticker_label)
         layout.addLayout(ticker_hbox)
         layout.addWidget(self.invalid_ticker_label)
@@ -693,6 +772,15 @@ class AddStockPopUp(QDialog):
         layout.addLayout(buttons_hbox)
 
         self.setLayout(layout)
+
+    def search_by_radio_toggled(self, checked):
+        if checked:
+            if self.by_name_radio.isChecked():
+                newCompleterModel = QStringListModel(self.sp500_companies)
+                self.completer.setModel(newCompleterModel)
+            elif self.by_esg_radio.isChecked():
+                newCompleterModel = QStringListModel(self.top_50_esg_companies)
+                self.completer.setModel(newCompleterModel)
 
     def validate_ticker(self):
         ticker = self.ticker_name.text()
