@@ -1,9 +1,13 @@
+import os
 import re
+from base64 import b64encode
+from io import BytesIO
 
 from PyQt5 import QtCore
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox,
-                             QScrollArea, QDialog, QLineEdit, QCompleter, QSizePolicy)
-from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel
+                             QScrollArea, QDialog, QLineEdit, QCompleter, QSizePolicy, QButtonGroup, QFrame)
+from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QBuffer, QIODevice
 import yfinance as yf
 
 from UI.Page import Page
@@ -11,7 +15,6 @@ from UI.SingleStockPage import SingleStockPage
 
 
 class PortfolioPage(QWidget, Page):
-
     back_to_menu_page = pyqtSignal()
     open_single_stock_page = pyqtSignal(str, str, float, int, str)
 
@@ -99,6 +102,7 @@ class PortfolioPage(QWidget, Page):
 
         self.results_vbox = None
         self.results_map = {}
+        self.monte_profits_losses = {"1d": {}, "1w": {}, "1m": {}}
 
         self.setStyleSheet(self.load_stylesheet())
 
@@ -285,7 +289,7 @@ class PortfolioPage(QWidget, Page):
         portfolio_hbox.setSpacing(3)
 
         portfolio_label = QLabel("Overall Portfolio results")
-        portfolio_label.setObjectName("resultLabel")
+        # portfolio_label.setObjectName("resultLabel")
         portfolio_label.setFixedSize(223, 70)
 
         self.portfolio_amount = QLabel("-")
@@ -330,13 +334,27 @@ class PortfolioPage(QWidget, Page):
                                   self.portfolio_bayesian, self.portfolio_monte_carlo, self.portfolio_lstm,
                                   self.portfolio_arima]
 
+        portfolio_vol_frame, portfolio_vol_frame_layout = self.create_frame()
         self.portfolio_volatility = QLabel("")
-        self.portfolio_volatility.setObjectName("resultLabel")
-        self.portfolio_volatility.setFixedSize(80, 70)
+        self.portfolio_volatility.setFixedSize(40, 30)
+        self.portfolio_volatility.setStyleSheet("color: white; font-weight: normal; border-width: 0;")
+        self.portfolio_volatility_category = QLabel("")
+        self.portfolio_volatility_category.setFixedSize(40, 30)
+        self.portfolio_volatility_category.setStyleSheet("color: blue; border: 2px solid blue; border-radius: 5px;")
+        portfolio_vol_frame_layout.addWidget(self.portfolio_volatility)
+        portfolio_vol_frame_layout.addWidget(self.portfolio_volatility_category)
+        portfolio_vol_frame.setFixedSize(90, 70)
 
+        portfolio_sharpe_frame, portfolio_sharpe_frame_layout = self.create_frame()
         self.portfolio_sharpe_ratio = QLabel("")
-        self.portfolio_sharpe_ratio.setObjectName("resultLabel")
         self.portfolio_sharpe_ratio.setFixedSize(80, 70)
+        self.portfolio_sharpe_ratio.setStyleSheet("color: white; font-weight: normal; border-width: 0;")
+        self.portfolio_sharpe_category = QLabel("")
+        self.portfolio_sharpe_category.setFixedSize(40, 30)
+        self.portfolio_sharpe_category.setStyleSheet("color: blue; border: 2px solid blue; border-radius: 5px;")
+        portfolio_sharpe_frame_layout.addWidget(self.portfolio_sharpe_ratio)
+        portfolio_sharpe_frame_layout.addWidget(self.portfolio_sharpe_category)
+        portfolio_sharpe_frame.setFixedSize(90, 70)
 
         self.portfolio_VaR = QLabel("")
         self.portfolio_VaR.setObjectName("resultLabel")
@@ -358,8 +376,10 @@ class PortfolioPage(QWidget, Page):
         portfolio_hbox.addWidget(self.portfolio_monte_carlo)
         portfolio_hbox.addWidget(self.portfolio_lstm)
         portfolio_hbox.addWidget(self.portfolio_arima)
-        portfolio_hbox.addWidget(self.portfolio_volatility)
-        portfolio_hbox.addWidget(self.portfolio_sharpe_ratio)
+        # portfolio_hbox.addWidget(self.portfolio_volatility)
+        portfolio_hbox.addWidget(portfolio_vol_frame)
+        portfolio_hbox.addWidget(portfolio_sharpe_frame)
+        # portfolio_hbox.addWidget(self.portfolio_sharpe_ratio)
         portfolio_hbox.addWidget(self.portfolio_VaR)
         portfolio_hbox.addWidget(portfolio_more_info_label)
         portfolio_hbox.addWidget(portfolio_edit_label)
@@ -386,6 +406,14 @@ class PortfolioPage(QWidget, Page):
         label.setObjectName('columnNameLabel')
         return label
 
+    def create_frame(self):
+        frame = QFrame()
+        frame_layout = QHBoxLayout(frame)
+        frame_layout.setSpacing(0)
+        frame_layout.setContentsMargins(0, 0, 0, 0)
+        frame.setObjectName("resultLabel")
+        return frame, frame_layout
+
     def hold_duration_button_toggled(self, checked):
         if checked:
             self.logger.info('Handling the change in hold duration.')
@@ -409,9 +437,9 @@ class PortfolioPage(QWidget, Page):
             self.ranking_vbox.itemAt(alg_index + 1).widget().setText(f"{alg_index + 1}. {algorithm}")
 
     def result_to_string(self, result):
-        if result > 0:
-            return f"+{result:.2f}$"
-        return f"{result:.2f}$"
+        if result >= 0:
+            return f"+{result:.2f}$", True
+        return f"{result:.2f}$", False
 
     def algorithms_state_changed(self, state, index):
         if state == Qt.Checked:
@@ -433,24 +461,32 @@ class PortfolioPage(QWidget, Page):
             label = self.results_map[ticker].itemAt(3 + index).widget()
             if ticker not in algorithmic_results.keys():
                 self.controller.run_algorithm(ticker, index, self.hold_duration)
-            if index == 2:
-                label.setText(f"{self.result_to_string(algorithmic_results[ticker])} +/- "
-                              f"{self.controller.bayesian_confidences[self.hold_duration][ticker][1]:.2f}")
-            elif index == 3:
-                res = algorithmic_results[ticker]
-                growth_fall = res.split()
+            if index != 3:
+                str_result, is_green = self.result_to_string(algorithmic_results[ticker])
+
+                if index == 2:
+                    label_text = f"{str_result} +/- {self.controller.bayesian_confidences[self.hold_duration][ticker][1]:.2f}"
+                elif index == 5:
+                    label_text = f"{str_result} +/- {self.controller.arima_confidences[self.hold_duration][ticker][1]:.2f}"
+                else:
+                    label_text = str_result
+            else:
+                label_text = algorithmic_results[ticker]
+                growth_fall = label_text.split()
                 is_long = self.controller.tickers_and_long_or_short[ticker]
                 if (growth_fall == "growth" and is_long) or (growth_fall == "fall" and not is_long):
-                    res += " (profit)"
+                    label_text += " (profit)"
+                    is_green = True
+                    self.monte_profits_losses[self.hold_duration][ticker] = True
                 else:
-                    res += " (loss)"
-                label.setText(res)
-            elif index == 5:
-                label.setText(f"{self.result_to_string(algorithmic_results[ticker])} +/- "
-                              f"{self.controller.arima_confidences[self.hold_duration][ticker][1]:.2f}")
+                    label_text += " (loss)"
+                    is_green = False
+                    self.monte_profits_losses[self.hold_duration][ticker] = False
+            label.setText(label_text)
+            if is_green:
+                self.results_map[ticker].itemAt(3 + index).widget().setStyleSheet("color: green;")
             else:
-                result = algorithmic_results[ticker]
-                label.setText(self.result_to_string(result))
+                self.results_map[ticker].itemAt(3 + index).widget().setStyleSheet("color: red;")
             label.show()
             self.result_col_names[index].show()
             self.update_portfolio_results()
@@ -477,9 +513,22 @@ class PortfolioPage(QWidget, Page):
             if is_chosen:
                 if index == 3:
                     result = self.controller.calculate_portfolio_monte_carlo(self.hold_duration)
+                    monte_profits = list(self.monte_profits_losses[self.hold_duration].values()).count(True)
+                    monte_losses = len(self.monte_profits_losses[self.hold_duration]) - monte_profits
+                    if monte_profits >= monte_losses:
+                        result += " (profit)"
+                        is_green = True
+                    else:
+                        result += " (loss)"
+                        is_green = False
                 else:
                     num_result = self.controller.calculate_portfolio_result(index, self.hold_duration)
-                    result = self.result_to_string(num_result)
+                    result, is_green = self.result_to_string(num_result)
+
+                if is_green:
+                    self.portfolio_results[index].setStyleSheet("color: green;")
+                else:
+                    self.portfolio_results[index].setStyleSheet("color: red;")
                 self.portfolio_results[index].setText(result)
                 self.portfolio_results[index].show()
             else:
@@ -489,19 +538,28 @@ class PortfolioPage(QWidget, Page):
         if len(ticker_keys) == 1:
             ticker = list(ticker_keys)[0]
             portfolio_vol, portfolio_vol_cat = self.controller.volatilities[ticker]
-            self.portfolio_volatility.setText(f'{portfolio_vol:.2f} {portfolio_vol_cat}')
+            # self.portfolio_volatility.setText(f'{portfolio_vol:.2f} {portfolio_vol_cat}')
+            self.portfolio_volatility.setText(f"{portfolio_vol:.2f}")
+            self.portfolio_volatility_category.setText(portfolio_vol_cat)
 
             portfolio_sharpe, portfolio_share_cat = self.controller.sharpe_ratios[ticker]
-            self.portfolio_sharpe_ratio.setText(f'{portfolio_sharpe:.2f} {portfolio_share_cat}')
+            # self.portfolio_sharpe_ratio.setText(f'{portfolio_sharpe:.2f} {portfolio_share_cat}')
+            self.portfolio_sharpe_ratio.setText(f"{portfolio_sharpe:.2f}")
+            self.portfolio_sharpe_category.setText(portfolio_share_cat)
 
             self.portfolio_VaR.setText(f"{self.controller.VaRs[ticker]:.2f}")
             return
 
         portfolio_vol, portfolio_vol_cat = self.controller.get_portfolio_volatility(self.hold_duration)
-        self.portfolio_volatility.setText(f'{portfolio_vol:.2f} {portfolio_vol_cat}')
+        # self.portfolio_volatility.setText(f'{portfolio_vol:.2f} {portfolio_vol_cat}')
+        self.portfolio_volatility.setText(f"{portfolio_vol:.2f}")
+        self.portfolio_volatility_category.setText(portfolio_vol_cat)
 
-        portfolio_sharpe, portfolio_share_cat = self.controller.get_portfolio_sharpe_ratio(self.hold_duration, portfolio_vol)
-        self.portfolio_sharpe_ratio.setText(f'{portfolio_sharpe:.2f} {portfolio_share_cat}')
+        portfolio_sharpe, portfolio_share_cat = self.controller.get_portfolio_sharpe_ratio(self.hold_duration,
+                                                                                           portfolio_vol)
+        # self.portfolio_sharpe_ratio.setText(f'{portfolio_sharpe:.2f} {portfolio_share_cat}')
+        self.portfolio_sharpe_ratio.setText(f"{portfolio_sharpe:.2f}")
+        self.portfolio_sharpe_category.setText(portfolio_share_cat)
 
         self.portfolio_VaR.setText(str(self.controller.get_portfolio_VaR(self.hold_duration, portfolio_vol)))
 
@@ -534,28 +592,28 @@ class PortfolioPage(QWidget, Page):
 
         if not_initial:
             self.controller.add_ticker(ticker, num_shares, investment, is_long)
-        # self.controller.tickers_and_num_shares[ticker] = num_shares
 
         results_hbox = QHBoxLayout()
         results_hbox.setSpacing(3)
 
         for i in range(12):
             label = QLabel()
-            label.setObjectName("resultLabel")
+            if i != 0:
+                label.setObjectName("resultLabel")
             label.setFixedSize(self.widths[i], 50)
             if 3 <= i <= 8:
                 label.hide()
             results_hbox.addWidget(label)
 
         more_info_button = QPushButton("--->")
-        more_info_button.setObjectName("moreInfoButton")
+        more_info_button.setObjectName("portfolioButton")
         more_info_button.setFixedSize(50, 50)
         more_info_button.clicked.connect(lambda: self.open_single_stock_page.emit(ticker, stock_name, one_share_price,
                                                                                   num_shares, self.hold_duration))
         results_hbox.addWidget(more_info_button)
 
         edit_button = QPushButton("Edit")
-        edit_button.setObjectName("moreInfoButton")
+        edit_button.setObjectName("portfolioButton")
         edit_button.setFixedSize(50, 50)
         edit_button.clicked.connect(lambda: self.edit_stock(ticker, stock_name, one_share_price))
         results_hbox.addWidget(edit_button)
@@ -575,17 +633,32 @@ class PortfolioPage(QWidget, Page):
         if self.algorithms[0]:
             self.lin_reg_col_name.show()
             lin_reg_prediction = self.controller.run_linear_regression(ticker, self.hold_duration)
-            results_hbox.itemAt(3).widget().setText(self.result_to_string(lin_reg_prediction))
+            result, is_green = self.result_to_string(lin_reg_prediction)
+            if is_green:
+                results_hbox.itemAt(3).widget().setObjectName("greenResultLabel")
+            else:
+                results_hbox.itemAt(3).widget().setObjectName("redResultLabel")
+            results_hbox.itemAt(3).widget().setText(result)
             results_hbox.itemAt(3).widget().show()
         if self.algorithms[1]:
             self.random_forest_col_name.show()
             random_forest_prediction = self.controller.run_random_forest(ticker, self.hold_duration)
-            results_hbox.itemAt(4).widget().setText(self.result_to_string(random_forest_prediction))
+            result, is_green = self.result_to_string(random_forest_prediction)
+            if is_green:
+                results_hbox.itemAt(4).widget().setObjectName("greenResultLabel")
+            else:
+                results_hbox.itemAt(4).widget().setObjectName("redResultLabel")
+            results_hbox.itemAt(4).widget().setText(result)
             results_hbox.itemAt(4).widget().show()
         if self.algorithms[2]:
             self.bayesian_col_name.show()
             bayesian_prediction = self.controller.run_bayesian(ticker, self.hold_duration)
-            results_hbox.itemAt(5).widget().setText(f"{self.result_to_string(bayesian_prediction[0][0])}"
+            result, is_green = self.result_to_string(bayesian_prediction[0][0])
+            if is_green:
+                results_hbox.itemAt(5).widget().setObjectName("greenResultLabel")
+            else:
+                results_hbox.itemAt(5).widget().setObjectName("redResultLabel")
+            results_hbox.itemAt(5).widget().setText(f"{result}"
                                                     f" +/- {self.controller.bayesian_confidences[self.hold_duration][ticker][1]:.2f}")
             results_hbox.itemAt(5).widget().show()
         if self.algorithms[3]:
@@ -595,19 +668,33 @@ class PortfolioPage(QWidget, Page):
             growth_fall = monte_carlo_prediction.split()
             if (growth_fall == "growth" and is_long) or (growth_fall == "fall" and not is_long):
                 monte_carlo_prediction += " (profit)"
+                results_hbox.itemAt(6).widget().setObjectName("greenResultLabel")
+                self.monte_profits_losses[self.hold_duration][ticker] = True
             else:
                 monte_carlo_prediction += " (loss)"
+                results_hbox.itemAt(6).widget().setObjectName("redResultLabel")
+                self.monte_profits_losses[self.hold_duration][ticker] = False
             results_hbox.itemAt(6).widget().setText(monte_carlo_prediction)
             results_hbox.itemAt(6).widget().show()
         if self.algorithms[4]:
             self.lstm_col_name.show()
             lstm_prediction = self.controller.run_lstm(ticker, self.hold_duration)
-            results_hbox.itemAt(7).widget().setText(self.result_to_string(lstm_prediction))
+            result, is_green = self.result_to_string(lstm_prediction)
+            if is_green:
+                results_hbox.itemAt(7).widget().setObjectName("greenResultLabel")
+            else:
+                results_hbox.itemAt(7).widget().setObjectName("redResultLabel")
+            results_hbox.itemAt(7).widget().setText(result)
             results_hbox.itemAt(7).widget().show()
         if self.algorithms[5]:
             self.arima_col_name.show()
             arima_prediction = self.controller.run_arima(ticker, self.hold_duration)
-            results_hbox.itemAt(8).widget().setText(f"{self.result_to_string(arima_prediction)}"
+            result, is_green = self.result_to_string(arima_prediction)
+            if is_green:
+                results_hbox.itemAt(8).widget().setObjectName("greenResultLabel")
+            else:
+                results_hbox.itemAt(8).widget().setObjectName("redResultLabel")
+            results_hbox.itemAt(8).widget().setText(f"{result}"
                                                     f" +/- {self.controller.arima_confidences[self.hold_duration][ticker][1]:.2f}")
             results_hbox.itemAt(8).widget().show()
 
@@ -691,6 +778,9 @@ class AddStockPopUp(QDialog):
         self.by_name_radio.toggled.connect(self.search_by_radio_toggled)
         self.by_esg_radio = QRadioButton("top 50 best ESG score companies")
         self.by_esg_radio.toggled.connect(self.search_by_radio_toggled)
+        self.search_by_group = QButtonGroup(self)
+        self.search_by_group.addButton(self.by_name_radio)
+        self.search_by_group.addButton(self.by_esg_radio)
         search_by_hbox.addWidget(search_by_label)
         search_by_hbox.addWidget(self.by_name_radio)
         search_by_hbox.addWidget(self.by_esg_radio)
@@ -746,6 +836,11 @@ class AddStockPopUp(QDialog):
         self.investment_long.hide()
         self.investment_short = QRadioButton("Short")
         self.investment_short.hide()
+        # self.investment_long.toggled.connect(self.long_short_radio_toggled)
+        # self.investment_short.toggled.connect(self.long_short_radio_toggled)
+        self.long_short_group = QButtonGroup(self)
+        self.long_short_group.addButton(self.investment_long)
+        self.long_short_group.addButton(self.investment_short)
         long_short_layout.addWidget(self.investment_long)
         long_short_layout.addWidget(self.investment_short)
 
@@ -781,6 +876,13 @@ class AddStockPopUp(QDialog):
             elif self.by_esg_radio.isChecked():
                 newCompleterModel = QStringListModel(self.top_50_esg_companies)
                 self.completer.setModel(newCompleterModel)
+
+    # def long_short_radio_toggled(self, checked):
+    #     if checked:
+    #         if self.investment_long.isChecked():
+    #             self.investment_short.setChecked(False)
+    #         elif self.investment_short.isChecked():
+    #             self.investment_long.setChecked(False)
 
     def validate_ticker(self):
         ticker = self.ticker_name.text()
@@ -1014,4 +1116,3 @@ class RankingTimeWarningPopUp(QDialog):
     def process_continue_decision(self):
         self.decision_made.emit(True)
         self.close()
-

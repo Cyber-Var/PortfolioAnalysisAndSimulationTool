@@ -171,6 +171,7 @@ class Controller:
         del self.tickers_and_investments[ticker]
         del self.tickers_and_long_or_short[ticker]
         del self.tickers_and_num_shares[ticker]
+
         if len(self.tickers_and_investments) > 0:
             for hold_dur in self.start_dates.keys():
                 # self.data[hold_dur].drop(ticker, axis=1, inplace=True)
@@ -181,6 +182,17 @@ class Controller:
                 "1w": pd.DataFrame(),
                 "1m": pd.DataFrame()
             }
+
+        for algorithm in self.results:
+            alg_results = self.results[algorithm]
+            for hold_dur in alg_results:
+                if ticker in alg_results[hold_dur].keys():
+                    if ticker in ["AAPL", "TSLA", "AMD"]:
+                        alg_results[hold_dur][ticker] = None
+                    else:
+                        del self.results[algorithm][hold_dur][ticker]
+
+
 
     def update_stock_info(self, ticker, num_shares, investment, is_long, algorithm_indices):
         self.tickers_and_investments[ticker] = investment
@@ -424,7 +436,6 @@ class Controller:
         risk_metrics = RiskMetrics(self.tickers_and_investments.keys(), self.tickers_and_investments.values(),
                                    self.tickers_and_long_or_short.values(), data)
         portfolio_VaR = risk_metrics.calculatePortfolioVaR(hold_duration, 0.95, portfolio_vol)
-        print(portfolio_VaR)
         return portfolio_VaR
 
     def run_model(self, model):
@@ -436,11 +447,17 @@ class Controller:
         algorithm_results = self.results[algorithm_name][hold_duration]
         final_result = 0
         for ticker in algorithm_results.keys():
-            final_result += algorithm_results[ticker]
+            if algorithm_results[ticker] is not None:
+                final_result += algorithm_results[ticker]
         self.portfolio_results[index] = final_result
         return final_result
 
     def calculate_portfolio_monte_carlo(self, hold_duration):
+        ticker_keys = self.tickers_and_investments.keys()
+        if len(self.tickers_and_investments.keys()) == 1:
+            ticker = list(ticker_keys)[0]
+            return self.monte_carlo_results[hold_duration][ticker]
+
         total_positives = 0
         total_negatives = 0
         total_negatives2 = 0
@@ -621,11 +638,6 @@ class Controller:
         # print(rankings_mape)
         # print("R^2 rankings:")
         # print(rankings_r2)
-
-        # rankings_mse = {'1d': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 71.26391312326031), ('random_forest', 336.60440620615987)], '1w': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 391.2276127608421), ('random_forest', 1029.9607039232037)], '1m': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 1939.2227765348366), ('random_forest', 2022.090700119813)]}
-        # rankings_mae = {'1d': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 9.901447382031126), ('random_forest', 20.37349078540057)], '1w': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 25.37079207073901), ('random_forest', 39.775791630646296)], '1m': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('random_forest', 56.33070692269658), ('linear_regression', 57.41482192776909)]}
-        # rankings_mape = {'1d': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 5.611251397569742), ('random_forest', 11.247492211399885)], '1w': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 14.398992372770188), ('random_forest', 22.664536036295004)], '1m': [('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('random_forest', 32.07457392072242), ('linear_regression', 32.339696113892124)]}
-        # rankings_r2 = {'1d': [('linear_regression', -2.8833572878522746), ('random_forest', -2.4412863500683883), ('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0)], '1w': [('linear_regression', -2.2314029569409657), ('random_forest', -0.9757240123007211), ('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0)], '1m': [('random_forest', -0.32377661629677823), ('bayesian', 0), ('monte_carlo', 0), ('lstm', 0), ('arima', 0), ('linear_regression', 0.37209943095992204)]}
 
         # Combine the separate rankings based on MSE, MAE, MAPE and R^2 into one final ranking:
 

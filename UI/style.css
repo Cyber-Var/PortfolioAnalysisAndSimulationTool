@@ -30,6 +30,7 @@ QLabel {
     color: white;
     font-size: 15px;
     font-weight: normal;
+    border-color: transparent;
 }
 
 #inputHeaderLabel {
@@ -56,6 +57,24 @@ QLabel {
     border: 2px solid white;
     background-color: black;
     color: white;
+    padding: 0;
+}
+
+#greenResultLabel {
+    font-size: 15px;
+    font-weight: normal;
+    border: 2px solid white;
+    background-color: black;
+    color: green;
+    padding: 0;
+}
+
+#redResultLabel {
+    font-size: 15px;
+    font-weight: normal;
+    border: 2px solid white;
+    background-color: black;
+    color: red;
     padding: 0;
 }
 
