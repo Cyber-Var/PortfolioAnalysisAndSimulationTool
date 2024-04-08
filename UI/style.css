@@ -189,6 +189,26 @@ QPushButton:pressed {
     margin: 0;
 }
 
+#addStockLabel {
+    color: #3B3A3A;
+    font-size: 15px;
+}
+
+#popUpButton {
+    background-color: black;
+    font-size: 15px;
+    font-weight: normal;
+    border-radius: 10px;
+}
+
+QPushButton:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, stop:1 #00DDEB);
+}
+
+QPushButton:pressed {
+    background-color: black;
+}
+
 
 QVBoxLayout {
 
@@ -276,10 +296,13 @@ QWidget {
     padding: 30px;
 }
 
+#addStockVBox {
+    border: 2px solid #4D4D4D;
+}
+
 #rankingHBox {
     border: 2px solid white;
     padding: 30px 50px;
-    /*margin-left: 70px;*/
 }
 
 
@@ -319,4 +342,16 @@ QRadioButton::indicator:checked {
 }
 QRadioButton::indicator:checked:hover {
     background-color: #303F9F;
+}
+
+
+QDialog {
+    background-color: #8C8C8C;
+    color: black;
+}
+
+
+QListView::item:selected {
+    background-color: darkGray;
+    color: white;
 }

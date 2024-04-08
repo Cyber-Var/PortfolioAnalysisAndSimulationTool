@@ -7,7 +7,7 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox,
                              QScrollArea, QDialog, QLineEdit, QCompleter, QSizePolicy, QButtonGroup, QFrame,
-                             QDialogButtonBox)
+                             QDialogButtonBox, QSpacerItem)
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QBuffer, QIODevice
 import yfinance as yf
 
@@ -848,19 +848,36 @@ class AddStockPopUp(QDialog):
 
     def __init__(self, sp500_companies, top_50_esg_companies):
         super().__init__()
-        self.setWindowTitle("Add Stock")
+        self.setWindowTitle("Add Stock to Portfolio")
+        with open("UI/style.css", "r") as f:
+            stylesheet = f.read()
+            self.setStyleSheet(stylesheet)
+        button_style = ("QPushButton: background-color: #272626; border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1,"
+                        "stop:0 #AF40FF, stop:1 #00DDEB);"
+                        "QPushButton:hover {background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, "
+                        "stop:1 #00DDEB);}"
+                        "QPushButton:pressed {background-color: black;}")
 
         self.sp500_companies = sp500_companies
         self.top_50_esg_companies = top_50_esg_companies
 
         layout = QVBoxLayout()
 
+        ticker_vbox = QVBoxLayout()
+        ticker_widget = QWidget()
+        ticker_widget.setObjectName("addStockVBox")
+        ticker_widget.setFixedSize(500, 200)
+        ticker_widget.setLayout(ticker_vbox)
+
         search_by_hbox = QHBoxLayout()
         search_by_label = QLabel("Search within:")
+        search_by_label.setObjectName("addStockLabel")
         self.by_name_radio = QRadioButton("companies with capitalisation\nabove 1 billion dollars")
+        # self.by_name_radio.setObjectName("addStockLabel")
         self.by_name_radio.setChecked(True)
         self.by_name_radio.toggled.connect(self.search_by_radio_toggled)
         self.by_esg_radio = QRadioButton("top 100 companies\nby ESG score")
+        # self.by_esg_radio.setObjectName("addStockLabel")
         self.by_esg_radio.toggled.connect(self.search_by_radio_toggled)
         self.search_by_group = QButtonGroup(self)
         self.search_by_group.addButton(self.by_name_radio)
@@ -870,6 +887,7 @@ class AddStockPopUp(QDialog):
         search_by_hbox.addWidget(self.by_esg_radio)
 
         ticker_label = QLabel("Please enter the stock ticker to add:")
+        ticker_label.setObjectName("addStockLabel")
 
         self.completer = QCompleter(sp500_companies, self)
         self.completer.setCaseSensitivity(Qt.CaseInsensitive)
@@ -881,23 +899,37 @@ class AddStockPopUp(QDialog):
         self.ticker_name.setCompleter(self.completer)
         ticker_hbox.addWidget(self.ticker_name)
         self.ticker_enter_button = QPushButton("Enter")
+        self.ticker_enter_button.setStyleSheet(button_style)
+        self.ticker_enter_button.setFixedSize(50, 30)
         self.ticker_enter_button.clicked.connect(self.validate_ticker)
         ticker_hbox.addWidget(self.ticker_enter_button)
 
-        self.invalid_ticker_label = QLabel("Invalid ticker entered")
+        self.invalid_ticker_label = QLabel("Please choose a company from list")
         self.invalid_ticker_label.hide()
-        self.invalid_ticker_label.setStyleSheet("color: red;")
+        self.invalid_ticker_label.setStyleSheet("font-size: 15px; color: #C70C0C;")
         self.ticker_name.textChanged.connect(self.hide_invalid_labels)
 
+        investment_vbox = QVBoxLayout()
+        self.investment_widget = QWidget()
+        self.investment_widget.setObjectName("addStockVBox")
+        self.investment_widget.setFixedSize(500, 200)
+        self.investment_widget.setLayout(investment_vbox)
+        self.investment_widget.hide()
+
         self.share_price_label = QLabel()
+        self.share_price_label.setObjectName("addStockLabel")
+        self.share_price_label.setStyleSheet("color: black;")
         self.share_price_label.hide()
 
         investment_hbox = QHBoxLayout()
 
         self.investment_label = QLabel("Enter the amount of shares:")
+        self.investment_label.setObjectName("addStockLabel")
         self.investment_label.hide()
 
         self.investment_enter_button = QPushButton("Enter")
+        self.investment_enter_button.setStyleSheet(button_style)
+        self.investment_enter_button.setFixedSize(50, 30)
         self.investment_enter_button.clicked.connect(self.validate_investment)
         self.investment_enter_button.hide()
 
@@ -911,7 +943,7 @@ class AddStockPopUp(QDialog):
 
         self.invalid_investment_label = QLabel("The amount of shares has to be a positive integer.")
         self.invalid_investment_label.hide()
-        self.invalid_investment_label.setStyleSheet("color: red;")
+        self.invalid_investment_label.setStyleSheet("font-size: 15px; color: #C70C0C;")
         self.ticker_name.textChanged.connect(self.hide_invalid_investment_label)
 
         long_short_layout = QHBoxLayout()
@@ -926,24 +958,38 @@ class AddStockPopUp(QDialog):
         long_short_layout.addWidget(self.investment_long)
         long_short_layout.addWidget(self.investment_short)
 
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttons_layout = QHBoxLayout()
+        self.add_button = QPushButton("Add")
+        self.add_button.setFixedSize(50, 30)
+        self.add_button.setStyleSheet(button_style)
+        self.add_button.clicked.connect(self.add_ticker_to_portfolio)
 
-        add_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        add_button.setText("Add")
+        cancel_button = QPushButton("Cancel")
+        cancel_button.setFixedSize(50, 30)
+        cancel_button.setStyleSheet(button_style)
+        cancel_button.clicked.connect(self.close)
 
-        self.buttonBox.accepted.connect(self.add_ticker_to_portfolio)
-        self.buttonBox.rejected.connect(self.close)
+        buttons_layout.addStretch(1)
+        buttons_layout.addWidget(cancel_button)
+        spacer = QSpacerItem(30, 10, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        buttons_layout.addItem(spacer)
+        buttons_layout.addWidget(self.add_button)
+        buttons_layout.addStretch(1)
 
-        layout.addLayout(search_by_hbox)
-        layout.addWidget(ticker_label)
-        layout.addLayout(ticker_hbox)
-        layout.addWidget(self.invalid_ticker_label)
-        layout.addWidget(self.share_price_label)
-        layout.addLayout(long_short_layout)
-        layout.addWidget(self.investment_label)
-        layout.addLayout(investment_hbox)
-        layout.addWidget(self.invalid_investment_label)
-        layout.addWidget(self.buttonBox, alignment=Qt.AlignCenter)
+        ticker_vbox.addLayout(search_by_hbox)
+        ticker_vbox.addWidget(ticker_label)
+        ticker_vbox.addLayout(ticker_hbox)
+        ticker_vbox.addWidget(self.invalid_ticker_label)
+
+        investment_vbox.addWidget(self.share_price_label)
+        investment_vbox.addLayout(long_short_layout)
+        investment_vbox.addWidget(self.investment_label)
+        investment_vbox.addLayout(investment_hbox)
+        investment_vbox.addWidget(self.invalid_investment_label)
+
+        layout.addWidget(ticker_widget)
+        layout.addWidget(self.investment_widget)
+        layout.addLayout(buttons_layout)
 
         self.setLayout(layout)
 
@@ -976,6 +1022,7 @@ class AddStockPopUp(QDialog):
             self.investment_short.show()
             self.investment.setFocus()
             self.investment_enter_button.show()
+            self.investment_widget.show()
         else:
             self.invalid_ticker_label.show()
 
@@ -1021,8 +1068,10 @@ class AddStockPopUp(QDialog):
         self.investment_long.hide()
         self.investment_short.hide()
         self.investment_label.hide()
+        self.investment_enter_button.hide()
         self.investment.hide()
         self.add_button.hide()
+        self.investment_widget.hide()
 
     def hide_invalid_investment_label(self):
         self.invalid_investment_label.hide()
