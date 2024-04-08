@@ -91,8 +91,11 @@ class MainWindow(QMainWindow):
 
                     one_stock_data = lines[0].strip().split("|")
                     ticker = one_stock_data[0]
-                    self.controller.add_ticker(ticker, int(one_stock_data[1]), None,
-                                               bool(one_stock_data[2]))
+                    if one_stock_data[2] == "True":
+                        is_long = True
+                    else:
+                        is_long = False
+                    self.controller.add_ticker(ticker, int(one_stock_data[1]), None, is_long)
 
                     alg_results_1d = lines[1].strip().split("|")[:6]
                     alg_results_1w = lines[2].strip().split("|")[:6]

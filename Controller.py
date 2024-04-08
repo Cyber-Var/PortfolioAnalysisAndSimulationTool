@@ -166,6 +166,7 @@ class Controller:
             # Retrieve historical data from Yahoo! Finance:
             for hold_dur in self.start_dates.keys():
                 self.data[hold_dur] = self.downloadData(self.start_dates[hold_dur], self.end_date)
+        print(self.tickers_and_long_or_short)
 
     def remove_ticker(self, ticker):
         del self.tickers_and_investments[ticker]

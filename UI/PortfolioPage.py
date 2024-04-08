@@ -18,6 +18,8 @@ class PortfolioPage(QWidget, Page):
     back_to_menu_page = pyqtSignal()
     open_single_stock_page = pyqtSignal(str, str, float, int, str)
 
+    portfolio_yellow_border_style = "font-weight: bold; border: 2px solid #F4FF96;"
+
     def __init__(self, main_window, controller, set_algorithms, hold_duration):
         super().__init__()
 
@@ -68,11 +70,14 @@ class PortfolioPage(QWidget, Page):
 
         update_ranking_button = QPushButton("Update Ranking")
         update_ranking_button.setObjectName('portfolioButton')
+        update_ranking_button.setStyleSheet("border-radius: 5px;")
         update_ranking_button.setFixedWidth(150)
         update_ranking_button.clicked.connect(self.show_ranking_time_warning_window)
         self.ranking_vbox.addWidget(update_ranking_button, alignment=Qt.AlignCenter)
 
+        self.portfolio_col_names = []
         self.portfolio_results = []
+        self.portfolio_label = None
         self.portfolio_amount = None
         self.portfolio_linear_regression = None
         self.portfolio_random_forest = None
@@ -81,9 +86,12 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_lstm = None
         self.portfolio_arima = None
         self.portfolio_volatility = None
+        self.portfolio_volatility_category = None
         self.portfolio_sharpe_ratio = None
+        self.portfolio_sharpe_category = None
         self.portfolio_VaR = None
 
+        self.col_names = []
         self.result_col_names = []
         self.ticker_col_name = None
         self.stock_name_col_name = None
@@ -179,17 +187,23 @@ class PortfolioPage(QWidget, Page):
         self.arima_col_name.setFixedSize(120, 50)
         self.arima_col_name.hide()
         self.volatility_col_name = self.create_column_names_labels("Volatility")
-        self.volatility_col_name.setFixedSize(80, 50)
+        self.volatility_col_name.setFixedSize(110, 50)
         self.sharpe_ratio_col_name = self.create_column_names_labels("Sharpe\nRatio")
-        self.sharpe_ratio_col_name.setFixedSize(80, 50)
+        self.sharpe_ratio_col_name.setFixedSize(110, 50)
         self.VaR_col_name = self.create_column_names_labels("Value\nat Risk")
         self.VaR_col_name.setFixedSize(60, 50)
         self.more_info_col_name = self.create_column_names_labels("More\nInfo")
         self.more_info_col_name.setFixedSize(50, 50)
         self.edit_col_name = self.create_column_names_labels("Edit\nStock")
         self.edit_col_name.setFixedSize(50, 50)
+
+        self.col_names = [self.ticker_col_name, self.stock_name_col_name, self.amount_col_name, self.volatility_col_name,
+                          self.sharpe_ratio_col_name, self.VaR_col_name, self.more_info_col_name, self.edit_col_name]
         self.result_col_names = [self.lin_reg_col_name, self.random_forest_col_name, self.bayesian_col_name,
                                  self.monte_carlo_col_name, self.lstm_col_name, self.arima_col_name]
+
+        for col_name_label in self.col_names:
+            col_name_label.hide()
 
         column_names_hbox.addWidget(self.ticker_col_name)
         column_names_hbox.addWidget(self.stock_name_col_name)
@@ -207,7 +221,9 @@ class PortfolioPage(QWidget, Page):
         column_names_hbox.addWidget(self.edit_col_name)
 
         add_stock_button = QPushButton("+ Add Stock")
-        add_stock_button.setObjectName('addStockButton')
+        add_stock_button.setObjectName("addStockButton")
+        add_stock_button.setStyleSheet("border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, stop:1 #00DDEB);")
+        add_stock_button.setFixedSize(110, 50)
         add_stock_button.clicked.connect(self.show_add_stock_window)
 
         column_names_hbox.addStretch(1)
@@ -219,13 +235,14 @@ class PortfolioPage(QWidget, Page):
         scrollable_layout = QVBoxLayout()
         scrollable_layout.addLayout(column_names_hbox)
         scrollable_layout.addLayout(self.results_vbox)
-        scrollable_layout.addWidget(add_stock_button)
+        scrollable_layout.addWidget(add_stock_button, alignment=Qt.AlignCenter)
         scrollable_layout.addStretch(1)
         scrollable_widget.setLayout(scrollable_layout)
         scrollable_area.setWidget(scrollable_widget)
 
         back_button = QPushButton("Back")
         back_button.setObjectName("addStockButton")
+        back_button.setFixedSize(90, 40)
         back_button.clicked.connect(self.back_to_menu_page.emit)
 
         self.show_portfolio_results()
@@ -288,12 +305,13 @@ class PortfolioPage(QWidget, Page):
         portfolio_hbox = QHBoxLayout()
         portfolio_hbox.setSpacing(3)
 
-        portfolio_label = QLabel("Overall Portfolio results")
-        # portfolio_label.setObjectName("resultLabel")
-        portfolio_label.setFixedSize(223, 70)
+        self.portfolio_label = QLabel("Overall Portfolio results")
+        self.portfolio_label.setStyleSheet(self.portfolio_yellow_border_style)
+        self.portfolio_label.setFixedSize(223, 70)
 
         self.portfolio_amount = QLabel("-")
-        self.portfolio_amount.setObjectName("resultLabel")
+        self.portfolio_amount.setObjectName("portfolioResultLabel")
+        self.portfolio_amount.setStyleSheet(self.portfolio_yellow_border_style)
         self.portfolio_amount.setFixedSize(105, 70)
 
         self.portfolio_linear_regression = QLabel("")
@@ -310,11 +328,17 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_arima.setFixedSize(120, 70)
 
         self.portfolio_linear_regression.setObjectName("resultLabel")
+        self.portfolio_linear_regression.setStyleSheet(self.portfolio_yellow_border_style)
         self.portfolio_random_forest.setObjectName("resultLabel")
+        self.portfolio_random_forest.setStyleSheet(self.portfolio_yellow_border_style)
         self.portfolio_bayesian.setObjectName("resultLabel")
+        self.portfolio_bayesian.setStyleSheet(self.portfolio_yellow_border_style)
         self.portfolio_monte_carlo.setObjectName("resultLabel")
+        self.portfolio_monte_carlo.setStyleSheet(self.portfolio_yellow_border_style)
         self.portfolio_lstm.setObjectName("resultLabel")
+        self.portfolio_lstm.setStyleSheet(self.portfolio_yellow_border_style)
         self.portfolio_arima.setObjectName("resultLabel")
+        self.portfolio_arima.setStyleSheet(self.portfolio_yellow_border_style)
 
         self.portfolio_linear_regression.setFixedHeight(70)
         self.portfolio_random_forest.setFixedHeight(70)
@@ -330,45 +354,63 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_lstm.hide()
         self.portfolio_arima.hide()
 
+        self.portfolio_vol_frame, portfolio_vol_frame_layout = self.create_frame()
+        self.portfolio_vol_frame.setStyleSheet(self.portfolio_yellow_border_style)
+        self.portfolio_volatility = QLabel()
+        self.portfolio_volatility.setFixedSize(50, 30)
+        # self.portfolio_volatility.setStyleSheet("color: white; font-weight: normal; border-width: 0;")
+        self.portfolio_volatility.setStyleSheet("color: white; border-width: 0;")
+        self.portfolio_volatility_category = QLabel()
+        self.portfolio_volatility_category.setFixedSize(50, 30)
+        self.portfolio_volatility_category.setAlignment(Qt.AlignCenter)
+        portfolio_vol_frame_layout.addWidget(self.portfolio_volatility)
+        portfolio_vol_frame_layout.addWidget(self.portfolio_volatility_category)
+        self.portfolio_vol_frame.setFixedSize(110, 70)
+
+        self.portfolio_sharpe_frame, portfolio_sharpe_frame_layout = self.create_frame()
+        self.portfolio_sharpe_frame.setStyleSheet(self.portfolio_yellow_border_style)
+        self.portfolio_sharpe_ratio = QLabel()
+        self.portfolio_sharpe_ratio.setFixedSize(50, 30)
+        # self.portfolio_sharpe_ratio.setStyleSheet("color: white; font-weight: normal; border-width: 0;")
+        self.portfolio_sharpe_ratio.setStyleSheet("color: white; border-width: 0;")
+        self.portfolio_sharpe_category = QLabel()
+        self.portfolio_sharpe_category.setFixedSize(50, 30)
+        self.portfolio_sharpe_category.setAlignment(Qt.AlignCenter)
+        portfolio_sharpe_frame_layout.addWidget(self.portfolio_sharpe_ratio)
+        portfolio_sharpe_frame_layout.addWidget(self.portfolio_sharpe_category)
+        self.portfolio_sharpe_frame.setFixedSize(110, 70)
+
+        self.portfolio_VaR = QLabel("")
+        self.portfolio_VaR.setObjectName("resultLabel")
+        self.portfolio_VaR.setStyleSheet(self.portfolio_yellow_border_style)
+        self.portfolio_VaR.setFixedSize(60, 70)
+
+
+        self.portfolio_more_info_button = QPushButton("--->")
+        self.portfolio_more_info_button.setFixedSize(50, 70)
+        self.portfolio_more_info_button.setObjectName("portfolioButton")
+        self.portfolio_more_info_button.setDisabled(True)
+        self.portfolio_more_info_button.setStyleSheet("background-color: #333; color: #AAA; border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #67497E, stop:1 #09828A);")
+
+        self.portfolio_edit_button = QPushButton("Edit")
+        self.portfolio_edit_button.setFixedSize(50, 70)
+        self.portfolio_edit_button.setObjectName("portfolioButton")
+        self.portfolio_edit_button.setDisabled(True)
+        self.portfolio_edit_button.setStyleSheet(
+            "background-color: #333; color: #AAA; border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #67497E, stop:1 #09828A);")
+
+        self.portfolio_col_names = [self.portfolio_label, self.portfolio_amount, self.portfolio_vol_frame,
+                                    self.portfolio_sharpe_frame, self.portfolio_VaR]
         self.portfolio_results = [self.portfolio_linear_regression, self.portfolio_random_forest,
                                   self.portfolio_bayesian, self.portfolio_monte_carlo, self.portfolio_lstm,
                                   self.portfolio_arima]
 
-        portfolio_vol_frame, portfolio_vol_frame_layout = self.create_frame()
-        self.portfolio_volatility = QLabel("")
-        self.portfolio_volatility.setFixedSize(40, 30)
-        self.portfolio_volatility.setStyleSheet("color: white; font-weight: normal; border-width: 0;")
-        self.portfolio_volatility_category = QLabel("")
-        self.portfolio_volatility_category.setFixedSize(40, 30)
-        self.portfolio_volatility_category.setStyleSheet("color: blue; border: 2px solid blue; border-radius: 5px;")
-        portfolio_vol_frame_layout.addWidget(self.portfolio_volatility)
-        portfolio_vol_frame_layout.addWidget(self.portfolio_volatility_category)
-        portfolio_vol_frame.setFixedSize(90, 70)
+        for col_name_label in self.portfolio_col_names:
+            col_name_label.hide()
+        self.portfolio_more_info_button.hide()
+        self.portfolio_edit_button.hide()
 
-        portfolio_sharpe_frame, portfolio_sharpe_frame_layout = self.create_frame()
-        self.portfolio_sharpe_ratio = QLabel("")
-        self.portfolio_sharpe_ratio.setFixedSize(80, 70)
-        self.portfolio_sharpe_ratio.setStyleSheet("color: white; font-weight: normal; border-width: 0;")
-        self.portfolio_sharpe_category = QLabel("")
-        self.portfolio_sharpe_category.setFixedSize(40, 30)
-        self.portfolio_sharpe_category.setStyleSheet("color: blue; border: 2px solid blue; border-radius: 5px;")
-        portfolio_sharpe_frame_layout.addWidget(self.portfolio_sharpe_ratio)
-        portfolio_sharpe_frame_layout.addWidget(self.portfolio_sharpe_category)
-        portfolio_sharpe_frame.setFixedSize(90, 70)
-
-        self.portfolio_VaR = QLabel("")
-        self.portfolio_VaR.setObjectName("resultLabel")
-        self.portfolio_VaR.setFixedSize(60, 70)
-
-        portfolio_more_info_label = QLabel("-")
-        portfolio_more_info_label.setObjectName("resultLabel")
-        portfolio_more_info_label.setFixedSize(50, 70)
-
-        portfolio_edit_label = QLabel("-")
-        portfolio_edit_label.setObjectName("resultLabel")
-        portfolio_edit_label.setFixedSize(50, 70)
-
-        portfolio_hbox.addWidget(portfolio_label)
+        portfolio_hbox.addWidget(self.portfolio_label)
         portfolio_hbox.addWidget(self.portfolio_amount)
         portfolio_hbox.addWidget(self.portfolio_linear_regression)
         portfolio_hbox.addWidget(self.portfolio_random_forest)
@@ -376,13 +418,11 @@ class PortfolioPage(QWidget, Page):
         portfolio_hbox.addWidget(self.portfolio_monte_carlo)
         portfolio_hbox.addWidget(self.portfolio_lstm)
         portfolio_hbox.addWidget(self.portfolio_arima)
-        # portfolio_hbox.addWidget(self.portfolio_volatility)
-        portfolio_hbox.addWidget(portfolio_vol_frame)
-        portfolio_hbox.addWidget(portfolio_sharpe_frame)
-        # portfolio_hbox.addWidget(self.portfolio_sharpe_ratio)
+        portfolio_hbox.addWidget(self.portfolio_vol_frame)
+        portfolio_hbox.addWidget(self.portfolio_sharpe_frame)
         portfolio_hbox.addWidget(self.portfolio_VaR)
-        portfolio_hbox.addWidget(portfolio_more_info_label)
-        portfolio_hbox.addWidget(portfolio_edit_label)
+        portfolio_hbox.addWidget(self.portfolio_more_info_button)
+        portfolio_hbox.addWidget(self.portfolio_edit_button)
 
         portfolio_hbox.addStretch(1)
         self.results_vbox.addLayout(portfolio_hbox)
@@ -410,7 +450,7 @@ class PortfolioPage(QWidget, Page):
         frame = QFrame()
         frame_layout = QHBoxLayout(frame)
         frame_layout.setSpacing(0)
-        frame_layout.setContentsMargins(0, 0, 0, 0)
+        # frame_layout.setContentsMargins(0, 0, 0, 0)
         frame.setObjectName("resultLabel")
         return frame, frame_layout
 
@@ -495,10 +535,10 @@ class PortfolioPage(QWidget, Page):
         self.logger.info('Updating the Portfolio results')
 
         if len(self.controller.tickers_and_investments) == 0:
-            self.portfolio_amount.setText("-")
-            self.portfolio_volatility.setText("-")
-            self.portfolio_sharpe_ratio.setText("-")
-            self.portfolio_VaR.setText("-")
+            for col_name_label in self.portfolio_col_names:
+                col_name_label.hide()
+            self.portfolio_more_info_button.hide()
+            self.portfolio_edit_button.hide()
 
             for col_name_label in self.result_col_names:
                 col_name_label.hide()
@@ -506,9 +546,24 @@ class PortfolioPage(QWidget, Page):
             for index, is_chosen in enumerate(self.algorithms):
                 if is_chosen:
                     self.portfolio_results[index].hide()
+
+            if self.ticker_col_name.isVisible():
+                for col_name_label in self.col_names:
+                    col_name_label.hide()
+                for col_name_label in self.result_col_names:
+                    col_name_label.hide()
             return
 
-        self.portfolio_amount.setText(str(sum(self.controller.tickers_and_investments.values())) + "$")
+        if not self.ticker_col_name.isVisible():
+            for i in range(len(self.col_names)):
+                self.col_names[i].show()
+
+        for col_name_label in self.portfolio_col_names:
+            col_name_label.show()
+        self.portfolio_more_info_button.show()
+        self.portfolio_edit_button.show()
+
+        self.portfolio_amount.setText(f"${sum(self.controller.tickers_and_investments.values()):.2f}")
         for index, is_chosen in enumerate(self.algorithms):
             if is_chosen:
                 if index == 3:
@@ -525,11 +580,11 @@ class PortfolioPage(QWidget, Page):
                     num_result = self.controller.calculate_portfolio_result(index, self.hold_duration)
                     result, is_green = self.result_to_string(num_result)
 
-                if is_green:
-                    self.portfolio_results[index].setStyleSheet("color: green;")
-                else:
-                    self.portfolio_results[index].setStyleSheet("color: red;")
                 self.portfolio_results[index].setText(result)
+                if is_green:
+                    self.portfolio_results[index].setStyleSheet(f"font-weight: bold; color: green; {self.portfolio_yellow_border_style}")
+                else:
+                    self.portfolio_results[index].setStyleSheet(f"font-weight: bold; color: red; {self.portfolio_yellow_border_style}")
                 self.portfolio_results[index].show()
             else:
                 self.portfolio_results[index].hide()
@@ -538,30 +593,30 @@ class PortfolioPage(QWidget, Page):
         if len(ticker_keys) == 1:
             ticker = list(ticker_keys)[0]
             portfolio_vol, portfolio_vol_cat = self.controller.volatilities[ticker]
-            # self.portfolio_volatility.setText(f'{portfolio_vol:.2f} {portfolio_vol_cat}')
-            self.portfolio_volatility.setText(f"{portfolio_vol:.2f}")
-            self.portfolio_volatility_category.setText(portfolio_vol_cat)
-
             portfolio_sharpe, portfolio_share_cat = self.controller.sharpe_ratios[ticker]
-            # self.portfolio_sharpe_ratio.setText(f'{portfolio_sharpe:.2f} {portfolio_share_cat}')
-            self.portfolio_sharpe_ratio.setText(f"{portfolio_sharpe:.2f}")
-            self.portfolio_sharpe_category.setText(portfolio_share_cat)
+            portfolio_VaR = self.controller.VaRs[ticker]
+        else:
+            portfolio_vol, portfolio_vol_cat = self.controller.get_portfolio_volatility(self.hold_duration)
+            portfolio_sharpe, portfolio_share_cat = self.controller.get_portfolio_sharpe_ratio(self.hold_duration, portfolio_vol)
+            portfolio_VaR = self.controller.get_portfolio_VaR(self.hold_duration, portfolio_vol)
 
-            self.portfolio_VaR.setText(f"{self.controller.VaRs[ticker]:.2f}")
-            return
-
-        portfolio_vol, portfolio_vol_cat = self.controller.get_portfolio_volatility(self.hold_duration)
-        # self.portfolio_volatility.setText(f'{portfolio_vol:.2f} {portfolio_vol_cat}')
         self.portfolio_volatility.setText(f"{portfolio_vol:.2f}")
         self.portfolio_volatility_category.setText(portfolio_vol_cat)
+        self.portfolio_volatility_category.setStyleSheet(self.process_category_style(portfolio_vol_cat))
 
-        portfolio_sharpe, portfolio_share_cat = self.controller.get_portfolio_sharpe_ratio(self.hold_duration,
-                                                                                           portfolio_vol)
-        # self.portfolio_sharpe_ratio.setText(f'{portfolio_sharpe:.2f} {portfolio_share_cat}')
         self.portfolio_sharpe_ratio.setText(f"{portfolio_sharpe:.2f}")
         self.portfolio_sharpe_category.setText(portfolio_share_cat)
+        self.portfolio_sharpe_category.setStyleSheet(self.process_category_style(portfolio_share_cat))
 
-        self.portfolio_VaR.setText(str(self.controller.get_portfolio_VaR(self.hold_duration, portfolio_vol)))
+        self.portfolio_VaR.setText(f"{portfolio_VaR:.2f}")
+
+    def process_category_style(self, category):
+        if category == "Low":
+            # 76D7C4
+            return "font-size: 12px; color: #8EF9F3; border: 2px solid #8EF9F3; border-radius: 5px;"
+        elif category == "Normal":
+            return "font-size: 12px; color: #A882DD; border: 2px solid #A882DD; border-radius: 5px;"
+        return "font-size: 12px; color: #FF5733; border: 2px solid #FF5733; border-radius: 5px;"
 
     def update_shares_results(self):
         for index, is_chosen in enumerate(self.algorithms):
@@ -583,7 +638,7 @@ class PortfolioPage(QWidget, Page):
             self.rankings = self.controller.handle_ranking(True)
             self.update_ranking_display()
 
-    widths = [60, 160, 105, 85, 80, 120, 210, 80, 120, 80, 80, 60]
+    widths = [60, 160, 105, 85, 80, 120, 210, 80, 120, 110, 110, 60]
 
     def add_ticker(self, ticker, one_share_price, num_shares, is_long, not_initial=True):
         self.logger.info('Adding new stock to portfolio.')
@@ -597,26 +652,29 @@ class PortfolioPage(QWidget, Page):
         results_hbox.setSpacing(3)
 
         for i in range(12):
-            label = QLabel()
-            if i != 0:
-                label.setObjectName("resultLabel")
-            label.setFixedSize(self.widths[i], 50)
-            if 3 <= i <= 8:
-                label.hide()
-            results_hbox.addWidget(label)
-
-        more_info_button = QPushButton("--->")
-        more_info_button.setObjectName("portfolioButton")
-        more_info_button.setFixedSize(50, 50)
-        more_info_button.clicked.connect(lambda: self.open_single_stock_page.emit(ticker, stock_name, one_share_price,
-                                                                                  num_shares, self.hold_duration))
-        results_hbox.addWidget(more_info_button)
-
-        edit_button = QPushButton("Edit")
-        edit_button.setObjectName("portfolioButton")
-        edit_button.setFixedSize(50, 50)
-        edit_button.clicked.connect(lambda: self.edit_stock(ticker, stock_name, one_share_price))
-        results_hbox.addWidget(edit_button)
+            if 9 <= i <= 10:
+                frame, frame_layout = self.create_frame()
+                label = QLabel()
+                label.setFixedSize(50, 25)
+                # label.setAlignment(Qt.AlignCenter)
+                label.setStyleSheet("color: white; font-weight: normal; border-width: 0;")
+                label_category = QLabel()
+                label_category.setFixedSize(50, 25)
+                label_category.setAlignment(Qt.AlignCenter)
+                # frame_layout.addStretch(1)
+                frame_layout.addWidget(label)
+                frame_layout.addWidget(label_category)
+                # frame_layout.addStretch(1)
+                frame.setFixedSize(self.widths[i], 50)
+                results_hbox.addWidget(frame)
+            else:
+                label = QLabel()
+                if i != 0:
+                    label.setObjectName("resultLabel")
+                label.setFixedSize(self.widths[i], 50)
+                if 3 <= i <= 8:
+                    label.hide()
+                results_hbox.addWidget(label)
 
         results_hbox.itemAt(0).widget().setText(ticker)
 
@@ -699,13 +757,37 @@ class PortfolioPage(QWidget, Page):
             results_hbox.itemAt(8).widget().show()
 
         volatility, volatility_category = self.controller.get_volatility(ticker, self.hold_duration)
-        results_hbox.itemAt(9).widget().setText(f"{volatility:.2f} {volatility_category}")
+        # results_hbox.itemAt(9).widget().setText(f"{volatility:.2f} {volatility_category}")
+        volatility_labels = results_hbox.itemAt(9).widget().findChildren(QLabel)
+        volatility_labels[0].setText(f"{volatility:.2f} ")
+        volatility_labels[1].setText(volatility_category)
+        volatility_labels[1].setStyleSheet(self.process_category_style(volatility_category))
 
         sharpe_ratio, sharpe_ratio_category = self.controller.get_sharpe_ratio(ticker, self.hold_duration)
-        results_hbox.itemAt(10).widget().setText(f"{sharpe_ratio:.2f} {sharpe_ratio_category}")
+        # results_hbox.itemAt(10).widget().setText(f"{sharpe_ratio:.2f} {sharpe_ratio_category}")
+        sharpe_labels = results_hbox.itemAt(10).widget().findChildren(QLabel)
+        sharpe_labels[0].setText(f"{sharpe_ratio:.2f} ")
+        sharpe_labels[1].setText(sharpe_ratio_category)
+        sharpe_labels[1].setStyleSheet(self.process_category_style(sharpe_ratio_category))
 
         VaR = self.controller.get_VaR(ticker, self.hold_duration, volatility)
         results_hbox.itemAt(11).widget().setText(f"{VaR:.2f}")
+
+        more_info_button = QPushButton("--->")
+        more_info_button.setFixedSize(50, 50)
+        more_info_button.clicked.connect(lambda: self.open_single_stock_page.emit(ticker, stock_name, one_share_price,
+                                                                                  num_shares, self.hold_duration))
+        more_info_button.setObjectName("portfolioButton")
+        more_info_button.setStyleSheet(
+            "#portfolioButton { border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, stop:1 #00DDEB);}")
+        results_hbox.addWidget(more_info_button)
+
+        edit_button = QPushButton("Edit")
+        edit_button.setFixedSize(50, 50)
+        edit_button.clicked.connect(lambda: self.edit_stock(ticker, stock_name, one_share_price))
+        edit_button.setObjectName("portfolioButton")
+        edit_button.setStyleSheet("#portfolioButton { border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, stop:1 #00DDEB);}")
+        results_hbox.addWidget(edit_button)
 
         self.update_portfolio_results()
         self.tickers.append(ticker)
@@ -743,13 +825,15 @@ class PortfolioPage(QWidget, Page):
             self.tickers.remove(ticker)
             self.update_portfolio_results()
         else:
+            print("Change is being made to", is_long)
             self.logger.info(f"Stock {ticker} changed to: num_shares={num_shares}, is_long={is_long}.")
             self.controller.tickers_and_num_shares[ticker] = num_shares
+            self.controller.tickers_and_long_or_short[ticker] = is_long
             if is_long:
                 long_short_str = "Long"
             else:
                 long_short_str = "Short"
-            self.results_map[ticker].itemAt(2).widget().setText("$ " + str(investment) + " " + long_short_str)
+            self.results_map[ticker].itemAt(2).widget().setText(f"${investment:.2f} {long_short_str}")
             algorithm_indices = [index for index, value in enumerate(self.algorithms) if value]
             self.controller.update_stock_info(ticker, num_shares, investment, is_long, algorithm_indices)
             for index in algorithm_indices:

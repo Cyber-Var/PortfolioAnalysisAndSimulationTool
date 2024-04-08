@@ -79,7 +79,7 @@ class SingleStockPage(QWidget, Page):
         self.logger.info('Building the Single Stock Page')
         self.clear_layout(self.layout)
 
-        title_label = self.get_title_label(f'{self.ticker} ({self.stock_name})')
+        title_label = self.get_title_label(f'{self.ticker} ({self.stock_name})', "titleLabelSingleStock")
         title_label.setFixedSize(1300, 50)
         self.layout.addWidget(title_label)
 
@@ -105,6 +105,7 @@ class SingleStockPage(QWidget, Page):
 
         back_button = QPushButton("Back")
         back_button.setObjectName("addStockButton")
+        back_button.setFixedSize(90, 40)
         back_button.clicked.connect(self.back_to_portfolio_page.emit)
         self.layout.addWidget(back_button)
 
