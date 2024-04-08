@@ -192,8 +192,12 @@ class ARIMAAlgorithm(Regression):
             ticks = x_axis[::10].union(pd.Series([today, self.prediction_date]))
         # plt.xticks(ticks, fontsize=9, rotation=330)
         ax.set_xticks(ticks)
-        tick_labels = [str(tick) for tick in ticks]
-        ax.set_xticklabels(labels=tick_labels, fontsize=9, rotation=330)
+        # tick_labels = [str(tick) for tick in ticks]
+        tick_labels = [tick.strftime('%Y-%m-%d') for tick in ticks]
+        if self.hold_duration == "1d":
+            ax.set_xticklabels(labels=tick_labels, fontsize=9, rotation=300)
+        else:
+            ax.set_xticklabels(labels=tick_labels, fontsize=9, rotation=330)
         ax.set_ylim(bottom=min(historical_prices.min(), y_axis.min()) * 0.99,
                  top=max(historical_prices.max(), y_axis.max()) * 1.01)
 

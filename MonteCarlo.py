@@ -170,13 +170,13 @@ class MonteCarloSimulation(Regression):
         for l in less:
             percentage = round((test_data < l).sum() * num, 2)
             if percentage > 0:
-                growth_results.append("< " + str(l) + ": " + str(percentage) + "%")
+                fall_results.append("< " + str(l) + ": " + str(percentage) + "%")
         for m in more:
-            percentage = (test_data > m).sum() * num
+            percentage = round((test_data > m).sum() * num, 2)
             if percentage > 0:
-                fall_results.append("> " + str(m) + ": " + str(percentage) + "%")
+                growth_results.append("> " + str(m) + ": " + str(percentage) + "%")
 
-        return growth_results[::-1], fall_results
+        return growth_results, fall_results[::-1]
 
     def evaluateModel(self):
         # TODO: explain this sliding method clearly in report

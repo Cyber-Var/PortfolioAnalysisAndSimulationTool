@@ -86,10 +86,10 @@ QLabel {
     padding: 0;
 }
 
-#infoLabelSingleStock {
-    font-size: 15px;
-    color: white;
-}
+/*#infoLabelSingleStock {*/
+/*    font-size: 15px;*/
+/*    color: white;*/
+/*}*/
 
 #riskMetricLabel {
     font-size: 15px;
@@ -103,6 +103,18 @@ QLabel {
 #algorithmResultSingleStock {
     font-size: 15px;
     color: white;
+    text-align: center;
+}
+
+#monteProbabilityGreen {
+    font-size: 15px;
+    color: green;
+    text-align: center;
+}
+
+#monteProbabilityRed {
+    font-size: 15px;
+    color: red;
     text-align: center;
 }
 
@@ -152,6 +164,32 @@ QPushButton:pressed {
     color: white;
 }
 
+#riskMetricFrame {
+    font-size: 15px;
+    border: 3px solid white;
+    border-radius: 10px;
+    background-color: black;
+    color: white;
+    padding: 0;
+    margin: 0;
+}
+
+#riskMetricTopLabel {
+    color: white;
+    font-size: 22px;
+    padding: 0;
+    margin: 0;
+}
+
+#riskMetricBottomLabel {
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 0;
+    margin: 0;
+}
+
+
 QVBoxLayout {
 
 }
@@ -160,13 +198,46 @@ QVBoxLayout {
     border: 2px solid white;
 }
 
+
 QComboBox {
-    background-color: white;
+    font-size: 15px;
+    border: 2px solid #555;
+    border-radius: 4px;
+    padding: 5px;
+    min-width: 6em;
+    color: white;
+    background-color: #333;
+}
+
+QComboBox:hover {
+    border-color: #6c757d;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 25px;
+    border-left-width: 1px;
+    border-left-color: #6c757d;
+    border-left-style: solid;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+QComboBox::down-arrow {
+    image: url('icons/down_arrow.png');
+    width: 16px;
+    height: 16px;
+    border-radius: 10px;
 }
 
 QComboBox QAbstractItemView {
-    background-color: white;
+    border: 2px solid darkgray;
+    selection-background-color: #6c757d;
+    background-color: #333;
+    color: white;
 }
+
 
 QMenuBar {
     background-color: #555;
@@ -212,6 +283,40 @@ QWidget {
 }
 
 
+QTableWidget {
+    background-color: black;
+    color: white;
+    gridline-color: #B3B2B2;
+    border: 2px solid #B3B2B2;
+}
+
+QTableWidget::item {
+    font-size: 20px;
+    font-weight: bold;
+    border-bottom: 1px solid #B3B2B2;
+    border-right: 1px solid #B3B2B2;
+    text-align: center;
+}
 
 
-
+QRadioButton {
+    spacing: 5px;
+}
+QRadioButton::indicator {
+    width: 13px;
+    height: 13px;
+    border-radius: 7px;
+}
+QRadioButton::indicator:unchecked {
+    border: 2px solid #BDBDBD;
+}
+QRadioButton::indicator:unchecked:hover {
+    border: 2px solid #757575;
+}
+QRadioButton::indicator:checked {
+    background-color: #3F51B5;
+    border: 2px solid #3F51B5;
+}
+QRadioButton::indicator:checked:hover {
+    background-color: #303F9F;
+}

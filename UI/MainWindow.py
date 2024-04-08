@@ -135,8 +135,8 @@ class MainWindow(QMainWindow):
             previousPage = self.page_history.pop()
             self.stacked_widget.setCurrentWidget(previousPage)
 
-    def openSingleStockPage(self, ticker, stock_name, one_share_price, num_shares, hold_duration):
-        self.single_stock_page.set_parameters(ticker, stock_name, one_share_price, num_shares, hold_duration)
+    def openSingleStockPage(self, ticker, stock_name, one_share_price, num_shares, hold_duration, is_long):
+        self.single_stock_page.set_parameters(ticker, stock_name, one_share_price, num_shares, hold_duration, is_long)
         self.changePage(self.single_stock_page)
 
     def show_top_esg(self):

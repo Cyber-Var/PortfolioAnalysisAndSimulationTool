@@ -6,7 +6,8 @@ from io import BytesIO
 from PyQt5 import QtCore
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox,
-                             QScrollArea, QDialog, QLineEdit, QCompleter, QSizePolicy, QButtonGroup, QFrame)
+                             QScrollArea, QDialog, QLineEdit, QCompleter, QSizePolicy, QButtonGroup, QFrame,
+                             QDialogButtonBox)
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QBuffer, QIODevice
 import yfinance as yf
 
@@ -16,7 +17,7 @@ from UI.SingleStockPage import SingleStockPage
 
 class PortfolioPage(QWidget, Page):
     back_to_menu_page = pyqtSignal()
-    open_single_stock_page = pyqtSignal(str, str, float, int, str)
+    open_single_stock_page = pyqtSignal(str, str, float, int, str, bool)
 
     portfolio_yellow_border_style = "font-weight: bold; border: 2px solid #F4FF96;"
 
@@ -450,7 +451,6 @@ class PortfolioPage(QWidget, Page):
         frame = QFrame()
         frame_layout = QHBoxLayout(frame)
         frame_layout.setSpacing(0)
-        # frame_layout.setContentsMargins(0, 0, 0, 0)
         frame.setObjectName("resultLabel")
         return frame, frame_layout
 
@@ -776,7 +776,7 @@ class PortfolioPage(QWidget, Page):
         more_info_button = QPushButton("--->")
         more_info_button.setFixedSize(50, 50)
         more_info_button.clicked.connect(lambda: self.open_single_stock_page.emit(ticker, stock_name, one_share_price,
-                                                                                  num_shares, self.hold_duration))
+                                                                                  num_shares, self.hold_duration, is_long))
         more_info_button.setObjectName("portfolioButton")
         more_info_button.setStyleSheet(
             "#portfolioButton { border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, stop:1 #00DDEB);}")
@@ -856,11 +856,11 @@ class AddStockPopUp(QDialog):
         layout = QVBoxLayout()
 
         search_by_hbox = QHBoxLayout()
-        search_by_label = QLabel("Search by")
-        self.by_name_radio = QRadioButton("name")
+        search_by_label = QLabel("Search within:")
+        self.by_name_radio = QRadioButton("companies with capitalisation\nabove 1 billion dollars")
         self.by_name_radio.setChecked(True)
         self.by_name_radio.toggled.connect(self.search_by_radio_toggled)
-        self.by_esg_radio = QRadioButton("top 50 best ESG score companies")
+        self.by_esg_radio = QRadioButton("top 100 companies\nby ESG score")
         self.by_esg_radio.toggled.connect(self.search_by_radio_toggled)
         self.search_by_group = QButtonGroup(self)
         self.search_by_group.addButton(self.by_name_radio)
@@ -920,24 +920,19 @@ class AddStockPopUp(QDialog):
         self.investment_long.hide()
         self.investment_short = QRadioButton("Short")
         self.investment_short.hide()
-        # self.investment_long.toggled.connect(self.long_short_radio_toggled)
-        # self.investment_short.toggled.connect(self.long_short_radio_toggled)
         self.long_short_group = QButtonGroup(self)
         self.long_short_group.addButton(self.investment_long)
         self.long_short_group.addButton(self.investment_short)
         long_short_layout.addWidget(self.investment_long)
         long_short_layout.addWidget(self.investment_short)
 
-        buttons_hbox = QHBoxLayout()
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
 
-        cancel_button = QPushButton("Cancel")
-        cancel_button.clicked.connect(self.close)
-        buttons_hbox.addWidget(cancel_button)
+        add_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        add_button.setText("Add")
 
-        self.add_button = QPushButton("Add")
-        self.add_button.clicked.connect(self.add_ticker_to_portfolio)
-        self.add_button.hide()
-        buttons_hbox.addWidget(self.add_button)
+        self.buttonBox.accepted.connect(self.add_ticker_to_portfolio)
+        self.buttonBox.rejected.connect(self.close)
 
         layout.addLayout(search_by_hbox)
         layout.addWidget(ticker_label)
@@ -948,7 +943,7 @@ class AddStockPopUp(QDialog):
         layout.addWidget(self.investment_label)
         layout.addLayout(investment_hbox)
         layout.addWidget(self.invalid_investment_label)
-        layout.addLayout(buttons_hbox)
+        layout.addWidget(self.buttonBox, alignment=Qt.AlignCenter)
 
         self.setLayout(layout)
 
@@ -959,14 +954,8 @@ class AddStockPopUp(QDialog):
                 self.completer.setModel(newCompleterModel)
             elif self.by_esg_radio.isChecked():
                 newCompleterModel = QStringListModel(self.top_50_esg_companies)
+                print(len(self.top_50_esg_companies))
                 self.completer.setModel(newCompleterModel)
-
-    # def long_short_radio_toggled(self, checked):
-    #     if checked:
-    #         if self.investment_long.isChecked():
-    #             self.investment_short.setChecked(False)
-    #         elif self.investment_short.isChecked():
-    #             self.investment_long.setChecked(False)
 
     def validate_ticker(self):
         ticker = self.ticker_name.text()
@@ -1109,27 +1098,35 @@ class EditStockPopUp(QDialog):
         long_short_layout.addWidget(self.investment_long)
         long_short_layout.addWidget(self.investment_short)
 
-        buttons_hbox = QHBoxLayout()
+        # buttons_hbox = QHBoxLayout()
+        #
+        # cancel_button = QPushButton("Cancel")
+        # cancel_button.clicked.connect(self.close)
+        # buttons_hbox.addWidget(cancel_button)
+        #
+        # self.save_changes_button = QPushButton("Save Changes")
+        # self.save_changes_button.clicked.connect(self.save_changes)
+        # self.save_changes_button.hide()
+        # buttons_hbox.addWidget(self.save_changes_button)
+        #
+        # self.delete_button = QPushButton(f"Delete {ticker} from portfolio")
+        # self.delete_button.clicked.connect(self.delete_stock)
+        # buttons_hbox.addWidget(self.delete_button)
 
-        cancel_button = QPushButton("Cancel")
-        cancel_button.clicked.connect(self.close)
-        buttons_hbox.addWidget(cancel_button)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
 
-        self.save_changes_button = QPushButton("Save Changes")
-        self.save_changes_button.clicked.connect(self.save_changes)
-        self.save_changes_button.hide()
-        buttons_hbox.addWidget(self.save_changes_button)
+        add_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        add_button.setText(f"Delete {ticker} from portfolio")
 
-        self.delete_button = QPushButton(f"Delete {ticker} from portfolio")
-        self.delete_button.clicked.connect(self.delete_stock)
-        buttons_hbox.addWidget(self.delete_button)
+        self.buttonBox.accepted.connect(self.delete_stock)
+        self.buttonBox.rejected.connect(self.close)
 
         layout.addWidget(self.stock_name_label)
         layout.addWidget(self.share_price_label)
         layout.addLayout(investment_hbox)
         layout.addWidget(self.invalid_investment_label)
         layout.addLayout(long_short_layout)
-        layout.addLayout(buttons_hbox)
+        layout.addWidget(self.buttonBox)
 
         self.setLayout(layout)
 

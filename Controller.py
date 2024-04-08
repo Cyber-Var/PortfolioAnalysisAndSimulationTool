@@ -86,6 +86,7 @@ class Controller:
         self.monte_carlo_results = {"1d": {}, "1w": {}, "1m": {}}
         self.montes = {"1d": {}, "1w": {}, "1m": {}}
         self.monte_plot_labels = {"1d": {}, "1w": {}, "1m": {}}
+        self.monte_probabilities = {"1d": {}, "1w": {}, "1m": {}}
         self.lstm_results = {"1d": {}, "1w": {}, "1m": {}}
         self.arima_results = {"1d": {}, "1w": {}, "1m": {}}
         self.arimas = {"1d": {}, "1w": {}, "1m": {}}
@@ -166,7 +167,6 @@ class Controller:
             # Retrieve historical data from Yahoo! Finance:
             for hold_dur in self.start_dates.keys():
                 self.data[hold_dur] = self.downloadData(self.start_dates[hold_dur], self.end_date)
-        print(self.tickers_and_long_or_short)
 
     def remove_ticker(self, ticker):
         del self.tickers_and_investments[ticker]
@@ -537,10 +537,11 @@ class Controller:
         ax.set_title(f'Moving Average of {ticker} stock')
         ax.set_xlabel('Date')
         ax.set_ylabel('Moving Average of Adjusted Close Price')
-        for label in ax.get_xticklabels():
-            label.set_fontsize(9)
-            label.set_rotation(340)
+        # for label in ax.get_xticklabels():
+        #     label.set_fontsize(9)
+        #     label.set_rotation(340)
         ax.legend()
+        ax.grid(True)
 
         return figure
 
@@ -551,9 +552,13 @@ class Controller:
         return figure
 
     def get_monte_carlo_probabilities(self, ticker, hold_duration):
+        if ticker in self.monte_probabilities[hold_duration]:
+            return self.monte_probabilities[hold_duration][ticker]
         monte, s_0, results = self.montes[hold_duration][ticker]
         plot_labels = monte.plotSimulation(results, s_0)
-        return monte.printProbabilities(plot_labels, results, s_0)
+        probabilities = monte.printProbabilities(plot_labels, results, s_0)
+        self.monte_probabilities[hold_duration][ticker] = probabilities
+        return probabilities
 
     def handle_ranking(self, need_to_update=False):
         current_date = datetime.now()
