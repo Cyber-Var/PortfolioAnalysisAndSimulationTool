@@ -68,4 +68,5 @@ class MenuPage(QWidget, Page):
 
     def quit_app(self):
         self.logger.info('Exiting the Application')
+        self.main_window.closeEvent(None)
         QApplication.instance().quit()

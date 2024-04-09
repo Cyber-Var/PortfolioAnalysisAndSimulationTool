@@ -560,6 +560,29 @@ class Controller:
         self.monte_probabilities[hold_duration][ticker] = probabilities
         return probabilities
 
+    def check_date_for_ranking_update(self, current_date, last_date):
+        try:
+            self.ranking_frequency = int(last_date[3])
+            print(current_date.day, current_date.month, current_date.year)
+            print(last_date[0], last_date[1], last_date[2], last_date[3])
+            if self.ranking_frequency == 0:
+                return str(current_date.day) != last_date[0] or str(current_date.month) != last_date[1] or str(
+                    current_date.year) != last_date[2]
+            elif self.ranking_frequency == 1:
+                date1 = datetime(current_date.year, current_date.month, current_date.day)
+                date2 = datetime(int(last_date[2]), int(last_date[1]), int(last_date[0]))
+                _, week1, _ = date1.isocalendar()
+                _, week2, _ = date2.isocalendar()
+                print(week1, week2)
+                return week1 != week2 or str(current_date.year) != last_date[2]
+            elif self.ranking_frequency == 2:
+                return str(current_date.month) != last_date[1] or str(current_date.year) != last_date[2]
+            else:
+                return True
+        except Exception as e:
+            print(e)
+            return True
+
     def handle_ranking(self, need_to_update=False):
         current_date = datetime.now()
         ranking_file_name = "ranking.txt"
@@ -568,15 +591,17 @@ class Controller:
         if os.path.exists(ranking_file_name):
             with open(ranking_file_name, 'r') as file:
                 last_date = file.readline().split()
-            if should_update or len(last_date) < 2 or str(current_date.month) != last_date[0] or str(current_date.year) != last_date[1]:
+            if should_update or len(last_date) < 2 or self.check_date_for_ranking_update(current_date, last_date):
                 should_update = True
+
+        print(should_update)
 
         start_time = time.time()
         if not os.path.exists(ranking_file_name) or should_update or need_to_update:
             updated_rankings = self.update_ranking()
             ranking_text = self.write_rankings_to_file(updated_rankings)
             with open(ranking_file_name, 'w') as file:
-                file.write(f"{current_date.month} {current_date.year}\n")
+                file.write(f"{current_date.day} {current_date.month} {current_date.year} {self.ranking_frequency}\n")
                 file.write(ranking_text)
 
             end_time = time.time()
@@ -587,9 +612,9 @@ class Controller:
         return self.read_rankings_from_file()
 
     def update_ranking(self):
-        self.add_ticker("AAPL", 1000, True)
-        self.add_ticker("TSLA", 2000, True)
-        self.add_ticker("AMD", 1000, False)
+        self.add_ticker("AAPL", 1000, None, True)
+        self.add_ticker("TSLA", 2000, None, True)
+        self.add_ticker("AMD", 1000, None, False)
 
         for algorithm_index in range(6):
             for ticker in self.eval_tickers:

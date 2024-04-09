@@ -9,7 +9,7 @@ from PyQt5.QtCore import QEvent, Qt
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QIntValidator, QValidator
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QStackedWidget, QAction, QDialog, QVBoxLayout, QHBoxLayout, \
-    QLabel, QComboBox, QLineEdit, QScrollArea, QWidget
+    QLabel, QComboBox, QLineEdit, QScrollArea, QWidget, QMenu
 
 from Controller import Controller
 from UI.MenuPage import MenuPage
@@ -62,8 +62,23 @@ class MainWindow(QMainWindow):
         view_top_esg_option.triggered.connect(self.show_top_esg)
         options_menu.addAction(view_top_esg_option)
 
-        update_ranking_frequency_option = QAction('Frequency of Algorithms Ranking updates')
-        update_ranking_frequency_option.triggered.connect(self.update_ranking_frequency)
+        ranking_frequency_menu = QMenu('Update ranking every:', self)
+        self.previous_frequency = 2
+
+        daily_updates = QAction('day', self)
+        daily_updates.triggered.connect(lambda: self.update_ranking_frequency(0))
+        ranking_frequency_menu.addAction(daily_updates)
+
+        weekly_updates = QAction('week', self)
+        weekly_updates.triggered.connect(lambda: self.update_ranking_frequency(1))
+        ranking_frequency_menu.addAction(weekly_updates)
+
+        monthly_updates = QAction('month', self)
+        monthly_updates.triggered.connect(lambda: self.update_ranking_frequency(2))
+        ranking_frequency_menu.addAction(monthly_updates)
+
+        update_ranking_frequency_option = QAction('Frequency of algorithms ranking', self)
+        update_ranking_frequency_option.setMenu(ranking_frequency_menu)
         options_menu.addAction(update_ranking_frequency_option)
 
         save_activity_option = QAction('Save Activity', self)
@@ -142,8 +157,11 @@ class MainWindow(QMainWindow):
         popup = TopESGPopUp()
         popup.exec_()
 
-    def update_ranking_frequency(self):
-        print("hello")
+    def update_ranking_frequency(self, freq):
+        if self.previous_frequency != freq:
+            self.controller.ranking_frequency = freq
+            self.controller.handle_ranking()
+        self.previous_frequency = freq
 
     def closeEvent(self, event):
         self.logger.info(f'Saving user activity to file.')
@@ -181,7 +199,18 @@ class TopESGPopUp(QDialog):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Top ESG Companies")
+        self.setWindowTitle("Top companies by ESG score")
+
+        with open("UI/style.css", "r") as f:
+            stylesheet = f.read()
+            self.setStyleSheet(stylesheet)
+        button_save_style = (
+            "QPushButton:hover {"
+            " background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #12CB0B, stop:1 #0EC1D0);"
+            "}"
+            "QPushButton:pressed {"
+            " background-color: black;"
+            "}")
 
         self.logger = logging.getLogger(__name__)
         self.logger.info("Displaying the Top ESG companies page")
@@ -192,12 +221,8 @@ class TopESGPopUp(QDialog):
 
         layout = QVBoxLayout()
 
-        top_N_hbox = QHBoxLayout()
-        layout.addLayout(top_N_hbox)
-
         top_label = QLabel("Top")
-        top_label.setObjectName("inputLabel")
-        top_N_hbox.addWidget(top_label)
+        top_label.setObjectName("addStockLabel")
 
         self.top_N_combo = CustomComboBoxESG()
         self.top_N_combo.setFixedWidth(50)
@@ -209,15 +234,20 @@ class TopESGPopUp(QDialog):
         self.top_N_combo.setCurrentIndex(0)
         self.top_N_combo.lineEdit().setPlaceholderText("5")
         self.top_N_combo.activated.connect(self.top_N_changed)
-        top_N_hbox.addWidget(self.top_N_combo)
 
         esg_label = QLabel("companies with highest ESG score:")
-        esg_label.setObjectName("inputLabel")
+        esg_label.setObjectName("addStockLabel")
+
+        top_N_hbox = QHBoxLayout()
+        top_N_hbox.setSpacing(10)
+        top_N_hbox.addStretch(1)
+        top_N_hbox.addWidget(top_label)
+        top_N_hbox.addWidget(self.top_N_combo)
         top_N_hbox.addWidget(esg_label)
+        top_N_hbox.addStretch(1)
 
         max_N_label = QLabel("(max 50)")
-        max_N_label.setObjectName("inputLabel")
-        layout.addWidget(max_N_label)
+        max_N_label.setObjectName("topESGLabel")
 
         self.place_col_name = self.create_column_names_label("Place")
         self.ticker_col_name = self.create_column_names_label("Ticker")
@@ -236,10 +266,12 @@ class TopESGPopUp(QDialog):
         scrollable_layout.addStretch(1)
         self.scrollable_widget.setLayout(scrollable_layout)
         self.scrollable_area.setWidget(self.scrollable_widget)
+
+        layout.addLayout(top_N_hbox)
+        layout.addWidget(max_N_label, alignment=Qt.AlignCenter)
         layout.addWidget(self.scrollable_area)
 
         self.display_top_esg_companies(False)
-
         self.setLayout(layout)
 
     def display_column_names(self):

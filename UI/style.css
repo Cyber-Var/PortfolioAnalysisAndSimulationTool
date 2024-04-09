@@ -194,6 +194,11 @@ QPushButton:pressed {
     font-size: 18px;
 }
 
+#topESGLabel {
+    color: #3B3A3A;
+    font-size: 18px;
+}
+
 #popUpButton {
     background-color: black;
     font-size: 15px;
