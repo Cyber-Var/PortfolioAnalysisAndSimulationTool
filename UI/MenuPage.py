@@ -58,11 +58,6 @@ class MenuPage(QWidget, Page):
         self.layout.addWidget(button, alignment=Qt.AlignHCenter)
         return button
 
-    # def open_portfolio_page(self):
-    #     self.logger.info('Opening the Portfolio Page')
-    #     portfolio_page = PortfolioPage(self.main_window, self.controller)
-    #     self.main_window.setCentralWidget(portfolio_page)
-
     def open_manual_page(self):
         self.logger.info('Opening the User Manual Page')
         pass

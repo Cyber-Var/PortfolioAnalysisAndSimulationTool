@@ -141,12 +141,6 @@ class Regression:
         r2 = r2_score(y_test, predictions)
         return mse, mae, mape, r2
 
-    def printEvaluation(self, mse, mae, mape, r2):
-        print(f'MSE: {mse}')
-        print(f'MAE: {mae}')
-        print(f'MAPE: {mape}%')
-        print(f'R-squared: {r2}\n')
-
     def calculate_profit_or_loss(self, predicted_price, investment_amount, confidence=False):
         current_price = self.data.iloc[-1]["Adj Close"]
         # if not confidence:
@@ -156,6 +150,4 @@ class Regression:
         profit_or_loss_value = investment_amount * percentage_change
         if not self.is_long:
             profit_or_loss_value = -profit_or_loss_value
-        print(current_price)
-        print(predicted_price)
         return profit_or_loss_value

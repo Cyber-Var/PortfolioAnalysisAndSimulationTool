@@ -62,14 +62,13 @@ class MainWindow(QMainWindow):
         view_top_esg_option.triggered.connect(self.show_top_esg)
         options_menu.addAction(view_top_esg_option)
 
-        # TODO: save activity option
-        save_activity_option = QAction('Save Activity', self)
-        save_activity_option.triggered.connect(self.close)
-        options_menu.addAction(save_activity_option)
+        update_ranking_frequency_option = QAction('Frequency of Algorithms Ranking updates')
+        update_ranking_frequency_option.triggered.connect(self.update_ranking_frequency)
+        options_menu.addAction(update_ranking_frequency_option)
 
-        exit_option = QAction('Exit the Application', self)
-        exit_option.triggered.connect(self.close)
-        options_menu.addAction(exit_option)
+        save_activity_option = QAction('Save Activity', self)
+        save_activity_option.triggered.connect(self.closeEvent)
+        options_menu.addAction(save_activity_option)
 
     def set_up_controller(self):
         self.logger.info(f'Reading previously saved user activity from file')
@@ -143,8 +142,10 @@ class MainWindow(QMainWindow):
         popup = TopESGPopUp()
         popup.exec_()
 
-    def closeEvent(self, event):
+    def update_ranking_frequency(self):
+        print("hello")
 
+    def closeEvent(self, event):
         self.logger.info(f'Saving user activity to file.')
         try:
             with (open(self.user_activity_file_name, 'w') as f):
@@ -270,11 +271,6 @@ class TopESGPopUp(QDialog):
         self.logger.info(f"Displaying top {self.top_N} ESG companies.")
 
         top_companies = self.top_companies_df.head(self.top_N)
-
-        # while self.top_companies_vbox.count():
-        #     child = self.top_companies_vbox.takeAt(0)
-        #     if child.widget():
-        #         child.widget().deleteLater()
 
         self.column_names_hbox = self.display_column_names()
         new_scrollable_widget = QWidget()
