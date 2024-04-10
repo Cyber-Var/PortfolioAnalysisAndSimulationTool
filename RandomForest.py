@@ -29,7 +29,6 @@ class RandomForestAlgorithm(Regression):
 
         return self.calculateEvalMetrics(all_predictions, all_y_tests)
 
-    # TODO: n_estimators chosen by user
     def predict_price(self):
         Regression.reg = self.setup_model()
         X_train, y_train, X_test = super().split_prediction_sets()

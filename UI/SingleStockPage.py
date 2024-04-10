@@ -512,7 +512,6 @@ class SingleStockPage(QWidget, Page):
             return "color: #A882DD;"
         return "color: #FF5733;"
 
-    # TODO: processing for this change
     def hold_duration_button_toggled(self, checked):
         if checked:
             self.logger.info('Handling the change in hold duration.')
@@ -549,26 +548,7 @@ class SingleStockPage(QWidget, Page):
             self.algorithms_combo.setCurrentIndex(6)
             self.algorithm_changed()
             self.graph_figure = self.controller.plotARIMA(self.ticker, self.hold_duration, self.graph_figure)
-        # else:
-        #     self.logger.info("Displaying the Monte Carlo Simulation graph.")
-        #     if self.ticker not in self.controller.montes[self.hold_duration]:
-        #         self.controller.run_monte_carlo(self.ticker, self.hold_duration)
-        #     self.graph_figure = self.controller.plot_monte_carlo(self.ticker, self.hold_duration, self.graph_figure)
-        #     self.algorithms_combo.setCurrentIndex(4)
-        #     self.algorithm_changed()
         self.graph_canvas.draw()
-
-    # def num_shares_changed(self):
-    #     num_shares_entered = self.num_shares_combo.currentText()
-    #     if num_shares_entered == "":
-    #         self.overall_price_label.setText(f"Overall price: -")
-    #         # TODO: when this is -, do not allow calculations or anything - make pop up error message if user tries
-    #     else:
-    #         self.num_shares = int(num_shares_entered)
-    #         self.investment = round(self.one_share_price * self.num_shares, 2)
-    #         self.overall_price_label.setText(f"Overall price: ${self.investment}")
-    #
-    #         self.controller.update_investment_amount(self.ticker, self.investment)
 
     def algorithm_changed(self):
         algorithm_entered = self.algorithms_combo.currentText()

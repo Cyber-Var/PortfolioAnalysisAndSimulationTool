@@ -13,7 +13,8 @@ from Regression import Regression
 
 class ARIMAAlgorithm(Regression):
 
-    def __init__(self, hold_duration, data, prediction_date, start_date, today_data, params, is_long, investment_amount):
+    def __init__(self, hold_duration, data, prediction_date, start_date, today_data, params, is_long,
+                 investment_amount):
         super().__init__(hold_duration, data, prediction_date, start_date, is_long)
         self.today_data = today_data
         self.params = params
@@ -48,8 +49,8 @@ class ARIMAAlgorithm(Regression):
         return data_for_prediction
 
     def predict_price(self, data):
-        arima_model = self.setup_model(data, True)
-        predicted_price, confidence_interval = self.make_prediction(arima_model, True)
+        arima_model = self.setup_model(data)
+        predicted_price, confidence_interval = self.make_prediction(arima_model)
 
         print("ARIMA Prediction:")
         prediction = predicted_price.iloc[-1]
@@ -58,69 +59,29 @@ class ARIMAAlgorithm(Regression):
         print(f"95% confidence interval: between {confidence_interval[0]} and {confidence_interval[1]} \n")
 
         profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
-        profit_loss_confidence = (confidence_interval[0] / prediction) * profit_loss_amount
+        profit_loss_confidence = (confidence_interval[0] / prediction) * profit_loss_amount * 0.1
         print(f"Predicted profit/loss: {profit_loss_amount} +/- {profit_loss_confidence} pounds.")
-        return profit_loss_amount, predicted_price, confidence, profit_loss_confidence
+        return profit_loss_amount, predicted_price, confidence * 0.1, profit_loss_confidence
 
-    def setup_model(self, data, auto):
-        # TODO: remove auto ?
-        if auto:
-            if self.hold_duration == "1d":
-                arima_model = auto_arima(data["Adj Close"],
-                                         seasonal=True,  # TODO: try false also
-                                         stepwise=True,
-                                         suppress_warnings=True,
-                                         error_action="ignore",
-                                         trace=False,
-                                         maxiter=self.params[0])
-                self.arima_order = arima_model.order
-            elif self.hold_duration == "1w":
-                arima_model = auto_arima(data["Adj Close"],
-                                         seasonal=True,  # TODO: try false also
-                                         stepwise=True,
-                                         m=5,  # weekly seasonality
-                                         suppress_warnings=False,
-                                         error_action="ignore",
-                                         trace=False,
-                                         maxiter=self.params[0])
-                self.arima_order = arima_model.order
-            else:
-                arima_model = auto_arima(data["Adj Close"],
-                                         seasonal=True,
-                                         stepwise=True,
-                                         m=12,  # monthly seasonality
-                                         suppress_warnings=False,
-                                         error_action="ignore",
-                                         trace=False,
-                                         maxiter=self.params[0])
-                self.arima_order = arima_model.order
-        else:
-            arima_model = ARIMA(data["Adj Close"], order=self.arima_order).fit()
-
+    def setup_model(self, data):
+        arima_model = ARIMA(data["Adj Close"], order=self.arima_order).fit()
         return arima_model
 
-    def make_prediction(self, model, auto):
-        if auto:
-            if self.hold_duration == "1d":
-                prediction, confidence_interval = model.predict(n_periods=1, return_conf_int=True)
-            elif self.hold_duration == "1w":
-                prediction, confidence_interval = model.predict(n_periods=5, return_conf_int=True)
-            else:
-                future_dates = pd.date_range(start=date.today(), end=self.prediction_date,
-                                             freq='D').map(
-                    lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
-                prediction, confidence_interval = model.predict(n_periods=len(future_dates) - 1, return_conf_int=True)
+    def make_prediction(self, model):
+        if self.hold_duration == "1d":
+            prediction = model.forecast(steps=1)
+            forecast_results = model.get_forecast(steps=1)
+        elif self.hold_duration == "1w":
+            prediction = model.forecast(steps=5)
+            forecast_results = model.get_forecast(steps=5)
         else:
-            if self.hold_duration == "1d":
-                prediction = model.forecast(steps=1)
-            elif self.hold_duration == "1w":
-                prediction = model.forecast(steps=5)
-            else:
-                prediction = model.forecast(steps=20)
-            confidence_interval = [[0, 0]]
-
-        # predicted_price = prediction.iloc[-1]
-        return prediction, confidence_interval[-1]
+            future_dates = pd.date_range(start=date.today(), end=self.prediction_date,
+                                         freq='D').map(
+                lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
+            prediction = model.forecast(steps=len(future_dates) - 1)
+            forecast_results = model.get_forecast(steps=len(future_dates) - 1)
+        confidence_interval = forecast_results.conf_int(alpha=0.05)
+        return prediction, [confidence_interval.iloc[-1]["lower Adj Close"], confidence_interval.iloc[-1]["upper Adj Close"]]
 
     def evaluateModel(self):
         # TODO: explain this sliding method clearly in report
@@ -141,8 +102,8 @@ class ARIMAAlgorithm(Regression):
             if counter == 250:
                 break
 
-            arima_model = self.setup_model(train, False)
-            pred, conf = self.make_prediction(arima_model, False)
+            arima_model = self.setup_model(train)
+            pred, conf = self.make_prediction(arima_model)
 
             all_predictions.append(pred.iloc[-1])
             all_tests.append(test["Adj Close"])
@@ -159,7 +120,7 @@ class ARIMAAlgorithm(Regression):
 
         today = date.today()
         future_dates = pd.date_range(start=today, end=self.prediction_date,
-                               freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
+                                     freq='D').map(lambda x: x if x.isoweekday() in range(1, 6) else np.nan).dropna()
 
         if today.weekday() >= 5:
             future_dates = pd.concat([pd.Series([today]), pd.Series(future_dates)], ignore_index=True)
@@ -178,6 +139,9 @@ class ARIMAAlgorithm(Regression):
         historical_prices = data['Adj Close'][-self.historical_range_for_graph:]
 
         ax = figure.add_subplot(111)
+
+        print(future_dates)
+        print(y_axis)
 
         ax.plot(historical_dates, historical_prices, color='blue', label='Historical Adj Close')
         ax.plot(future_dates, y_axis, color='red', label='ARIMA Forecast')
@@ -199,7 +163,7 @@ class ARIMAAlgorithm(Regression):
         else:
             ax.set_xticklabels(labels=tick_labels, fontsize=9, rotation=330)
         ax.set_ylim(bottom=min(historical_prices.min(), y_axis.min()) * 0.99,
-                 top=max(historical_prices.max(), y_axis.max()) * 1.01)
+                    top=max(historical_prices.max(), y_axis.max()) * 1.01)
 
         ax.legend()
 

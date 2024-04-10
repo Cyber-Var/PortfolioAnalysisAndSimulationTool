@@ -20,7 +20,6 @@ class RiskMetrics:
         # daily_returns = self.close_prices / data.shift(1) - 1
         return self.close_prices.pct_change()
 
-    # TODO: can regulate daily/weekly/monthly/annual
     def calculateVolatility(self, ticker):
         daily_returns = self.close_prices[(self.today - relativedelta(months=6)):].pct_change()
         if len(self.tickers) > 1:
@@ -46,7 +45,7 @@ class RiskMetrics:
         sharpe_ratio = excess.mean() / excess.std()
 
         # Make the Sharpe ratio annualized:
-        sharpe_ratio = sharpe_ratio * (252 ** 0.5)
+        sharpe_ratio = sharpe_ratio # * (252 ** 0.5)
 
         if sharpe_ratio < 0.1:
             sharpe_category = "Low"
@@ -56,7 +55,6 @@ class RiskMetrics:
             sharpe_category = "High"
         return sharpe_ratio, sharpe_category
 
-    # TODO: can regulate daily/weekly/monthly/annual
     # TODO: choose 1 of the methods below (choice is between historical VaR and Parametric VaR)
     def calculateVaR(self, ticker, confidence, volatility):
         ticker_index = self.tickers.index(ticker)

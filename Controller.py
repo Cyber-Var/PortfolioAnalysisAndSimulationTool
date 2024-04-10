@@ -37,8 +37,6 @@ class Controller:
         today = date.today()
         self.end_date = today
 
-        # TODO: choose historical date range here using user's preferred investment behaviour:
-
         start_date_1d = today - relativedelta(months=18)
         prediction_date_1d = today + relativedelta(days=1)
         while prediction_date_1d.weekday() >= 5:
@@ -65,7 +63,7 @@ class Controller:
         self.moving_avg_values = {
             "1d": 5,
             "1w": 20,
-            "1m": 80
+            "1m": 60
         }
 
         self.data = {
@@ -193,18 +191,20 @@ class Controller:
                     else:
                         del self.results[algorithm][hold_dur][ticker]
 
-
-
-    def update_stock_info(self, ticker, num_shares, investment, is_long, algorithm_indices):
+    def update_stock_info(self, ticker, num_shares, investment, is_long, algorithm_indices, only_change_sign):
         self.tickers_and_investments[ticker] = investment
         self.tickers_and_long_or_short[ticker] = is_long
         self.tickers_and_num_shares[ticker] = num_shares
         for algorithm in algorithm_indices:
-            alg_results = self.results[self.algorithms_with_indices[algorithm]]
+            alg_name = self.algorithms_with_indices[algorithm]
+            alg_results = self.results[alg_name]
             for hold_dur in alg_results:
                 if ticker in alg_results[hold_dur]:
-                    self.run_algorithm(ticker, algorithm, hold_dur)
-
+                    if only_change_sign:
+                        if algorithm != 3:
+                            self.results[alg_name][hold_dur][ticker] = -self.results[alg_name][hold_dur][ticker]
+                    else:
+                        self.run_algorithm(ticker, algorithm, hold_dur)
 
     def run_algorithm(self, ticker, algorithm_index, hold_duration, evaluate=False):
         print("called", algorithm_index, ticker, hold_duration, evaluate)
@@ -328,7 +328,8 @@ class Controller:
         elif hold_duration == "1w":
             params = (20, 2, 1, 2)
         else:
-            params = (20, 0, 1, 0)
+            params = (20, 2, 0, 2)
+            # params = (20, 0, 1, 0)
         arima = ARIMAAlgorithm(hold_duration, data, self.prediction_dates[hold_duration], self.start_dates[hold_duration],
                                today_data, params, self.tickers_and_long_or_short[ticker],
                                self.tickers_and_investments[ticker])
@@ -373,10 +374,6 @@ class Controller:
         vol, cat = risk_metrics.calculateVolatility(ticker)
         sharpe_ratio, sharpe_ratio_cat = risk_metrics.calculateSharpeRatio(ticker)
         VaR = risk_metrics.calculateVaR(ticker, 0.95, vol)
-        # print("Risk Metrics:")
-        # print("Volatility:", cat, "(" + str(vol) + ")")
-        # print("Sharpe Ratio:", sharpe_ratio, sharpe_ratio_cat)
-        # print("VaR: " + str(VaR))
 
         # TODO: maybe different sharpe ratio and VaR should be calculated for 1d, 1w and 1m ?
         self.volatilities[ticker] = (vol, cat)
@@ -499,7 +496,6 @@ class Controller:
             return ticker_data
         return data
 
-    # TODO: move to MonteCarlo class:
     def getWeekDays(self, hold_duration):
         if hold_duration == "1d":
             weekdays = pd.to_datetime([self.prediction_dates[hold_duration]])
@@ -526,7 +522,6 @@ class Controller:
 
         return figure
 
-    # TODO: moving_avg_value set by user
     def plotMovingAverage(self, ticker, hold_duration, figure):
         ax = figure.add_subplot(111)
 
@@ -607,6 +602,7 @@ class Controller:
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "seconds")
+            os.system(f'say "Your code has finished."')
             return updated_rankings
 
         return self.read_rankings_from_file()
@@ -655,7 +651,6 @@ class Controller:
         rankings_r2 = {}
         new_index = random.randint(0, 1)
         for duration in ["1d", "1w", "1m"]:
-            # TODO: check that this is ranked correctly:
             rankings_mse[duration] = sorted([(alg, sums_mse[alg][duration]) for alg in sums_mse], key=lambda x: x[1])
             rankings_mae[duration] = sorted([(alg, sums_mae[alg][duration]) for alg in sums_mae], key=lambda x: x[1])
             rankings_mape[duration] = sorted([(alg, sums_mape[alg][duration]) for alg in sums_mape], key=lambda x: x[1])

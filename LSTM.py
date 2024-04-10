@@ -1,6 +1,7 @@
 from datetime import date
 
 import numpy as np
+import tensorflow as tf
 from dateutil.relativedelta import relativedelta
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.layers import Dense, LSTM, Dropout
@@ -40,7 +41,6 @@ class LSTMAlgorithm(Regression):
 
         return super().calculateEvalMetrics(all_predictions, all_y_tests)
 
-    # TODO: n_estimators chosen by user
     def predict_price(self, data):
         Regression.reg = self.createModel()
 
@@ -61,7 +61,6 @@ class LSTMAlgorithm(Regression):
         X_test_scaled = scaler_X.transform(X_test)
         y_train_scaled = scaler_y.fit_transform(np.array(y_train).reshape(-1, 1))
 
-        # TODO: number of epochs controlled by user:
         if final:
             self.reg.fit(X_train_scaled, y_train_scaled, batch_size=32, epochs=self.params[6])
         else:
@@ -77,20 +76,6 @@ class LSTMAlgorithm(Regression):
             num_features = 20
         elif self.hold_duration == "1m":
             num_features = 80
-
-        # lstm_model = Sequential()
-        # lstm_model.add(LSTM(units=50, return_sequences=True, input_shape=(num_features, 1)))
-        # # lstm_model.add(Dropout(0.2))
-        # lstm_model.add(LSTM(units=50, return_sequences=True))
-        # # lstm_model.add(Dropout(0.2))
-        # lstm_model.add(LSTM(units=50, return_sequences=True))
-        # # lstm_model.add(Dropout(0.2))
-        # lstm_model.add(LSTM(units=150, return_sequences=False))
-        # # lstm_model.add(Dropout(0.2))
-        # lstm_model.add(Dense(units=25))
-        # lstm_model.add(Dense(units=1))
-        #
-        # lstm_model.compile(optimizer='adam', loss='mean_squared_error')
 
         lstm_model = Sequential()
         for _ in range(self.params[0] - 1):

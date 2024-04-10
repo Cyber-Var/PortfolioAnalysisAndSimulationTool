@@ -507,15 +507,17 @@ class PortfolioPage(QWidget, Page):
                 str_result, is_green = self.result_to_string(algorithmic_results[ticker])
 
                 if index == 2:
-                    label_text = f"{str_result} +/- {self.controller.bayesian_confidences[self.hold_duration][ticker][1]:.2f}"
+                    label_text = f"{str_result} +/- {abs(self.controller.bayesian_confidences[self.hold_duration][ticker][1]):.2f}"
                 elif index == 5:
-                    label_text = f"{str_result} +/- {self.controller.arima_confidences[self.hold_duration][ticker][1]:.2f}"
+                    label_text = f"{str_result} +/- {abs(self.controller.arima_confidences[self.hold_duration][ticker][1]):.2f}"
                 else:
                     label_text = str_result
             else:
                 label_text = algorithmic_results[ticker]
-                growth_fall = label_text.split()
+                growth_fall = label_text.split()[-1]
                 is_long = self.controller.tickers_and_long_or_short[ticker]
+                print(growth_fall)
+                print(is_long)
                 if (growth_fall == "growth" and is_long) or (growth_fall == "fall" and not is_long):
                     label_text += " (profit)"
                     is_green = True
@@ -722,11 +724,10 @@ class PortfolioPage(QWidget, Page):
             else:
                 results_hbox.itemAt(5).widget().setObjectName("redResultLabel")
             results_hbox.itemAt(5).widget().setText(f"{result}"
-                                                    f" +/- {self.controller.bayesian_confidences[self.hold_duration][ticker][1]:.2f}")
+                                                    f" +/- {abs(self.controller.bayesian_confidences[self.hold_duration][ticker][1]):.2f}")
             results_hbox.itemAt(5).widget().show()
         if self.algorithms[3]:
             self.monte_carlo_col_name.show()
-            # TODO: num_of_simulations set by user ??
             monte_carlo_prediction = self.controller.run_monte_carlo(ticker, self.hold_duration)
             growth_fall = monte_carlo_prediction.split()
             if (growth_fall == "growth" and is_long) or (growth_fall == "fall" and not is_long):
@@ -758,7 +759,7 @@ class PortfolioPage(QWidget, Page):
             else:
                 results_hbox.itemAt(8).widget().setObjectName("redResultLabel")
             results_hbox.itemAt(8).widget().setText(f"{result}"
-                                                    f" +/- {self.controller.arima_confidences[self.hold_duration][ticker][1]:.2f}")
+                                                    f" +/- {abs(self.controller.arima_confidences[self.hold_duration][ticker][1]):.2f}")
             results_hbox.itemAt(8).widget().show()
 
         volatility, volatility_category = self.controller.get_volatility(ticker, self.hold_duration)
@@ -832,17 +833,21 @@ class PortfolioPage(QWidget, Page):
             self.tickers.remove(ticker)
             self.update_portfolio_results()
         else:
-            print("Change is being made to", is_long)
+            if num_shares == self.controller.tickers_and_num_shares[ticker] and self.controller.tickers_and_long_or_short[ticker] == is_long:
+                return
+
             self.logger.info(f"Stock {ticker} changed to: num_shares={num_shares}, is_long={is_long}.")
-            self.controller.tickers_and_num_shares[ticker] = num_shares
-            self.controller.tickers_and_long_or_short[ticker] = is_long
+
             if is_long:
                 long_short_str = "Long"
             else:
                 long_short_str = "Short"
             self.results_map[ticker].itemAt(2).widget().setText(f"${investment:.2f} {long_short_str}")
             algorithm_indices = [index for index, value in enumerate(self.algorithms) if value]
-            self.controller.update_stock_info(ticker, num_shares, investment, is_long, algorithm_indices)
+
+            only_change_sign = (num_shares == self.controller.tickers_and_num_shares[ticker] and self.controller.tickers_and_long_or_short[ticker] != is_long)
+            self.controller.update_stock_info(ticker, num_shares, investment, is_long, algorithm_indices,
+                                              only_change_sign)
             for index in algorithm_indices:
                 self.update_algorithm_values(index)
 
@@ -1037,7 +1042,6 @@ class AddStockPopUp(QDialog):
             self.investment_long.show()
             self.investment_short.show()
             self.investment.setFocus()
-            self.investment_enter_button.show()
             self.investment_widget.show()
         else:
             self.invalid_ticker_label.show()
@@ -1277,7 +1281,7 @@ class RankingTimeWarningPopUp(QDialog):
 
         layout = QVBoxLayout()
 
-        # TODO: replace X with number (do this when I have good internet, maybe back in UK)
+        # TODO: replace X with number (do this when I have good internet, maybe when in Dubai)
         warning_label = QLabel("Ranking process will take approximately X minutes.")
         warning_label_2 = QLabel("Do you still want to continue?")
 

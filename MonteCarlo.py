@@ -61,7 +61,7 @@ class MonteCarloSimulation(Regression):
         s_0 = data.iloc[-1]
 
         # Daily Returns = R(t) = (P(t) - P(t-1)) / P(t-1) = (P(t) / P(t-1)) - 1
-        # TODO: decide to use daily_returns or log_returns:
+        # TODO: choose between daily_returns and log returns
         daily_returns = data.pct_change(self.days).dropna()
         returns = np.log(1 + daily_returns)
 
