@@ -231,6 +231,7 @@ class TopESGPopUp(QDialog):
         self.top_N_combo.addItem('10')
         self.top_N_combo.addItem('20')
         self.top_N_combo.addItem('50')
+        self.top_N_combo.addItem('100')
         self.top_N_combo.setCurrentIndex(0)
         self.top_N_combo.lineEdit().setPlaceholderText("5")
         self.top_N_combo.activated.connect(self.top_N_changed)
@@ -246,18 +247,24 @@ class TopESGPopUp(QDialog):
         top_N_hbox.addWidget(esg_label)
         top_N_hbox.addStretch(1)
 
-        max_N_label = QLabel("(max 50)")
+        max_N_label = QLabel("(max 100)")
         max_N_label.setObjectName("topESGLabel")
+        max_N_label.setStyleSheet("font-size: 15px; font-weight: normal; margin-left: 170px;")
 
         self.place_col_name = self.create_column_names_label("Place")
+        self.place_col_name.setFixedWidth(60)
         self.ticker_col_name = self.create_column_names_label("Ticker")
+        self.ticker_col_name.setFixedWidth(60)
         self.stock_name_col_name = self.create_column_names_label("Stock Name")
+        self.stock_name_col_name.setFixedWidth(200)
         self.industry_col_name = self.create_column_names_label("Industry")
+        self.industry_col_name.setFixedWidth(350)
         self.column_names_hbox = self.display_column_names()
 
         self.top_companies_vbox = QVBoxLayout()
         self.scrollable_area = QScrollArea()
         self.scrollable_area.setWidgetResizable(True)
+        self.scrollable_area.setFixedWidth(710)
         self.scrollable_widget = QWidget()
         self.scrollable_widget.setStyleSheet("border: 2px solid white;")
         scrollable_layout = QVBoxLayout()
@@ -268,7 +275,7 @@ class TopESGPopUp(QDialog):
         self.scrollable_area.setWidget(self.scrollable_widget)
 
         layout.addLayout(top_N_hbox)
-        layout.addWidget(max_N_label, alignment=Qt.AlignCenter)
+        layout.addWidget(max_N_label, alignment=Qt.AlignLeft)
         layout.addWidget(self.scrollable_area)
 
         self.display_top_esg_companies(False)
@@ -276,6 +283,7 @@ class TopESGPopUp(QDialog):
 
     def display_column_names(self):
         column_names_hbox = QHBoxLayout()
+        column_names_hbox.setSpacing(3)
 
         column_names_hbox.addWidget(self.place_col_name)
         column_names_hbox.addWidget(self.ticker_col_name)
@@ -287,13 +295,14 @@ class TopESGPopUp(QDialog):
     def create_column_names_label(self, name):
         label = QLabel(name)
         label.setObjectName('columnNameLabel')
-        label.setFixedHeight(50)
+        label.setStyleSheet("border: 4px solid #717171; font-weight: bold; color: black; font-size: 16px;")
+        label.setFixedHeight(60)
         return label
 
     def create_result_label(self, name):
-        label = QLabel(name)
+        label = QLabel(str(name))
         label.setObjectName('resultLabel')
-        label.setFixedHeight(50)
+        label.setStyleSheet("border: 2px solid #8C8C8C; color: #3B3A3A;")
         return label
 
     def display_top_esg_companies(self, not_first=True):
@@ -315,10 +324,19 @@ class TopESGPopUp(QDialog):
         for i in range(self.top_N):
             results_hbox = QHBoxLayout()
             index_label = self.create_result_label(str(top_companies["index"].iloc[i]))
+            index_label.setFixedSize(60, 40)
+            index_label.setObjectName("columnNameESG")
             ticker_label = self.create_result_label(top_companies["ticker"].iloc[i])
+            ticker_label.setFixedSize(60, 40)
+            ticker_label.setObjectName("columnNameESG")
             stock_name_label = self.create_result_label(top_companies["stock_name"].iloc[i])
+            stock_name_label.setFixedSize(200, 40)
+            stock_name_label.setObjectName("columnNameESG")
             industry_label = self.create_result_label(top_companies["industry"].iloc[i])
+            industry_label.setFixedSize(350, 40)
+            industry_label.setObjectName("columnNameESG")
 
+            results_hbox.setSpacing(3)
             results_hbox.addWidget(index_label)
             results_hbox.addWidget(ticker_label)
             results_hbox.addWidget(stock_name_label)
@@ -341,7 +359,7 @@ class CustomComboBoxESG(QComboBox):
         super().__init__(parent)
         self.setEditable(True)
 
-        validator = CustomValidator(1, 50, self)
+        validator = CustomValidator(1, 100, self)
         self.lineEdit().setValidator(validator)
 
 

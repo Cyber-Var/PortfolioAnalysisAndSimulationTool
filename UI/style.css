@@ -118,6 +118,12 @@ QLabel {
     text-align: center;
 }
 
+#columnNameESG {
+    font-size: 15px;
+    color: black;
+    background-color: white;
+}
+
 
 
 
