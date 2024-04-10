@@ -13,7 +13,7 @@ from UI.Page import Page
 class SingleStockPage(QWidget, Page):
 
     back_to_portfolio_page = pyqtSignal()
-    algorithm_names = ["Linear Regression", "Random Forest", "Bayesian", "Monte Carlo", "LSTM", "ARIMA"]
+    algorithm_names = ["Linear Regression", "Random Forest", "Bayesian", "Monte Carlo Simulation", "LSTM", "ARIMA"]
     color_green = QColor('#00FF00')
     color_red = QColor('#FF0000')
 
@@ -121,14 +121,14 @@ class SingleStockPage(QWidget, Page):
         self.left_vbox.addWidget(info_and_manipulation_widget)
 
         info_table = QTableWidget()
-        info_table.setRowCount(5)
+        info_table.setRowCount(6)
         info_table.setColumnCount(2)
-        info_table.setFixedSize(300, 200)
+        info_table.setFixedSize(300, 222)
 
         info_table.setColumnWidth(0, 150)
-        info_table.setColumnWidth(1, 150)
-        for i in range(5):
-            info_table.setRowHeight(i, 40)
+        info_table.setColumnWidth(1, 200)
+        for i in range(6):
+            info_table.setRowHeight(i, 37)
 
         bold_font = QFont()
         bold_font.setBold(True)
@@ -170,7 +170,6 @@ class SingleStockPage(QWidget, Page):
 
         one_share_price_label_2 = QTableWidgetItem(f"${self.one_share_price}")
         one_share_price_label_2.setTextAlignment(Qt.AlignCenter)
-        # color_2 = QColor('#8EF9F3')
         one_share_price_label_2.setForeground(QBrush(color_1))
         info_table.setItem(2, 1, one_share_price_label_2)
         one_share_price_label_2.setFont(large_font)
@@ -185,15 +184,29 @@ class SingleStockPage(QWidget, Page):
         info_table.setItem(3, 1, num_shares_label_2)
         num_shares_label_2.setFont(large_font)
 
+        investment_type_label_1 = QTableWidgetItem("Investment type")
+        investment_type_label_1.setTextAlignment(Qt.AlignCenter)
+        info_table.setItem(4, 0, investment_type_label_1)
+        investment_type_label_1.setFont(bold_font)
+
+        if self.is_long:
+            investment_type = "Long"
+        else:
+            investment_type = "Short"
+        investment_type_label_2 = QTableWidgetItem(investment_type)
+        investment_type_label_2.setTextAlignment(Qt.AlignCenter)
+        info_table.setItem(4, 1, investment_type_label_2)
+        investment_type_label_2.setFont(large_font)
+
         overall_price_label_1 = QTableWidgetItem("Overall price")
         overall_price_label_1.setTextAlignment(Qt.AlignCenter)
-        info_table.setItem(4, 0, overall_price_label_1)
+        info_table.setItem(5, 0, overall_price_label_1)
         overall_price_label_1.setFont(bold_font)
 
         overall_price_label_2 = QTableWidgetItem(f"${self.investment}")
         overall_price_label_2.setTextAlignment(Qt.AlignCenter)
         overall_price_label_2.setForeground(QBrush(color_1))
-        info_table.setItem(4, 1, overall_price_label_2)
+        info_table.setItem(5, 1, overall_price_label_2)
         overall_price_label_2.setFont(large_font)
 
         self.stylize_table(info_table)
@@ -210,7 +223,7 @@ class SingleStockPage(QWidget, Page):
         hold_duration_hbox = QHBoxLayout()
         hold_duration_widget = QWidget()
         hold_duration_widget.setObjectName("inputHBox")
-        hold_duration_widget.setFixedSize(250, 100)
+        hold_duration_widget.setFixedSize(250, 80)
         hold_duration_widget.setLayout(hold_duration_hbox)
 
         self.hold_duration_1d = self.create_hold_duration_button("1 day")
@@ -256,7 +269,7 @@ class SingleStockPage(QWidget, Page):
             self.algorithms_combo.addItem(algorithm_name)
         self.algorithms_combo.activated.connect(self.algorithm_changed)
         self.algorithms_combo.setCurrentIndex(0)
-        self.algorithms_combo.setFixedSize(300, 50)
+        self.algorithms_combo.setFixedSize(350, 50)
         self.algorithm_results_vbox.addWidget(self.algorithms_combo, alignment=Qt.AlignCenter)
 
         self.results_table = QTableWidget()
@@ -375,7 +388,7 @@ class SingleStockPage(QWidget, Page):
     def draw_graphs_box(self):
         graphs_widget = QWidget()
         graphs_widget.setObjectName("singleStockVBox")
-        graphs_widget.setFixedSize(775, 645)
+        graphs_widget.setFixedSize(775, 545)
         graphs_vbox = QVBoxLayout(graphs_widget)
         self.right_vbox.addWidget(graphs_widget)
 
@@ -384,25 +397,25 @@ class SingleStockPage(QWidget, Page):
 
         self.history_graph_radio = QRadioButton("Historical Price")
         self.history_graph_radio.setObjectName('inputLabel')
-        self.history_graph_radio.setFixedSize(200, 50)
+        self.history_graph_radio.setFixedSize(200, 40)
         self.history_graph_radio.setChecked(True)
         self.history_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
 
         self.moving_average_graph_radio = QRadioButton("Moving Average")
         self.moving_average_graph_radio.setObjectName('inputLabel')
-        self.moving_average_graph_radio.setFixedSize(200, 50)
+        self.moving_average_graph_radio.setFixedSize(200, 40)
         self.moving_average_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
 
         self.arima_graph_radio = QRadioButton("ARIMA")
         self.arima_graph_radio.setObjectName('inputLabel')
-        self.arima_graph_radio.setFixedSize(200, 50)
+        self.arima_graph_radio.setFixedSize(200, 40)
         self.arima_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
 
         graphs_choice_hbox.addWidget(self.history_graph_radio)
         graphs_choice_hbox.addWidget(self.moving_average_graph_radio)
         graphs_choice_hbox.addWidget(self.arima_graph_radio)
 
-        self.graph_figure = Figure(figsize=(700, 550), dpi=self.dpi)
+        self.graph_figure = Figure(figsize=(700, 450), dpi=self.dpi)
         self.graph_figure = self.controller.plot_historical_price_data(self.ticker, self.hold_duration, self.graph_figure)
         self.graph_canvas = FigureCanvas(self.graph_figure)
         graphs_vbox.addWidget(self.graph_canvas)
@@ -410,9 +423,12 @@ class SingleStockPage(QWidget, Page):
     def draw_risk_metrics_box(self):
         risk_metrics_widget = QWidget()
         risk_metrics_widget.setObjectName("singleStockVBox")
-        risk_metrics_widget.setFixedSize(775, 125)
-        risk_metrics_hbox = QHBoxLayout(risk_metrics_widget)
+        risk_metrics_widget.setFixedSize(775, 225)
         self.right_vbox.addWidget(risk_metrics_widget)
+
+        risk_metrics_vbox = QVBoxLayout(risk_metrics_widget)
+
+        risk_metrics_hbox = QHBoxLayout()
 
         vol, sharpe, VaR = self.controller.get_risk_metrics(self.ticker)
         volatility, volatility_category = vol
@@ -483,6 +499,29 @@ class SingleStockPage(QWidget, Page):
         VaR_frame.setFixedSize(200, 90)
         risk_metrics_hbox.addWidget(VaR_frame)
 
+        esg_hbox = QHBoxLayout()
+
+        total_score, e_score, s_score, g_score = self.controller.get_esg_scores(self.ticker)
+        esg_frame, esg_frame_layout = self.create_esg_frame()
+
+        esg_top_label = QLabel(f"ESG Score = {total_score}")
+        esg_top_label.setObjectName("riskMetricTopLabel")
+        esg_top_label.setFixedSize(220, 30)
+
+        # esg_bottom_label = QLabel(f"E-Score = {e_score}, S-Score = {s_score}, G-Score = {g_score}")
+        esg_bottom_label = QLabel(f"<font color='red'>E-Score = {e_score},</font>\t<font color='green'>S-Score = {s_score},</font>\t<font color='blue'>G-Score = {g_score}</font>")
+        esg_bottom_label.setObjectName("riskMetricBottomLabel")
+        esg_bottom_label.setFixedSize(450, 30)
+        # esg_bottom_label.setAlignment(Qt.AlignCenter)
+
+        esg_frame_layout.addWidget(esg_top_label, alignment=Qt.AlignCenter)
+        esg_frame_layout.addWidget(esg_bottom_label, alignment=Qt.AlignCenter)
+        esg_frame.setFixedSize(600, 90)
+        esg_hbox.addWidget(esg_frame)
+
+        risk_metrics_vbox.addLayout(risk_metrics_hbox)
+        risk_metrics_vbox.addLayout(esg_hbox)
+
     def create_frame(self):
         frame = QFrame()
         frame_layout = QVBoxLayout(frame)
@@ -494,6 +533,14 @@ class SingleStockPage(QWidget, Page):
         frame_layout_bottom.setSpacing(0)
         frame_layout_bottom.setContentsMargins(5, 5, 5, 5)
         return frame, frame_layout, frame_layout_bottom
+
+    def create_esg_frame(self):
+        frame = QFrame()
+        frame_layout = QVBoxLayout(frame)
+        frame_layout.setSpacing(0)
+        frame_layout.setContentsMargins(0, 0, 0, 0)
+        frame.setObjectName("riskMetricFrame")
+        return frame, frame_layout
 
     def process_category_style(self, category):
         if category == "Low":

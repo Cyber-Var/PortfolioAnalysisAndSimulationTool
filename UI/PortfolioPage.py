@@ -45,7 +45,7 @@ class PortfolioPage(QWidget, Page):
         self.algorithms = [False] * 6
 
         self.outer_ranking_vbox = QVBoxLayout()
-        self.outer_ranking_vbox.setContentsMargins(0, 70, 0, 0)
+        self.outer_ranking_vbox.setContentsMargins(0, 100, 0, 0)
 
         self.ranking_vbox = QVBoxLayout()
         self.ranking_widget = QWidget()
@@ -168,7 +168,7 @@ class PortfolioPage(QWidget, Page):
         self.stock_name_col_name = self.create_column_names_labels("Name")
         self.stock_name_col_name.setFixedSize(160, 50)
         self.amount_col_name = self.create_column_names_labels("Investment\nAmount")
-        self.amount_col_name.setFixedSize(105, 50)
+        self.amount_col_name.setFixedSize(120, 50)
         self.lin_reg_col_name = self.create_column_names_labels("Linear\nRegression")
         self.lin_reg_col_name.setFixedSize(85, 50)
         self.lin_reg_col_name.hide()
@@ -178,7 +178,7 @@ class PortfolioPage(QWidget, Page):
         self.bayesian_col_name = self.create_column_names_labels("Bayesian")
         self.bayesian_col_name.setFixedSize(120, 50)
         self.bayesian_col_name.hide()
-        self.monte_carlo_col_name = self.create_column_names_labels("Monte Carlo")
+        self.monte_carlo_col_name = self.create_column_names_labels("Monte Carlo\nSimulation")
         self.monte_carlo_col_name.setFixedSize(210, 50)
         self.monte_carlo_col_name.hide()
         self.lstm_col_name = self.create_column_names_labels("LSTM")
@@ -260,7 +260,7 @@ class PortfolioPage(QWidget, Page):
         algrithms_hbox = QHBoxLayout()
         algorithms_widget = QWidget()
         algorithms_widget.setObjectName("inputHBox")
-        algorithms_widget.setFixedSize(300, 200)
+        algorithms_widget.setFixedSize(350, 200)
         algorithms_widget.setLayout(algrithms_hbox)
 
         self.algorithms_label = QLabel("Algorithms:")
@@ -271,7 +271,7 @@ class PortfolioPage(QWidget, Page):
         self.algorithm_1 = self.create_algorithm_checkbox("Linear Regression", 0)
         self.algorithm_2 = self.create_algorithm_checkbox("Random Forest", 1)
         self.algorithm_3 = self.create_algorithm_checkbox("Bayesian", 2)
-        self.algorithm_4 = self.create_algorithm_checkbox("Monte Carlo", 3)
+        self.algorithm_4 = self.create_algorithm_checkbox("Monte Carlo Simulation", 3)
         self.algorithm_5 = self.create_algorithm_checkbox("LSTM", 4)
         self.algorithm_6 = self.create_algorithm_checkbox("ARIMA", 5)
 
@@ -286,7 +286,7 @@ class PortfolioPage(QWidget, Page):
         algrithms_hbox.addLayout(algorithms_vbox)
 
         input_hbox = QHBoxLayout()
-        input_hbox.setSpacing(150)
+        input_hbox.setSpacing(130)
         input_hbox.addWidget(hold_duration_widget)
         input_hbox.addWidget(algorithms_widget)
 
@@ -315,7 +315,7 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_amount = QLabel("-")
         self.portfolio_amount.setObjectName("portfolioResultLabel")
         self.portfolio_amount.setStyleSheet(self.portfolio_yellow_border_style)
-        self.portfolio_amount.setFixedSize(105, 70)
+        self.portfolio_amount.setFixedSize(120, 70)
 
         self.portfolio_linear_regression = QLabel("")
         self.portfolio_linear_regression.setFixedSize(85, 70)
@@ -583,6 +583,9 @@ class PortfolioPage(QWidget, Page):
                 else:
                     num_result = self.controller.calculate_portfolio_result(index, self.hold_duration)
                     result, is_green = self.result_to_string(num_result)
+                if index == 2 or index == 5:
+                    confidence = self.controller.calculate_portfolio_confidence(index, self.hold_duration)
+                    result += f"+/- {abs(confidence):.2f}"
 
                 self.portfolio_results[index].setText(result)
                 if is_green:
@@ -645,7 +648,7 @@ class PortfolioPage(QWidget, Page):
             self.rankings = self.controller.handle_ranking(True)
             self.update_ranking_display()
 
-    widths = [60, 160, 105, 85, 80, 120, 210, 80, 120, 110, 110, 60]
+    widths = [60, 160, 120, 85, 80, 120, 210, 80, 120, 110, 110, 60]
 
     def add_ticker(self, ticker, one_share_price, num_shares, is_long, not_initial=True):
         self.logger.info('Adding new stock to portfolio.')

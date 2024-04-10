@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QVBoxLayout
 import sys
 from matplotlib.figure import Figure
+import yesg
 
 from ARIMAAlgorithm import ARIMAAlgorithm
 from BayesianRegressionAlgorithm import BayesianRegressionAlgorithm
@@ -80,7 +81,7 @@ class Controller:
         self.linear_regression_results = {"1d": {}, "1w": {}, "1m": {}}
         self.random_forest_results = {"1d": {}, "1w": {}, "1m": {}}
         self.bayesian_results = {"1d": {}, "1w": {}, "1m": {}}
-        self.bayesian_confidences =  {"1d": {}, "1w": {}, "1m": {}}
+        self.bayesian_confidences = {"1d": {}, "1w": {}, "1m": {}}
         self.monte_carlo_results = {"1d": {}, "1w": {}, "1m": {}}
         self.montes = {"1d": {}, "1w": {}, "1m": {}}
         self.monte_plot_labels = {"1d": {}, "1w": {}, "1m": {}}
@@ -149,6 +150,7 @@ class Controller:
         self.top_companies_df = pd.read_csv('top_esg_companies.csv', sep=';')
 
         self.portfolio_results = {}
+        self.portfolio_confidences = {}
         self.tickers_and_company_names_sp500 = None
         self.top_esg_companies = None
 
@@ -202,7 +204,9 @@ class Controller:
                 if ticker in alg_results[hold_dur]:
                     if only_change_sign:
                         if algorithm != 3:
+                            print(self.results[alg_name][hold_dur][ticker])
                             self.results[alg_name][hold_dur][ticker] = -self.results[alg_name][hold_dur][ticker]
+                            print(self.results[alg_name][hold_dur][ticker])
                     else:
                         self.run_algorithm(ticker, algorithm, hold_dur)
 
@@ -346,9 +350,15 @@ class Controller:
             print(self.arima_evaluation)
         return predictions
 
-    def get_esg_scores(self):
-        # ESG Scores:
-        esg = ESGScores(self.tickers_and_investments.keys())
+    def get_esg_scores(self, ticker):
+        # The lower the rating, the more ethical and sustainable a company is
+        scores = yesg.get_historic_esg(ticker).iloc[-1]
+        e_score = scores["E-Score"]
+        s_score = scores["S-Score"]
+        g_score = scores["G-Score"]
+        total_score = scores["Total-Score"]
+        # print(f"E-Score = {e_score}, S-Score = {s_score}, G-Score = {g_score}, Total-Score = {total_score}")
+        return total_score, e_score, s_score, g_score
 
     def plot_moving_average_graph(self, ticker, hold_duration):
         data = self.getDataForTicker(ticker, self.data[hold_duration])
@@ -448,6 +458,19 @@ class Controller:
             if algorithm_results[ticker] is not None:
                 final_result += algorithm_results[ticker]
         self.portfolio_results[index] = final_result
+        return final_result
+
+    def calculate_portfolio_confidence(self, index, hold_duration):
+        algorithm_name = self.algorithms_with_indices[index]
+        final_result = 0
+        if index == 2:
+            for ticker, confidences in self.bayesian_confidences[hold_duration].items():
+                print(self.results[algorithm_name][hold_duration][ticker])
+                if self.results[algorithm_name][hold_duration][ticker] >= 0:
+                    final_result += abs(confidences[1])
+                else:
+                    final_result -= abs(confidences[1])
+        self.portfolio_confidences[index] = final_result
         return final_result
 
     def calculate_portfolio_monte_carlo(self, hold_duration):

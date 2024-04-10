@@ -3,14 +3,8 @@ import yesg
 
 class ESGScores:
 
-    def __init__(self, tickers):
-        # The lower the rating, the more sustainable a company is
-        print("ESG scores:")
-        for ticker in tickers:
-            self.get_esg_score(ticker)
-        print()
-
     def get_esg_score(self, ticker):
+        # The lower the rating, the more ethical and sustainable a company is
         print(ticker + ":")
         scores = yesg.get_historic_esg(ticker).iloc[-1]
         e_score = scores["E-Score"]
