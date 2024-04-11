@@ -81,7 +81,8 @@ class ARIMAAlgorithm(Regression):
             prediction = model.forecast(steps=len(future_dates) - 1)
             forecast_results = model.get_forecast(steps=len(future_dates) - 1)
         confidence_interval = forecast_results.conf_int(alpha=0.05)
-        return prediction, [confidence_interval.iloc[-1]["lower Adj Close"], confidence_interval.iloc[-1]["upper Adj Close"]]
+        # print(prediction, [confidence_interval.iloc[-1, 0], confidence_interval.iloc[-1, 0]])
+        return prediction, [confidence_interval.iloc[-1, 0], confidence_interval.iloc[-1, 0]]
 
     def evaluateModel(self):
         # TODO: explain this sliding method clearly in report
@@ -139,9 +140,6 @@ class ARIMAAlgorithm(Regression):
         historical_prices = data['Adj Close'][-self.historical_range_for_graph:]
 
         ax = figure.add_subplot(111)
-
-        print(future_dates)
-        print(y_axis)
 
         ax.plot(historical_dates, historical_prices, color='blue', label='Historical Adj Close')
         ax.plot(future_dates, y_axis, color='red', label='ARIMA Forecast')

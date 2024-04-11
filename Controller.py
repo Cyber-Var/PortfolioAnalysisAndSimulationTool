@@ -193,6 +193,14 @@ class Controller:
                     else:
                         del self.results[algorithm][hold_dur][ticker]
 
+        for hold_dur in self.bayesian_confidences.keys():
+            if ticker in self.bayesian_confidences[hold_dur].keys():
+                del self.bayesian_confidences[hold_dur][ticker]
+
+        for hold_dur in self.arima_confidences.keys():
+            if ticker in self.arima_confidences[hold_dur].keys():
+                del self.arima_confidences[hold_dur][ticker]
+
     def update_stock_info(self, ticker, num_shares, investment, is_long, algorithm_indices, only_change_sign):
         self.tickers_and_investments[ticker] = investment
         self.tickers_and_long_or_short[ticker] = is_long
@@ -477,6 +485,8 @@ class Controller:
         ticker_keys = self.tickers_and_investments.keys()
         if len(self.tickers_and_investments.keys()) == 1:
             ticker = list(ticker_keys)[0]
+            if ticker not in self.monte_carlo_results[hold_duration].keys():
+                self.run_monte_carlo(ticker, hold_duration)
             return self.monte_carlo_results[hold_duration][ticker]
 
         total_positives = 0

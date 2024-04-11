@@ -108,6 +108,7 @@ class SingleStockPage(QWidget, Page):
         back_button = QPushButton("Back")
         back_button.setObjectName("addStockButton")
         back_button.setFixedSize(90, 40)
+        back_button.clicked.connect(self.play_cancel_sound)
         back_button.clicked.connect(self.back_to_portfolio_page.emit)
         self.layout.addWidget(back_button)
 
@@ -253,6 +254,7 @@ class SingleStockPage(QWidget, Page):
     def create_hold_duration_button(self, name):
         button = QRadioButton(name)
         button.setObjectName('inputLabel')
+        button.clicked.connect(self.play_radio_sound)
         return button
 
     def draw_algorithm_results_box(self):
@@ -399,16 +401,19 @@ class SingleStockPage(QWidget, Page):
         self.history_graph_radio.setObjectName('inputLabel')
         self.history_graph_radio.setFixedSize(200, 40)
         self.history_graph_radio.setChecked(True)
+        self.history_graph_radio.clicked.connect(self.play_radio_sound)
         self.history_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
 
         self.moving_average_graph_radio = QRadioButton("Moving Average")
         self.moving_average_graph_radio.setObjectName('inputLabel')
         self.moving_average_graph_radio.setFixedSize(200, 40)
+        self.moving_average_graph_radio.clicked.connect(self.play_radio_sound)
         self.moving_average_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
 
         self.arima_graph_radio = QRadioButton("ARIMA")
         self.arima_graph_radio.setObjectName('inputLabel')
         self.arima_graph_radio.setFixedSize(200, 40)
+        self.arima_graph_radio.clicked.connect(self.play_radio_sound)
         self.arima_graph_radio.toggled.connect(self.graphs_choice_button_toggled)
 
         graphs_choice_hbox.addWidget(self.history_graph_radio)
@@ -583,6 +588,7 @@ class SingleStockPage(QWidget, Page):
                 self.update_graph()
 
     def update_graph(self):
+        self.play_action_sound()
         self.graph_figure.clear()
         if self.history_graph_radio.isChecked():
             self.logger.info("Displaying the History Price graph.")
@@ -598,6 +604,7 @@ class SingleStockPage(QWidget, Page):
         self.graph_canvas.draw()
 
     def algorithm_changed(self):
+        self.play_action_sound()
         algorithm_entered = self.algorithms_combo.currentText()
 
         if self.growth_probabilities_vbox.itemAt(0).widget().isVisible():

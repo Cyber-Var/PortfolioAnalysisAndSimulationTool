@@ -1,11 +1,7 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGraphicsDropShadowEffect
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont, QPalette, QColor
-
-import logging
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton
+from PyQt5.QtCore import Qt, pyqtSignal, QUrl, QTimer
 
 from UI.Page import Page
-from UI.PortfolioPage import PortfolioPage
 
 
 class MenuPage(QWidget, Page):
@@ -45,8 +41,8 @@ class MenuPage(QWidget, Page):
         exit_button = self.create_menu_button('Exit')
 
         portfolio_button.clicked.connect(self.open_portfolio_page.emit)
-        manual_button.clicked.connect(self.open_manual_page)
-        settings_button.clicked.connect(self.open_settings_page)
+        # manual_button.clicked.connect(self.open_manual_page)
+        # settings_button.clicked.connect(self.open_settings_page)
         exit_button.clicked.connect(self.quit_app)
 
         self.layout.addStretch()
@@ -55,18 +51,20 @@ class MenuPage(QWidget, Page):
         button = QPushButton(name)
         button.setObjectName('menuButton')
         button.setFixedWidth(400)
+        button.clicked.connect(self.play_cancel_sound)
         self.layout.addWidget(button, alignment=Qt.AlignHCenter)
         return button
 
-    def open_manual_page(self):
-        self.logger.info('Opening the User Manual Page')
-        pass
-
-    def open_settings_page(self):
-        self.logger.info('Opening the Settings Page')
-        pass
+    # def open_manual_page(self):
+    #     self.logger.info('Opening the User Manual Page')
+    #
+    # def open_settings_page(self):
+    #     self.logger.info('Opening the Settings Page')
 
     def quit_app(self):
         self.logger.info('Exiting the Application')
-        self.main_window.closeEvent(None)
-        QApplication.instance().quit()
+        self.play_cancel_sound()
+        QTimer.singleShot(500, lambda: self.main_window.closeEvent(None))
+        QTimer.singleShot(500, QApplication.instance().quit)
+        # self.main_window.closeEvent(None)
+        # QApplication.instance().quit()

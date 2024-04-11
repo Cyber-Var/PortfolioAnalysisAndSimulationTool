@@ -1,5 +1,7 @@
 import sys
 
+from PyQt5.QtCore import QUrl
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtWidgets import QApplication
 
 from UI.MainWindow import MainWindow

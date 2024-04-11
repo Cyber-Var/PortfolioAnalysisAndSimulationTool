@@ -5,10 +5,11 @@ from io import BytesIO
 
 from PyQt5 import QtCore
 from PyQt5.QtGui import QPixmap, QFont
+from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox,
                              QScrollArea, QDialog, QLineEdit, QCompleter, QSizePolicy, QButtonGroup, QFrame,
                              QDialogButtonBox, QSpacerItem)
-from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QBuffer, QIODevice
+from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QBuffer, QIODevice, QUrl, QTimer
 import yfinance as yf
 
 from UI.Page import Page
@@ -73,6 +74,7 @@ class PortfolioPage(QWidget, Page):
         update_ranking_button.setObjectName('portfolioButton')
         update_ranking_button.setStyleSheet("border-radius: 5px;")
         update_ranking_button.setFixedWidth(150)
+        update_ranking_button.clicked.connect(self.play_cancel_sound)
         update_ranking_button.clicked.connect(self.show_ranking_time_warning_window)
         self.ranking_vbox.addWidget(update_ranking_button, alignment=Qt.AlignCenter)
 
@@ -227,6 +229,7 @@ class PortfolioPage(QWidget, Page):
         add_stock_button.setStyleSheet(
             "border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, stop:1 #00DDEB);")
         add_stock_button.setFixedSize(110, 50)
+        add_stock_button.clicked.connect(self.play_cancel_sound)
         add_stock_button.clicked.connect(self.show_add_stock_window)
 
         column_names_hbox.addStretch(1)
@@ -246,6 +249,7 @@ class PortfolioPage(QWidget, Page):
         back_button = QPushButton("Back")
         back_button.setObjectName("addStockButton")
         back_button.setFixedSize(90, 40)
+        back_button.clicked.connect(self.play_cancel_sound)
         back_button.clicked.connect(self.back_to_menu_page.emit)
 
         self.show_portfolio_results()
@@ -392,6 +396,7 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_more_info_button.setFixedSize(50, 70)
         self.portfolio_more_info_button.setObjectName("portfolioButton")
         self.portfolio_more_info_button.setDisabled(True)
+        self.portfolio_more_info_button.clicked.connect(self.play_cancel_sound)
         self.portfolio_more_info_button.setStyleSheet(
             "background-color: #333; color: #AAA; border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #67497E, stop:1 #09828A);")
 
@@ -399,6 +404,7 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_edit_button.setFixedSize(50, 70)
         self.portfolio_edit_button.setObjectName("portfolioButton")
         self.portfolio_edit_button.setDisabled(True)
+        self.portfolio_edit_button.clicked.connect(self.play_cancel_sound)
         self.portfolio_edit_button.setStyleSheet(
             "background-color: #333; color: #AAA; border: 2px solid qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #67497E, stop:1 #09828A);")
 
@@ -433,12 +439,14 @@ class PortfolioPage(QWidget, Page):
     def create_hold_duration_button(self, name):
         button = QRadioButton(name)
         button.setObjectName('inputLabel')
+        button.toggled.connect(self.play_radio_sound)
         button.toggled.connect(self.hold_duration_button_toggled)
         return button
 
     def create_algorithm_checkbox(self, name, ii):
         button = QCheckBox(name)
         button.setObjectName('inputLabel')
+        button.stateChanged.connect(self.play_radio_sound)
         button.stateChanged.connect(lambda state, index=ii: self.algorithms_state_changed(state, index))
         if self.set_algorithms[ii]:
             button.setChecked(True)
@@ -784,6 +792,7 @@ class PortfolioPage(QWidget, Page):
 
         more_info_button = QPushButton("--->")
         more_info_button.setFixedSize(50, 50)
+        more_info_button.clicked.connect(self.play_action_sound)
         more_info_button.clicked.connect(lambda: self.open_single_stock_page.emit(ticker, stock_name, one_share_price,
                                                                                   num_shares, self.hold_duration,
                                                                                   is_long))
@@ -794,6 +803,7 @@ class PortfolioPage(QWidget, Page):
 
         edit_button = QPushButton("Edit")
         edit_button.setFixedSize(50, 50)
+        edit_button.clicked.connect(self.play_cancel_sound)
         edit_button.clicked.connect(lambda: self.edit_stock(ticker, stock_name, one_share_price))
         edit_button.setObjectName("portfolioButton")
         edit_button.setStyleSheet(
@@ -855,7 +865,7 @@ class PortfolioPage(QWidget, Page):
                 self.update_algorithm_values(index)
 
 
-class AddStockPopUp(QDialog):
+class AddStockPopUp(QDialog, Page):
     valid_ticker_entered = pyqtSignal(str, float, int, bool)
     ticker = ""
     share_price = None
@@ -864,6 +874,11 @@ class AddStockPopUp(QDialog):
     def __init__(self, sp500_companies, top_100_esg_companies):
         super().__init__()
         self.setWindowTitle("Add Stock to Portfolio")
+
+        self.sp500_companies = sp500_companies
+        self.top_100_esg_companies = top_100_esg_companies
+        self.current_list = sp500_companies
+
         with open("UI/style.css", "r") as f:
             stylesheet = f.read()
             self.setStyleSheet(stylesheet)
@@ -875,9 +890,18 @@ class AddStockPopUp(QDialog):
             " background-color: black;"
             "}")
 
-        self.sp500_companies = sp500_companies
-        self.top_100_esg_companies = top_100_esg_companies
-        self.current_list = sp500_companies
+        sound_directory = os.path.join(os.path.dirname(__file__), 'sounds')
+        action_sound_path = os.path.join(sound_directory, 'action_button.wav')
+        cancel_sound_path = os.path.join(sound_directory, 'cancel_button.wav')
+        radio_sound_path = os.path.join(sound_directory, 'radio_button.wav')
+
+        self.sound_cancel = QSoundEffect()
+        self.sound_action = QSoundEffect()
+        self.sound_radio = QSoundEffect()
+
+        self.sound_action.setSource(QUrl.fromLocalFile(action_sound_path))
+        self.sound_cancel.setSource(QUrl.fromLocalFile(cancel_sound_path))
+        self.sound_radio.setSource(QUrl.fromLocalFile(radio_sound_path))
 
         layout = QVBoxLayout()
 
@@ -892,8 +916,10 @@ class AddStockPopUp(QDialog):
         search_by_label.setObjectName("addStockLabel")
         self.by_name_radio = QRadioButton("companies with capitalisation\nabove 1 billion dollars")
         self.by_name_radio.setChecked(True)
+        self.by_name_radio.toggled.connect(self.sound_radio.play)
         self.by_name_radio.toggled.connect(self.search_by_radio_toggled)
         self.by_esg_radio = QRadioButton("top 100 companies\nby ESG score")
+        self.by_esg_radio.toggled.connect(self.sound_radio.play)
         self.by_esg_radio.toggled.connect(self.search_by_radio_toggled)
         self.search_by_group = QButtonGroup(self)
         self.search_by_group.addButton(self.by_name_radio)
@@ -968,9 +994,11 @@ class AddStockPopUp(QDialog):
         self.investment_long = QRadioButton("Long")
         self.investment_long.setObjectName("addStockLabel")
         self.investment_long.setChecked(True)
+        self.investment_long.toggled.connect(self.sound_radio.play)
         self.investment_long.hide()
         self.investment_short = QRadioButton("Short")
         self.investment_short.setObjectName("addStockLabel")
+        self.investment_short.toggled.connect(self.sound_radio.play)
         self.investment_short.hide()
         self.long_short_group = QButtonGroup(self)
         self.long_short_group.addButton(self.investment_long)
@@ -990,7 +1018,7 @@ class AddStockPopUp(QDialog):
 
         cancel_button = QPushButton("Cancel")
         cancel_button.setFixedSize(70, 40)
-        cancel_button.clicked.connect(self.close)
+        cancel_button.clicked.connect(self.process_cancel_decision)
 
         buttons_hbox.addStretch(1)
         buttons_hbox.addWidget(cancel_button)
@@ -1028,6 +1056,8 @@ class AddStockPopUp(QDialog):
                 self.completer.setModel(newCompleterModel)
 
     def validate_ticker(self):
+        self.sound_radio.play()
+
         ticker = self.ticker_name.text()
         is_valid, price = self.is_valid_ticker(ticker)
 
@@ -1050,7 +1080,7 @@ class AddStockPopUp(QDialog):
             self.invalid_ticker_label.show()
 
     def is_valid_ticker(self, ticker):
-        if ticker in self.current_list:
+        if (ticker in self.sp500_companies) or (ticker in self.top_100_esg_companies):
             ticker = ticker.split()[0]
             data = yf.Ticker(ticker)
             one_day_data = data.history(period="1d")
@@ -1068,17 +1098,24 @@ class AddStockPopUp(QDialog):
         return bool(re.match(r'^[1-9]\d*$', inv))
 
     def add_ticker_to_portfolio(self):
+        self.sound_action.play()
         num_shares = self.investment.text()
         if self.is_valid_investment(num_shares):
             if self.investment_long.isChecked():
                 is_long = True
             else:
                 is_long = False
-            self.valid_ticker_entered.emit(self.ticker.upper(), self.share_price, int(num_shares), is_long)
-            self.close()
+            QTimer.singleShot(1000, lambda: self.valid_ticker_entered.emit(self.ticker.upper(), self.share_price, int(num_shares), is_long))
+            QTimer.singleShot(1000, self.close)
+            # self.valid_ticker_entered.emit(self.ticker.upper(), self.share_price, int(num_shares), is_long)
+            # self.close()
         else:
             self.invalid_investment_label.show()
             self.investment.setFocus()
+
+    def process_cancel_decision(self):
+        self.sound_cancel.play()
+        QTimer.singleShot(100, self.close)
 
     def hide_invalid_labels(self):
         self.invalid_ticker_label.hide()
@@ -1154,6 +1191,19 @@ class EditStockPopUp(QDialog):
                         " background-color: black;"
                         "}")
 
+        sound_directory = os.path.join(os.path.dirname(__file__), 'sounds')
+        action_sound_path = os.path.join(sound_directory, 'action_button.wav')
+        cancel_sound_path = os.path.join(sound_directory, 'cancel_button.wav')
+        radio_sound_path = os.path.join(sound_directory, 'radio_button.wav')
+
+        self.sound_cancel = QSoundEffect()
+        self.sound_action = QSoundEffect()
+        self.sound_radio = QSoundEffect()
+
+        self.sound_action.setSource(QUrl.fromLocalFile(action_sound_path))
+        self.sound_cancel.setSource(QUrl.fromLocalFile(cancel_sound_path))
+        self.sound_radio.setSource(QUrl.fromLocalFile(radio_sound_path))
+
         layout = QVBoxLayout()
 
         ticker_vbox = QVBoxLayout()
@@ -1199,7 +1249,9 @@ class EditStockPopUp(QDialog):
             self.investment_long.setChecked(True)
         else:
             self.investment_short.setChecked(True)
+        self.investment_long.toggled.connect(self.sound_radio.play)
         self.investment_long.toggled.connect(self.long_short_changed)
+        self.investment_short.toggled.connect(self.sound_radio.play)
         self.investment_short.toggled.connect(self.long_short_changed)
         long_short_layout.addStretch(1)
         long_short_layout.addWidget(self.investment_long)
@@ -1210,7 +1262,7 @@ class EditStockPopUp(QDialog):
 
         cancel_button = QPushButton("Cancel")
         cancel_button.setFixedSize(70, 40)
-        cancel_button.clicked.connect(self.close)
+        cancel_button.clicked.connect(self.process_cancel_decision)
 
         self.save_changes_button = QPushButton("Save Changes")
         self.save_changes_button.setFixedSize(110, 40)
@@ -1244,6 +1296,10 @@ class EditStockPopUp(QDialog):
 
         self.setLayout(layout)
 
+    def process_cancel_decision(self):
+        self.sound_cancel.play()
+        QTimer.singleShot(100, self.close)
+
     def hide_invalid_investment_label(self):
         self.invalid_investment_label.hide()
         self.save_changes_button.show()
@@ -1257,16 +1313,22 @@ class EditStockPopUp(QDialog):
             self.save_changes_button.show()
 
     def save_changes(self):
+        self.sound_action.play()
         num_shares = self.investment.text()
         if bool(re.match(r'^[1-9]\d*$', num_shares)):
-            self.perform_change.emit(self.ticker, int(num_shares), int(num_shares) * self.one_share_price, self.is_long)
-            self.close()
+            QTimer.singleShot(1000, lambda: self.perform_change.emit(self.ticker, int(num_shares), int(num_shares) * self.one_share_price, self.is_long))
+            QTimer.singleShot(1000, self.close)
+            # self.perform_change.emit(self.ticker, int(num_shares), int(num_shares) * self.one_share_price, self.is_long)
+            # self.close()
         else:
             self.invalid_investment_label.show()
 
     def delete_stock(self):
-        self.perform_change.emit(self.ticker, -1, -1, True)
-        self.close()
+        self.sound_action.play()
+        QTimer.singleShot(1000, lambda: self.perform_change.emit(self.ticker, -1, -1, True))
+        QTimer.singleShot(1000, self.close)
+        # self.perform_change.emit(self.ticker, -1, -1, True)
+        # self.close()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
@@ -1275,39 +1337,88 @@ class EditStockPopUp(QDialog):
             super().keyPressEvent(event)
 
 
-class RankingTimeWarningPopUp(QDialog):
+class RankingTimeWarningPopUp(QDialog, Page):
     decision_made = pyqtSignal(bool)
 
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Time Warning")
 
+        with open("UI/style.css", "r") as f:
+            stylesheet = f.read()
+            self.setStyleSheet(stylesheet)
+        # button_save_style = (
+        #                 "QPushButton:hover {"
+        #                 " background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #12CB0B, stop:1 #0EC1D0);"
+        #                 "}"
+        #                 "QPushButton:pressed {"
+        #                 " background-color: black;"
+        #                 "}")
+        button_continue_style = (
+                        "QPushButton:hover {"
+                        " background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FF0000, stop:1 #FF8600);"
+                        "}"
+                        "QPushButton:pressed {"
+                        " background-color: black;"
+                        "}")
+
+        sound_directory = os.path.join(os.path.dirname(__file__), 'sounds')
+        action_sound_path = os.path.join(sound_directory, 'action_button.wav')
+        cancel_sound_path = os.path.join(sound_directory, 'cancel_button.wav')
+
+        self.sound_cancel = QSoundEffect()
+        self.sound_action = QSoundEffect()
+
+        self.sound_action.setSource(QUrl.fromLocalFile(action_sound_path))
+        self.sound_cancel.setSource(QUrl.fromLocalFile(cancel_sound_path))
+
         layout = QVBoxLayout()
 
+        warning_vbox = QVBoxLayout()
+        warning_vbox.setSpacing(30)
+        warning_widget = QWidget()
+        warning_widget.setObjectName("addStockVBox")
+        warning_widget.setFixedSize(500, 120)
+        warning_widget.setLayout(warning_vbox)
+
         # TODO: replace X with number (do this when I have good internet, maybe when in Dubai)
-        warning_label = QLabel("Ranking process will take approximately X minutes.")
+        warning_label = QLabel("The ranking process will take approximately X minutes.")
+        warning_label.setObjectName("addStockLabel")
         warning_label_2 = QLabel("Do you still want to continue?")
+        warning_label_2.setObjectName("addStockLabel")
 
         buttons_hbox = QHBoxLayout()
 
         cancel_button = QPushButton("Cancel")
+        cancel_button.setFixedSize(70, 40)
+        cancel_button.clicked.connect(self.play_cancel_sound)
         cancel_button.clicked.connect(self.process_cancel_decision)
         buttons_hbox.addWidget(cancel_button)
 
         continue_button = QPushButton("Continue")
+        continue_button.setFixedSize(70, 40)
+        continue_button.setStyleSheet(button_continue_style)
+        continue_button.clicked.connect(self.play_action_sound)
         continue_button.clicked.connect(self.process_continue_decision)
         buttons_hbox.addWidget(continue_button)
 
-        layout.addWidget(warning_label)
-        layout.addWidget(warning_label_2)
+        warning_vbox.addWidget(warning_label, alignment=Qt.AlignCenter)
+        warning_vbox.addWidget(warning_label_2, alignment=Qt.AlignCenter)
+        layout.addWidget(warning_widget)
         layout.addLayout(buttons_hbox)
 
         self.setLayout(layout)
 
     def process_cancel_decision(self):
-        self.decision_made.emit(False)
-        self.close()
+        self.sound_cancel.play()
+        QTimer.singleShot(100, lambda: self.decision_made.emit(False))
+        QTimer.singleShot(100, self.close)
+        # self.decision_made.emit(False)
+        # self.close()
 
     def process_continue_decision(self):
-        self.decision_made.emit(True)
-        self.close()
+        self.sound_action.play()
+        QTimer.singleShot(1000, lambda: self.decision_made.emit(True))  # Delay for 100ms
+        QTimer.singleShot(1000, self.close)
+        # self.decision_made.emit(True)
+        # self.close()

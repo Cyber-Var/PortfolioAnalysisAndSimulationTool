@@ -5,11 +5,12 @@ import traceback
 from datetime import date
 
 import pandas as pd
-from PyQt5.QtCore import QEvent, Qt
+from PyQt5.QtCore import QEvent, Qt, QUrl, QTimer
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QIntValidator, QValidator
+from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QStackedWidget, QAction, QDialog, QVBoxLayout, QHBoxLayout, \
-    QLabel, QComboBox, QLineEdit, QScrollArea, QWidget, QMenu
+    QLabel, QComboBox, QLineEdit, QScrollArea, QWidget, QMenu, QPushButton
 
 from Controller import Controller
 from UI.MenuPage import MenuPage
@@ -29,6 +30,16 @@ class MainWindow(QMainWindow):
 
         self.setGeometry(0, 0, 1300, 900)
         self.setStyleSheet("background-color: black;")
+
+        sound_directory = os.path.join(os.path.dirname(__file__), 'sounds')
+        action_sound_path = os.path.join(sound_directory, 'action_button.wav')
+        cancel_sound_path = os.path.join(sound_directory, 'cancel_button.wav')
+
+        self.sound_cancel = QSoundEffect()
+        self.sound_action = QSoundEffect()
+
+        self.sound_action.setSource(QUrl.fromLocalFile(action_sound_path))
+        self.sound_cancel.setSource(QUrl.fromLocalFile(cancel_sound_path))
 
         frame_geom = self.frameGeometry()
         frame_geom.moveCenter(QDesktopWidget().availableGeometry().center())
@@ -59,6 +70,7 @@ class MainWindow(QMainWindow):
         options_menu = self.menuBar().addMenu('Options Menu')
 
         view_top_esg_option = QAction('View top ESG companies', self)
+        view_top_esg_option.triggered.connect(self.sound_cancel.play)
         view_top_esg_option.triggered.connect(self.show_top_esg)
         options_menu.addAction(view_top_esg_option)
 
@@ -66,22 +78,27 @@ class MainWindow(QMainWindow):
         self.previous_frequency = 2
 
         daily_updates = QAction('day', self)
+        daily_updates.triggered.connect(self.sound_action.play)
         daily_updates.triggered.connect(lambda: self.update_ranking_frequency(0))
         ranking_frequency_menu.addAction(daily_updates)
 
         weekly_updates = QAction('week', self)
+        weekly_updates.triggered.connect(self.sound_action.play)
         weekly_updates.triggered.connect(lambda: self.update_ranking_frequency(1))
         ranking_frequency_menu.addAction(weekly_updates)
 
         monthly_updates = QAction('month', self)
+        monthly_updates.triggered.connect(self.sound_action.play)
         monthly_updates.triggered.connect(lambda: self.update_ranking_frequency(2))
         ranking_frequency_menu.addAction(monthly_updates)
 
         update_ranking_frequency_option = QAction('Frequency of algorithms ranking', self)
+        update_ranking_frequency_option.triggered.connect(self.sound_cancel.play)
         update_ranking_frequency_option.setMenu(ranking_frequency_menu)
         options_menu.addAction(update_ranking_frequency_option)
 
         save_activity_option = QAction('Save Activity', self)
+        save_activity_option.triggered.connect(self.sound_action.play)
         save_activity_option.triggered.connect(self.closeEvent)
         options_menu.addAction(save_activity_option)
 
@@ -212,6 +229,16 @@ class TopESGPopUp(QDialog):
             " background-color: black;"
             "}")
 
+        sound_directory = os.path.join(os.path.dirname(__file__), 'sounds')
+        action_sound_path = os.path.join(sound_directory, 'action_button.wav')
+        cancel_sound_path = os.path.join(sound_directory, 'cancel_button.wav')
+
+        self.sound_cancel = QSoundEffect()
+        self.sound_action = QSoundEffect()
+
+        self.sound_action.setSource(QUrl.fromLocalFile(action_sound_path))
+        self.sound_cancel.setSource(QUrl.fromLocalFile(cancel_sound_path))
+
         self.logger = logging.getLogger(__name__)
         self.logger.info("Displaying the Top ESG companies page")
 
@@ -274,12 +301,19 @@ class TopESGPopUp(QDialog):
         self.scrollable_widget.setLayout(scrollable_layout)
         self.scrollable_area.setWidget(self.scrollable_widget)
 
+        cancel_button = QPushButton("Cancel")
+        cancel_button.setFixedSize(70, 40)
+        cancel_button.clicked.connect(self.process_cancel_decision)
+
         layout.addLayout(top_N_hbox)
         layout.addWidget(max_N_label, alignment=Qt.AlignLeft)
         layout.addWidget(self.scrollable_area)
+        layout.addWidget(cancel_button, alignment=Qt.AlignCenter)
 
         self.display_top_esg_companies(False)
         self.setLayout(layout)
+
+        self.finished.connect(self.on_finished)
 
     def display_column_names(self):
         column_names_hbox = QHBoxLayout()
@@ -291,6 +325,10 @@ class TopESGPopUp(QDialog):
         column_names_hbox.addWidget(self.industry_col_name)
 
         return column_names_hbox
+
+    def process_cancel_decision(self):
+        self.sound_cancel.play()
+        QTimer.singleShot(100, self.close)
 
     def create_column_names_label(self, name):
         label = QLabel(name)
@@ -308,6 +346,9 @@ class TopESGPopUp(QDialog):
     def display_top_esg_companies(self, not_first=True):
         if self.top_N == self.previous_top_N and not_first:
             return
+
+        if not_first:
+            self.sound_action.play()
 
         self.logger.info(f"Displaying top {self.top_N} ESG companies.")
 
@@ -352,6 +393,10 @@ class TopESGPopUp(QDialog):
             self.previous_top_N = self.top_N
             self.top_N = int(top_N_entered)
             self.display_top_esg_companies()
+
+    def on_finished(self):
+        self.sound_cancel.play()
+        QTimer.singleShot(5000, self.close)
 
 
 class CustomComboBoxESG(QComboBox):
