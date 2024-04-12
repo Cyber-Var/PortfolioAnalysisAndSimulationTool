@@ -62,9 +62,9 @@ class MainWindow(QMainWindow):
         self.settings_page = SettingsPage(self, self.controller)
 
         self.stacked_widget.addWidget(self.menu_page)
+        self.stacked_widget.addWidget(self.settings_page)
         self.stacked_widget.addWidget(self.portfolio_page)
         self.stacked_widget.addWidget(self.single_stock_page)
-        self.stacked_widget.addWidget(self.settings_page)
 
         self.menu_page.open_portfolio_page.connect(lambda: self.changePage(self.portfolio_page))
         self.menu_page.open_settings_page.connect(self.openSettingsPage)
@@ -79,6 +79,7 @@ class MainWindow(QMainWindow):
         view_top_esg_option.triggered.connect(self.sound_cancel.play)
         view_top_esg_option.triggered.connect(self.show_top_esg)
         options_menu.addAction(view_top_esg_option)
+        options_menu.addSeparator()
 
         ranking_frequency_menu = QMenu("", self)
 
@@ -86,26 +87,31 @@ class MainWindow(QMainWindow):
         daily_updates.triggered.connect(self.sound_action.play)
         daily_updates.triggered.connect(lambda: self.update_ranking_frequency(0))
         ranking_frequency_menu.addAction(daily_updates)
+        ranking_frequency_menu.addSeparator()
 
         weekly_updates = QAction('every week', self)
         weekly_updates.triggered.connect(self.sound_action.play)
         weekly_updates.triggered.connect(lambda: self.update_ranking_frequency(1))
         ranking_frequency_menu.addAction(weekly_updates)
+        ranking_frequency_menu.addSeparator()
 
         monthly_updates = QAction('every month', self)
         monthly_updates.triggered.connect(self.sound_action.play)
         monthly_updates.triggered.connect(lambda: self.update_ranking_frequency(2))
         ranking_frequency_menu.addAction(monthly_updates)
+        ranking_frequency_menu.addSeparator()
 
         update_ranking_frequency_option = QAction('Frequency of algorithms ranking', self)
         update_ranking_frequency_option.triggered.connect(self.sound_cancel.play)
         update_ranking_frequency_option.setMenu(ranking_frequency_menu)
         options_menu.addAction(update_ranking_frequency_option)
+        options_menu.addSeparator()
 
         save_activity_option = QAction('Save Activity', self)
         save_activity_option.triggered.connect(self.sound_action.play)
         save_activity_option.triggered.connect(self.closeEvent)
         options_menu.addAction(save_activity_option)
+        options_menu.addSeparator()
 
     def set_up_controller(self):
         self.logger.info(f'Reading previously saved user activity from file')
@@ -151,12 +157,15 @@ class MainWindow(QMainWindow):
                                     self.controller.results[alg_name][hold_dur][ticker] = float(res[0])
                                     self.controller.predicted_prices[alg_name][hold_dur][ticker] = float(res[1])
                                     if index == 2:
-                                        self.controller.bayesian_confidences[hold_dur][ticker] = (float(res[2]), float(res[3]))
+                                        self.controller.bayesian_confidences[hold_dur][ticker] = (
+                                        float(res[2]), float(res[3]))
 
             return set_algorithms, hold_duration
         except Exception as e:
-            traceback.print_exc()
+            # traceback.print_exc()
             self.logger.error(f"User activity failed to be read. {e}")
+            self.show_error_window("Error occurred when loading the portfolio.", "Some stocks might not be displayed.",
+                                   "Please check your Internet connection.")
             return set_algorithms, "1d"
 
     def changePage(self, page):
@@ -180,7 +189,7 @@ class MainWindow(QMainWindow):
         self.changePage(self.settings_page)
 
     def show_top_esg(self):
-        popup = TopESGPopUp()
+        popup = TopESGPopUp(self)
         popup.exec_()
 
     def update_ranking_frequency(self, freq):
@@ -189,6 +198,10 @@ class MainWindow(QMainWindow):
             self.controller.set_ranking_frequency(freq)
             self.controller.handle_ranking()
         self.previous_frequency = freq
+
+    def show_error_window(self, text_1, text_2, text_3=None):
+        popup = ErrorPopUp(text_1, text_2, text_3)
+        popup.exec_()
 
     def closeEvent(self, event):
         self.logger.info(f'Saving user activity to file.')
@@ -211,22 +224,28 @@ class MainWindow(QMainWindow):
                                 if algorithm == "monte_carlo" or algorithm == "arima":
                                     str_result += "a|"
                                 else:
-                                    str_result += str(alg_results[hold_dur][ticker]) + "," + str(alg_predicted_prices[hold_dur][ticker]) + "|"
+                                    str_result += str(alg_results[hold_dur][ticker]) + "," + str(
+                                        alg_predicted_prices[hold_dur][ticker]) + "|"
                                     if algorithm == "bayesian":
                                         confidence = self.controller.bayesian_confidences[hold_dur][ticker]
-                                        str_result = str_result[:-1] + "," + str(confidence[0]) + "," + str(confidence[1]) + "|"
+                                        str_result = str_result[:-1] + "," + str(confidence[0]) + "," + str(
+                                            confidence[1]) + "|"
                             else:
                                 str_result += "|"
                         f.write(f"{str_result}\n")
         except IOError:
             self.logger.error("Saving user activity to file failed.")
+            self.show_error_window(f"Error occurred when saving your activity.",
+                                   "Some results might not be displayed on your next visit.")
 
 
 class TopESGPopUp(QDialog):
 
-    def __init__(self):
+    def __init__(self, main_window):
         super().__init__()
         self.setWindowTitle("Top companies by ESG score")
+
+        self.main_window = main_window
 
         with open("UI/style.css", "r") as f:
             stylesheet = f.read()
@@ -362,40 +381,44 @@ class TopESGPopUp(QDialog):
 
         self.logger.info(f"Displaying top {self.top_N} ESG companies.")
 
-        top_companies = self.top_companies_df.head(self.top_N)
+        try:
+            top_companies = self.top_companies_df.head(self.top_N)
 
-        self.column_names_hbox = self.display_column_names()
-        new_scrollable_widget = QWidget()
-        new_scrollable_widget.setStyleSheet("border: 2px solid white;")
-        self.top_companies_vbox = QVBoxLayout()
-        self.top_companies_vbox.addLayout(self.column_names_hbox)
-        new_scrollable_widget.setLayout(self.top_companies_vbox)
-        self.scrollable_area.setWidget(new_scrollable_widget)
+            self.column_names_hbox = self.display_column_names()
+            new_scrollable_widget = QWidget()
+            new_scrollable_widget.setStyleSheet("border: 2px solid white;")
+            self.top_companies_vbox = QVBoxLayout()
+            self.top_companies_vbox.addLayout(self.column_names_hbox)
+            new_scrollable_widget.setLayout(self.top_companies_vbox)
+            self.scrollable_area.setWidget(new_scrollable_widget)
 
-        for i in range(self.top_N):
-            results_hbox = QHBoxLayout()
-            index_label = self.create_result_label(str(top_companies["index"].iloc[i]))
-            index_label.setFixedSize(60, 40)
-            index_label.setObjectName("columnNameESG")
-            ticker_label = self.create_result_label(top_companies["ticker"].iloc[i])
-            ticker_label.setFixedSize(60, 40)
-            ticker_label.setObjectName("columnNameESG")
-            stock_name_label = self.create_result_label(top_companies["stock_name"].iloc[i])
-            stock_name_label.setFixedSize(200, 40)
-            stock_name_label.setObjectName("columnNameESG")
-            industry_label = self.create_result_label(top_companies["industry"].iloc[i])
-            industry_label.setFixedSize(350, 40)
-            industry_label.setObjectName("columnNameESG")
+            for i in range(self.top_N):
+                results_hbox = QHBoxLayout()
+                index_label = self.create_result_label(str(top_companies["index"].iloc[i]))
+                index_label.setFixedSize(60, 40)
+                index_label.setObjectName("columnNameESG")
+                ticker_label = self.create_result_label(top_companies["ticker"].iloc[i])
+                ticker_label.setFixedSize(60, 40)
+                ticker_label.setObjectName("columnNameESG")
+                stock_name_label = self.create_result_label(top_companies["stock_name"].iloc[i])
+                stock_name_label.setFixedSize(200, 40)
+                stock_name_label.setObjectName("columnNameESG")
+                industry_label = self.create_result_label(top_companies["industry"].iloc[i])
+                industry_label.setFixedSize(350, 40)
+                industry_label.setObjectName("columnNameESG")
 
-            results_hbox.setSpacing(3)
-            results_hbox.addWidget(index_label)
-            results_hbox.addWidget(ticker_label)
-            results_hbox.addWidget(stock_name_label)
-            results_hbox.addWidget(industry_label)
+                results_hbox.setSpacing(3)
+                results_hbox.addWidget(index_label)
+                results_hbox.addWidget(ticker_label)
+                results_hbox.addWidget(stock_name_label)
+                results_hbox.addWidget(industry_label)
 
-            self.top_companies_vbox.addLayout(results_hbox)
+                self.top_companies_vbox.addLayout(results_hbox)
 
-        self.top_companies_vbox.addStretch(1)
+            self.top_companies_vbox.addStretch(1)
+        except:
+            self.main_window.show_error_window("Error occurred when loading the Top ESG companies.",
+                                               "Please check your Internet connection.")
 
     def top_N_changed(self):
         top_N_entered = self.top_N_combo.currentText()
@@ -446,3 +469,62 @@ class CustomValidator(QValidator):
                 return str(5)
         except ValueError:
             return str(self.min)
+
+
+class ErrorPopUp(QDialog):
+    close_pop_up = pyqtSignal()
+
+    def __init__(self, text_1, text_2, text_3=None):
+        super().__init__()
+        self.setWindowTitle("ERROR")
+
+        with open("UI/style.css", "r") as f:
+            stylesheet = f.read()
+            self.setStyleSheet(stylesheet)
+
+        self.setStyleSheet("QDialog { background-color: #874747; color: black; } QWidget { border: 2px solid #332020; }"
+                           " QLabel { color: black; font-size: 16px; border-color: transparent; font-weight: bold; text-align: center; }"
+                           " QPushButton { background-color: black; color: #FFF; font-weight: bold; outline: none; text-align: center; } "
+                           "QPushButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF40FF, stop:1 #00DDEB); } "
+                           "QPushButton:pressed { background-color: black; }")
+
+        sound_directory = os.path.join(os.path.dirname(__file__), 'sounds')
+        cancel_sound_path = os.path.join(sound_directory, 'cancel_button.wav')
+        self.sound_cancel = QSoundEffect()
+        self.sound_cancel.setSource(QUrl.fromLocalFile(cancel_sound_path))
+
+        layout = QVBoxLayout()
+
+        error_vbox = QVBoxLayout()
+        error_vbox.setSpacing(20)
+        error_widget = QWidget()
+        error_widget.setObjectName("errorVBox")
+        error_widget.setFixedSize(500, 120)
+        error_widget.setLayout(error_vbox)
+
+        error_label_1 = QLabel(text_1)
+        error_label_1.setObjectName("errorLabel")
+        error_label_2 = QLabel(text_2)
+        error_label_2.setObjectName("errorLabel")
+        error_vbox.addWidget(error_label_1, alignment=Qt.AlignCenter)
+        error_vbox.addWidget(error_label_2, alignment=Qt.AlignCenter)
+
+        if text_3 is not None:
+            error_label_3 = QLabel(text_3)
+            error_label_3.setObjectName("errorLabel")
+            error_widget.setFixedSize(500, 180)
+            error_vbox.addWidget(error_label_3, alignment=Qt.AlignCenter)
+
+        cancel_button = QPushButton("Ok")
+        cancel_button.setFixedSize(70, 40)
+        cancel_button.clicked.connect(self.sound_cancel.play)
+        cancel_button.clicked.connect(self.process_cancel_decision)
+
+        layout.addWidget(error_widget)
+        layout.addWidget(cancel_button, alignment=Qt.AlignCenter)
+
+        self.setLayout(layout)
+
+    def process_cancel_decision(self):
+        self.sound_cancel.play()
+        QTimer.singleShot(100, self.close)

@@ -52,6 +52,7 @@ class SingleStockPage(QWidget, Page):
 
         self.setStyleSheet(self.load_stylesheet())
 
+        self.setFixedSize(1330, 900)
         self.setLayout(self.layout)
 
     def set_parameters(self, ticker, stock_name, one_share_price, num_shares, hold_duration, is_long):
@@ -65,11 +66,8 @@ class SingleStockPage(QWidget, Page):
         self.build_page()
 
     def clear_layout(self, layout):
-        if layout is None:
-            print("None!!!")
-        else:
+        if layout is not None:
             while layout.count():
-                print("a")
                 item = layout.takeAt(0)
                 widget = item.widget()
                 if widget is None:
@@ -82,7 +80,7 @@ class SingleStockPage(QWidget, Page):
         self.clear_layout(self.layout)
 
         title_label = self.get_title_label(f'{self.ticker} ({self.stock_name})', "titleLabelSingleStock")
-        title_label.setFixedSize(1300, 50)
+        title_label.setFixedSize(1300, 30)
         self.layout.addWidget(title_label)
 
         main_hbox = QHBoxLayout()
@@ -90,13 +88,13 @@ class SingleStockPage(QWidget, Page):
 
         left_widget = QWidget()
         left_widget.setObjectName("singleStockVBox")
-        left_widget.setFixedSize(500, 800)
+        left_widget.setFixedSize(500, 780)
         self.left_vbox = QVBoxLayout(left_widget)
         main_hbox.addWidget(left_widget)
 
         right_widget = QWidget()
         right_widget.setObjectName("singleStockVBox")
-        right_widget.setFixedSize(800, 800)
+        right_widget.setFixedSize(800, 780)
         self.right_vbox = QVBoxLayout(right_widget)
         main_hbox.addWidget(right_widget)
 
@@ -124,7 +122,7 @@ class SingleStockPage(QWidget, Page):
         info_table = QTableWidget()
         info_table.setRowCount(6)
         info_table.setColumnCount(2)
-        info_table.setFixedSize(300, 222)
+        info_table.setFixedSize(350, 222)
 
         info_table.setColumnWidth(0, 150)
         info_table.setColumnWidth(1, 200)
@@ -260,7 +258,7 @@ class SingleStockPage(QWidget, Page):
     def draw_algorithm_results_box(self):
         algorithm_results_widget = QWidget()
         algorithm_results_widget.setObjectName("singleStockVBox")
-        algorithm_results_widget.setFixedSize(475, 425)
+        algorithm_results_widget.setFixedSize(475, 405)
         self.algorithm_results_vbox = QVBoxLayout(algorithm_results_widget)
         self.algorithm_results_vbox.setSpacing(20)
         self.left_vbox.addWidget(algorithm_results_widget)
@@ -388,11 +386,11 @@ class SingleStockPage(QWidget, Page):
         table.setStyleSheet("QTableWidget { background-color: black; color: white; gridline-color: white; font-size: 15px; }")
 
     def draw_graphs_box(self):
-        graphs_widget = QWidget()
-        graphs_widget.setObjectName("singleStockVBox")
-        graphs_widget.setFixedSize(775, 545)
-        graphs_vbox = QVBoxLayout(graphs_widget)
-        self.right_vbox.addWidget(graphs_widget)
+        self.graphs_widget = QWidget()
+        self.graphs_widget.setObjectName("singleStockVBox")
+        self.graphs_widget.setFixedSize(775, 545)
+        graphs_vbox = QVBoxLayout(self.graphs_widget)
+        self.right_vbox.addWidget(self.graphs_widget)
 
         graphs_choice_hbox = QHBoxLayout()
         graphs_vbox.addLayout(graphs_choice_hbox)
@@ -420,7 +418,7 @@ class SingleStockPage(QWidget, Page):
         graphs_choice_hbox.addWidget(self.moving_average_graph_radio)
         graphs_choice_hbox.addWidget(self.arima_graph_radio)
 
-        self.graph_figure = Figure(figsize=(700, 450), dpi=self.dpi)
+        self.graph_figure = Figure(figsize=(600, 400), dpi=self.dpi)
         self.graph_figure = self.controller.plot_historical_price_data(self.ticker, self.hold_duration, self.graph_figure)
         self.graph_canvas = FigureCanvas(self.graph_figure)
         graphs_vbox.addWidget(self.graph_canvas)
@@ -428,7 +426,7 @@ class SingleStockPage(QWidget, Page):
     def draw_risk_metrics_box(self):
         risk_metrics_widget = QWidget()
         risk_metrics_widget.setObjectName("singleStockVBox")
-        risk_metrics_widget.setFixedSize(775, 225)
+        risk_metrics_widget.setFixedSize(775, 205)
         self.right_vbox.addWidget(risk_metrics_widget)
 
         risk_metrics_vbox = QVBoxLayout(risk_metrics_widget)
@@ -506,23 +504,37 @@ class SingleStockPage(QWidget, Page):
 
         esg_hbox = QHBoxLayout()
 
-        total_score, e_score, s_score, g_score = self.controller.get_esg_scores(self.ticker)
-        esg_frame, esg_frame_layout = self.create_esg_frame()
+        try:
+            total_score, e_score, s_score, g_score = self.controller.get_esg_scores(self.ticker)
+            if total_score is not None and e_score is not None and s_score is not None and g_score is not None:
+                esg_frame, esg_frame_layout = self.create_esg_frame()
 
-        esg_top_label = QLabel(f"ESG Score = {total_score}")
-        esg_top_label.setObjectName("riskMetricTopLabel")
-        esg_top_label.setFixedSize(220, 30)
+                esg_top_label = QLabel(f"ESG Score = {total_score}")
+                esg_top_label.setObjectName("riskMetricTopLabel")
+                esg_top_label.setFixedSize(220, 30)
 
-        # esg_bottom_label = QLabel(f"E-Score = {e_score}, S-Score = {s_score}, G-Score = {g_score}")
-        esg_bottom_label = QLabel(f"<font color='red'>E-Score = {e_score},</font>\t<font color='green'>S-Score = {s_score},</font>\t<font color='blue'>G-Score = {g_score}</font>")
-        esg_bottom_label.setObjectName("riskMetricBottomLabel")
-        esg_bottom_label.setFixedSize(450, 30)
-        # esg_bottom_label.setAlignment(Qt.AlignCenter)
+                # esg_bottom_label = QLabel(f"E-Score = {e_score}, S-Score = {s_score}, G-Score = {g_score}")
+                esg_bottom_label = QLabel(f"<font color='red'>E-Score = {e_score},</font>\t<font color='green'>S-Score = {s_score},</font>\t<font color='blue'>G-Score = {g_score}</font>")
+                esg_bottom_label.setObjectName("riskMetricBottomLabel")
+                esg_bottom_label.setFixedSize(450, 30)
+                # esg_bottom_label.setAlignment(Qt.AlignCenter)
 
-        esg_frame_layout.addWidget(esg_top_label, alignment=Qt.AlignCenter)
-        esg_frame_layout.addWidget(esg_bottom_label, alignment=Qt.AlignCenter)
-        esg_frame.setFixedSize(600, 90)
-        esg_hbox.addWidget(esg_frame)
+                esg_frame_layout.addWidget(esg_top_label, alignment=Qt.AlignCenter)
+                esg_frame_layout.addWidget(esg_bottom_label, alignment=Qt.AlignCenter)
+                esg_frame.setFixedSize(600, 70)
+                esg_hbox.addWidget(esg_frame)
+            else:
+                self.main_window.show_error_window("This stock was not found in the API that is used",
+                                                   "to provide ESG scores.",
+                                                   "Therefore, its ESG scores are not displayed.")
+                self.graphs_widget.setFixedSize(775, 645)
+                risk_metrics_widget.setFixedSize(775, 120)
+        except:
+            self.main_window.show_error_window(f"Error occurred when trying to load the ESG scores for {self.ticker}.",
+                                               "Its results will not be displayed.",
+                                               "Please check your Internet connection.")
+            self.graphs_widget.setFixedSize(775, 645)
+            risk_metrics_widget.setFixedSize(775, 120)
 
         risk_metrics_vbox.addLayout(risk_metrics_hbox)
         risk_metrics_vbox.addLayout(esg_hbox)

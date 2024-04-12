@@ -99,11 +99,6 @@ QLabel {
     padding: 0;
 }
 
-/*#infoLabelSingleStock {*/
-/*    font-size: 15px;*/
-/*    color: white;*/
-/*}*/
-
 #riskMetricLabel {
     font-size: 15px;
     color: white;
@@ -136,6 +131,11 @@ QLabel {
     color: black;
     background-color: white;
 }
+
+/*#errorLabel {*/
+/*    color: black;*/
+/*    font-size: 18px;*/
+/*}*/
 
 
 
@@ -323,6 +323,11 @@ QWidget {
 #addStockVBox {
     border: 2px solid #4D4D4D;
 }
+
+/*#errorVBox {*/
+/*    background-color: #874747;*/
+/*    color: black;*/
+/*}*/
 
 #rankingHBox {
     border: 2px solid white;
