@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QStackedWidget, QAction
 from Controller import Controller
 from UI.MenuPage import MenuPage
 from UI.PortfolioPage import PortfolioPage
+from UI.SettingsPage import SettingsPage
 from UI.SingleStockPage import SingleStockPage
 
 
@@ -51,21 +52,26 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.stacked_widget)
 
         self.controller = Controller()
+        self.previous_frequency = self.controller.read_ranking_frequency()
         self.hold_durations = ["1d", "1w", "1m"]
         set_algorithms, hold_duration = self.set_up_controller()
 
         self.menu_page = MenuPage(self, self.controller)
         self.portfolio_page = PortfolioPage(self, self.controller, set_algorithms, hold_duration)
         self.single_stock_page = SingleStockPage(self, self.controller, dpi)
+        self.settings_page = SettingsPage(self, self.controller)
 
         self.stacked_widget.addWidget(self.menu_page)
         self.stacked_widget.addWidget(self.portfolio_page)
         self.stacked_widget.addWidget(self.single_stock_page)
+        self.stacked_widget.addWidget(self.settings_page)
 
         self.menu_page.open_portfolio_page.connect(lambda: self.changePage(self.portfolio_page))
+        self.menu_page.open_settings_page.connect(self.openSettingsPage)
         self.portfolio_page.back_to_menu_page.connect(self.goBack)
         self.portfolio_page.open_single_stock_page.connect(self.openSingleStockPage)
         self.single_stock_page.back_to_portfolio_page.connect(self.goBack)
+        self.settings_page.back_to_menu_page.connect(self.goBack)
 
         options_menu = self.menuBar().addMenu('Options Menu')
 
@@ -74,20 +80,19 @@ class MainWindow(QMainWindow):
         view_top_esg_option.triggered.connect(self.show_top_esg)
         options_menu.addAction(view_top_esg_option)
 
-        ranking_frequency_menu = QMenu('Update ranking every:', self)
-        self.previous_frequency = 2
+        ranking_frequency_menu = QMenu("", self)
 
-        daily_updates = QAction('day', self)
+        daily_updates = QAction('every day', self)
         daily_updates.triggered.connect(self.sound_action.play)
         daily_updates.triggered.connect(lambda: self.update_ranking_frequency(0))
         ranking_frequency_menu.addAction(daily_updates)
 
-        weekly_updates = QAction('week', self)
+        weekly_updates = QAction('every week', self)
         weekly_updates.triggered.connect(self.sound_action.play)
         weekly_updates.triggered.connect(lambda: self.update_ranking_frequency(1))
         ranking_frequency_menu.addAction(weekly_updates)
 
-        monthly_updates = QAction('month', self)
+        monthly_updates = QAction('every month', self)
         monthly_updates.triggered.connect(self.sound_action.play)
         monthly_updates.triggered.connect(lambda: self.update_ranking_frequency(2))
         ranking_frequency_menu.addAction(monthly_updates)
@@ -170,13 +175,18 @@ class MainWindow(QMainWindow):
         self.single_stock_page.set_parameters(ticker, stock_name, one_share_price, num_shares, hold_duration, is_long)
         self.changePage(self.single_stock_page)
 
+    def openSettingsPage(self):
+        self.settings_page.set_checked()
+        self.changePage(self.settings_page)
+
     def show_top_esg(self):
         popup = TopESGPopUp()
         popup.exec_()
 
     def update_ranking_frequency(self, freq):
+        self.logger.info(f"Updating ranking frequency to {freq}")
         if self.previous_frequency != freq:
-            self.controller.ranking_frequency = freq
+            self.controller.set_ranking_frequency(freq)
             self.controller.handle_ranking()
         self.previous_frequency = freq
 

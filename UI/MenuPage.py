@@ -7,6 +7,7 @@ from UI.Page import Page
 class MenuPage(QWidget, Page):
 
     open_portfolio_page = pyqtSignal()
+    open_settings_page = pyqtSignal()
 
     def __init__(self, main_window, controller):
         super().__init__()
@@ -42,7 +43,7 @@ class MenuPage(QWidget, Page):
 
         portfolio_button.clicked.connect(self.open_portfolio_page.emit)
         # manual_button.clicked.connect(self.open_manual_page)
-        # settings_button.clicked.connect(self.open_settings_page)
+        settings_button.clicked.connect(self.open_settings_page.emit)
         exit_button.clicked.connect(self.quit_app)
 
         self.layout.addStretch()

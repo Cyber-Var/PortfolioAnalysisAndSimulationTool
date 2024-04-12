@@ -35,6 +35,8 @@ class Controller:
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S')
 
+        self.ranking_frequency = self.read_ranking_frequency()
+
         today = date.today()
         self.end_date = today
 
@@ -212,9 +214,7 @@ class Controller:
                 if ticker in alg_results[hold_dur]:
                     if only_change_sign:
                         if algorithm != 3:
-                            print(self.results[alg_name][hold_dur][ticker])
                             self.results[alg_name][hold_dur][ticker] = -self.results[alg_name][hold_dur][ticker]
-                            print(self.results[alg_name][hold_dur][ticker])
                     else:
                         self.run_algorithm(ticker, algorithm, hold_dur)
 
@@ -473,7 +473,6 @@ class Controller:
         final_result = 0
         if index == 2:
             for ticker, confidences in self.bayesian_confidences[hold_duration].items():
-                print(self.results[algorithm_name][hold_duration][ticker])
                 if self.results[algorithm_name][hold_duration][ticker] >= 0:
                     final_result += abs(confidences[1])
                 else:
@@ -590,9 +589,7 @@ class Controller:
 
     def check_date_for_ranking_update(self, current_date, last_date):
         try:
-            self.ranking_frequency = int(last_date[3])
-            print(current_date.day, current_date.month, current_date.year)
-            print(last_date[0], last_date[1], last_date[2], last_date[3])
+            # self.ranking_frequency = int(last_date[3])
             if self.ranking_frequency == 0:
                 return str(current_date.day) != last_date[0] or str(current_date.month) != last_date[1] or str(
                     current_date.year) != last_date[2]
@@ -601,7 +598,7 @@ class Controller:
                 date2 = datetime(int(last_date[2]), int(last_date[1]), int(last_date[0]))
                 _, week1, _ = date1.isocalendar()
                 _, week2, _ = date2.isocalendar()
-                print(week1, week2)
+                # print(week1, week2)
                 return week1 != week2 or str(current_date.year) != last_date[2]
             elif self.ranking_frequency == 2:
                 return str(current_date.month) != last_date[1] or str(current_date.year) != last_date[2]
@@ -610,6 +607,21 @@ class Controller:
         except Exception as e:
             print(e)
             return True
+
+    def read_ranking_frequency(self):
+        try:
+            with open("ranking.txt", 'r') as file:
+                first_line = file.readline().strip()
+                if not first_line:
+                    return 2
+                else:
+                    self.ranking_frequency = int(first_line.split()[-1])
+                    return self.ranking_frequency
+        except FileNotFoundError:
+            return 2
+
+    def set_ranking_frequency(self, freq):
+        self.ranking_frequency = freq
 
     def handle_ranking(self, need_to_update=False):
         current_date = datetime.now()
@@ -621,8 +633,6 @@ class Controller:
                 last_date = file.readline().split()
             if should_update or len(last_date) < 2 or self.check_date_for_ranking_update(current_date, last_date):
                 should_update = True
-
-        print(should_update)
 
         start_time = time.time()
         if not os.path.exists(ranking_file_name) or should_update or need_to_update:
