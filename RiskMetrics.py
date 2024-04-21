@@ -37,7 +37,7 @@ class RiskMetrics:
         return volatility, daily_category
 
     def calculateSharpeRatio(self, ticker):
-        risk_free_rate = 1.05 ** (1 / 252) - 1 # or maybe 1.02 instead of 1.05 ???
+        risk_free_rate = 1.02 ** (1 / 252) - 1
         if len(self.tickers) == 1:
             excess = self.daily_returns - risk_free_rate
         else:
@@ -45,7 +45,7 @@ class RiskMetrics:
         sharpe_ratio = excess.mean() / excess.std()
 
         # Make the Sharpe ratio annualized:
-        sharpe_ratio = sharpe_ratio # * (252 ** 0.5)
+        sharpe_ratio = sharpe_ratio * (252 ** 0.5)
 
         if sharpe_ratio < 0.1:
             sharpe_category = "Low"

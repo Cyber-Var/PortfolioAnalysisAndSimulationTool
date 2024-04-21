@@ -506,29 +506,53 @@ class SingleStockPage(QWidget, Page):
 
         try:
             total_score, e_score, s_score, g_score = self.controller.get_esg_scores(self.ticker)
-            if total_score is not None and e_score is not None and s_score is not None and g_score is not None:
-                esg_frame, esg_frame_layout = self.create_esg_frame()
+            esg_frame, esg_frame_layout = self.create_esg_frame()
 
-                esg_top_label = QLabel(f"ESG Score = {total_score}")
-                esg_top_label.setObjectName("riskMetricTopLabel")
-                esg_top_label.setFixedSize(220, 30)
-
-                # esg_bottom_label = QLabel(f"E-Score = {e_score}, S-Score = {s_score}, G-Score = {g_score}")
-                esg_bottom_label = QLabel(f"<font color='red'>E-Score = {e_score},</font>\t<font color='green'>S-Score = {s_score},</font>\t<font color='blue'>G-Score = {g_score}</font>")
-                esg_bottom_label.setObjectName("riskMetricBottomLabel")
-                esg_bottom_label.setFixedSize(450, 30)
-                # esg_bottom_label.setAlignment(Qt.AlignCenter)
-
-                esg_frame_layout.addWidget(esg_top_label, alignment=Qt.AlignCenter)
-                esg_frame_layout.addWidget(esg_bottom_label, alignment=Qt.AlignCenter)
-                esg_frame.setFixedSize(600, 70)
-                esg_hbox.addWidget(esg_frame)
+            if self.ticker in self.main_window.tickers_and_esg_indices:
+                place = self.main_window.tickers_and_esg_indices.index(self.ticker) + 1
+                if place <= 5:
+                    esg_place = "in top 5"
+                elif place <= 10:
+                    esg_place = "in top 10"
+                elif place <= 20:
+                    esg_place = "in top 20"
+                elif place <= 50:
+                    esg_place = "in top 50"
+                else:
+                    esg_place = "in top 100"
             else:
-                self.main_window.show_error_window("This stock was not found in the API that is used",
-                                                   "to provide ESG scores.",
-                                                   "Therefore, its ESG scores are not displayed.")
-                self.graphs_widget.setFixedSize(775, 645)
-                risk_metrics_widget.setFixedSize(775, 120)
+                esg_place = "not in top 100"
+
+            if total_score is not None and e_score is not None and s_score is not None and g_score is not None:
+                esg_top_label = QLabel(f"ESG Score = {total_score} ({esg_place})")
+                esg_bottom_label = QLabel(f"<font color='red'>E-Score = {e_score},</font>\t<font color='green'>S-Score = {s_score},</font>\t<font color='blue'>G-Score = {g_score}</font>")
+
+                esg_top_label.setFixedSize(355, 30)
+                esg_bottom_label.setFixedSize(450, 30)
+            else:
+                esg_top_label = QLabel("ESG score unavailable,")
+                if esg_place == "not in top 100":
+                    esg_bottom_label = QLabel("the company is not in top 100")
+                else:
+                    esg_bottom_label = QLabel("but the company is in top 100")
+
+                esg_top_label.setFixedSize(300, 30)
+                esg_bottom_label.setFixedSize(330, 30)
+
+            esg_top_label.setObjectName("riskMetricTopLabel")
+            esg_bottom_label.setObjectName("riskMetricBottomLabel")
+
+            esg_frame_layout.addWidget(esg_top_label, alignment=Qt.AlignCenter)
+            esg_frame_layout.addWidget(esg_bottom_label, alignment=Qt.AlignCenter)
+            esg_frame.setFixedSize(600, 70)
+            esg_hbox.addWidget(esg_frame)
+
+            # else:
+            #     self.main_window.show_error_window("This stock was not found in the API that is used",
+            #                                        "to provide ESG scores.",
+            #                                        "Therefore, its ESG scores are not displayed.")
+            #     self.graphs_widget.setFixedSize(775, 645)
+            #     risk_metrics_widget.setFixedSize(775, 120)
         except:
             self.main_window.show_error_window(f"Error occurred when trying to load the ESG scores for {self.ticker}.",
                                                "Its results will not be displayed.",

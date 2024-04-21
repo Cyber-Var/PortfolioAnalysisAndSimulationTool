@@ -51,6 +51,9 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
+        self.top_companies_df = pd.read_csv('top_esg_companies.csv', sep=';')
+        self.tickers_and_esg_indices = list(self.top_companies_df["ticker"])
+
         self.controller = Controller()
         self.previous_frequency = self.controller.read_ranking_frequency()
         self.hold_durations = ["1d", "1w", "1m"]
@@ -273,7 +276,7 @@ class TopESGPopUp(QDialog):
 
         self.previous_top_N = 0
         self.top_N = 5
-        self.top_companies_df = pd.read_csv('top_esg_companies.csv', sep=';')
+        # self.top_companies_df = pd.read_csv('top_esg_companies.csv', sep=';')
 
         layout = QVBoxLayout()
 
@@ -382,7 +385,7 @@ class TopESGPopUp(QDialog):
         self.logger.info(f"Displaying top {self.top_N} ESG companies.")
 
         try:
-            top_companies = self.top_companies_df.head(self.top_N)
+            top_companies = self.main_window.top_companies_df.head(self.top_N)
 
             self.column_names_hbox = self.display_column_names()
             new_scrollable_widget = QWidget()
@@ -430,6 +433,10 @@ class TopESGPopUp(QDialog):
     def on_finished(self):
         self.sound_cancel.play()
         QTimer.singleShot(5000, self.close)
+
+    def keyPressEvent(self, event):
+        if event.key() not in (Qt.Key_Enter, Qt.Key_Return):
+            super().keyPressEvent(event)
 
 
 class CustomComboBoxESG(QComboBox):
