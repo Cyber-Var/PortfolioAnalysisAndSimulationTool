@@ -56,16 +56,8 @@ class MenuPage(QWidget, Page):
         self.layout.addWidget(button, alignment=Qt.AlignHCenter)
         return button
 
-    # def open_manual_page(self):
-    #     self.logger.info('Opening the User Manual Page')
-    #
-    # def open_settings_page(self):
-    #     self.logger.info('Opening the Settings Page')
-
     def quit_app(self):
         self.logger.info('Exiting the Application')
         self.play_cancel_sound()
         QTimer.singleShot(500, lambda: self.main_window.closeEvent(None))
         QTimer.singleShot(500, QApplication.instance().quit)
-        # self.main_window.closeEvent(None)
-        # QApplication.instance().quit()

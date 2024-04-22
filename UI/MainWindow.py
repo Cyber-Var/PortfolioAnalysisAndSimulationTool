@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
 
         self.dpi = dpi
 
-        self.setGeometry(0, 0, 1300, 900)
+        self.setGeometry(0, 0, 1425, 900)
         self.setStyleSheet("background-color: black;")
 
         sound_directory = os.path.join(os.path.dirname(__file__), 'sounds')
@@ -42,9 +42,9 @@ class MainWindow(QMainWindow):
         self.sound_action.setSource(QUrl.fromLocalFile(action_sound_path))
         self.sound_cancel.setSource(QUrl.fromLocalFile(cancel_sound_path))
 
-        frame_geom = self.frameGeometry()
-        frame_geom.moveCenter(QDesktopWidget().availableGeometry().center())
-        self.move(frame_geom.topLeft())
+        self.frame_geom = self.frameGeometry()
+        self.frame_geom.moveCenter(QDesktopWidget().availableGeometry().center())
+        self.move(self.frame_geom.topLeft())
 
         self.page_history = []
 
@@ -172,6 +172,13 @@ class MainWindow(QMainWindow):
             return set_algorithms, "1d"
 
     def changePage(self, page):
+        if page == self.portfolio_page:
+            self.setGeometry(0, 0, 1425, 900)
+        else:
+            self.setGeometry(0, 0, 1300, 900)
+        self.frame_geom.moveCenter(QDesktopWidget().availableGeometry().center())
+        self.move(self.frame_geom.topLeft())
+
         currentIndex = self.stacked_widget.currentIndex()
         currentPage = self.stacked_widget.widget(currentIndex)
         self.page_history.append(currentPage)

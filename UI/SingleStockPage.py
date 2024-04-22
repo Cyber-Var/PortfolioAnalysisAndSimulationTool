@@ -546,13 +546,6 @@ class SingleStockPage(QWidget, Page):
             esg_frame_layout.addWidget(esg_bottom_label, alignment=Qt.AlignCenter)
             esg_frame.setFixedSize(600, 70)
             esg_hbox.addWidget(esg_frame)
-
-            # else:
-            #     self.main_window.show_error_window("This stock was not found in the API that is used",
-            #                                        "to provide ESG scores.",
-            #                                        "Therefore, its ESG scores are not displayed.")
-            #     self.graphs_widget.setFixedSize(775, 645)
-            #     risk_metrics_widget.setFixedSize(775, 120)
         except:
             self.main_window.show_error_window(f"Error occurred when trying to load the ESG scores for {self.ticker}.",
                                                "Its results will not be displayed.",
