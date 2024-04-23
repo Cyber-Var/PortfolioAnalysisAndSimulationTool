@@ -9,7 +9,7 @@ from UI.MainWindow import MainWindow
 # from Controller import Controller
 # controller = Controller()
 # controller.add_ticker("AAPL", 2, None, True)
-# controller.run_monte_carlo("AAPL", "1w")
+# controller.run_linear_regression("AAPL", "1m", True)
 
 
 app = QApplication(sys.argv)

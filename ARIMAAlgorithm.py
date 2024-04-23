@@ -36,6 +36,7 @@ class ARIMAAlgorithm(Regression):
             self.historical_range_for_graph = 90
 
     def get_data_for_prediction(self):
+        # TODO: try without this, with full data:
         if self.hold_duration == "1d":
             train_start = date.today() - relativedelta(months=6)
         elif self.hold_duration == "1w":

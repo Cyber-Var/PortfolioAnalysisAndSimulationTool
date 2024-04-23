@@ -366,6 +366,7 @@ class Controller:
 
         # The lower the rating, the more ethical and sustainable a company is.
         scores = yesg.get_historic_esg(ticker).iloc[-1]
+        print(scores)
         e_score = scores["E-Score"]
         s_score = scores["S-Score"]
         g_score = scores["G-Score"]
@@ -397,7 +398,6 @@ class Controller:
         sharpe_ratio, sharpe_ratio_cat = risk_metrics.calculateSharpeRatio(ticker)
         VaR = risk_metrics.calculateVaR(ticker, 0.95, vol)
 
-        # TODO: maybe different sharpe ratio and VaR should be calculated for 1d, 1w and 1m ?
         self.volatilities[ticker] = (vol, cat)
         self.sharpe_ratios[ticker] = (sharpe_ratio, sharpe_ratio_cat)
         self.VaRs[ticker] = VaR

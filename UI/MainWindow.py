@@ -172,12 +172,7 @@ class MainWindow(QMainWindow):
             return set_algorithms, "1d"
 
     def changePage(self, page):
-        if page == self.portfolio_page:
-            self.setGeometry(0, 0, 1425, 900)
-        else:
-            self.setGeometry(0, 0, 1300, 900)
-        self.frame_geom.moveCenter(QDesktopWidget().availableGeometry().center())
-        self.move(self.frame_geom.topLeft())
+        self.format_page_size(page)
 
         currentIndex = self.stacked_widget.currentIndex()
         currentPage = self.stacked_widget.widget(currentIndex)
@@ -188,7 +183,16 @@ class MainWindow(QMainWindow):
     def goBack(self):
         if self.page_history:
             previousPage = self.page_history.pop()
+            self.format_page_size(previousPage)
             self.stacked_widget.setCurrentWidget(previousPage)
+
+    def format_page_size(self, page):
+        if page == self.portfolio_page:
+            self.setGeometry(0, 0, 1425, 900)
+        else:
+            self.setGeometry(0, 0, 1300, 900)
+        self.frame_geom.moveCenter(QDesktopWidget().availableGeometry().center())
+        self.move(self.frame_geom.topLeft())
 
     def openSingleStockPage(self, ticker, stock_name, one_share_price, num_shares, hold_duration, is_long):
         self.single_stock_page.set_parameters(ticker, stock_name, one_share_price, num_shares, hold_duration, is_long)
@@ -424,6 +428,12 @@ class TopESGPopUp(QDialog):
                 results_hbox.addWidget(industry_label)
 
                 self.top_companies_vbox.addLayout(results_hbox)
+
+            source_label = QLabel("The rating is taken from "
+                                                     "https://www.investors.com/news/esg-stocks-list-of-100-best-esg-companies/")
+            source_label.setObjectName("sourceLabel")
+            source_label.setFixedWidth(490)
+            self.top_companies_vbox.addWidget(source_label, alignment=Qt.AlignCenter)
 
             self.top_companies_vbox.addStretch(1)
         except:

@@ -65,9 +65,8 @@ class MonteCarloSimulation(Regression):
         daily_returns = data.pct_change(self.days).dropna()
         returns = np.log(1 + daily_returns)
 
-        # mu:
         mu = returns.mean()
-        # sigma:
+        # volatility:
         sigma = returns.std()
 
         return s_0, mu, sigma
