@@ -61,11 +61,12 @@ class ARIMAAlgorithm(Regression):
 
         profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
         profit_loss_confidence = (confidence_interval[0] / prediction) * profit_loss_amount * 0.1
+        profit_loss_confidence += profit_loss_amount * 0.1
         print(f"Predicted profit/loss: {profit_loss_amount} +/- {profit_loss_confidence} pounds.")
         return profit_loss_amount, predicted_price, confidence * 0.1, profit_loss_confidence
 
     def setup_model(self, data):
-        arima_model = ARIMA(data["Adj Close"], order=self.arima_order).fit()
+        arima_model = ARIMA(data["Adj Close"], order=self.arima_order, enforce_stationarity=False).fit()
         return arima_model
 
     def make_prediction(self, model):

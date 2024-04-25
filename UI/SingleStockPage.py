@@ -13,7 +13,7 @@ from UI.Page import Page
 class SingleStockPage(QWidget, Page):
 
     back_to_portfolio_page = pyqtSignal()
-    algorithm_names = ["Linear Regression", "Random Forest", "Bayesian", "Monte Carlo Simulation", "LSTM", "ARIMA"]
+    algorithm_names = ["Linear Regression", "Random Forest", "Bayesian", "Monte Carlo Simulation", "ARIMA"]
     color_green = QColor('#00FF00')
     color_red = QColor('#FF0000')
 
@@ -304,10 +304,10 @@ class SingleStockPage(QWidget, Page):
 
         self.algorithm_results = [self.controller.linear_regression_results, self.controller.random_forest_results,
                                   self.controller.bayesian_results, self.controller.monte_carlo_results,
-                                  self.controller.lstm_results, self.controller.arima_results]
+                                  self.controller.arima_results]
         self.algorithm_predicted_prices = [self.controller.linear_regression_predicted_prices, self.controller.random_forest_predicted_prices,
                                   self.controller.bayesian_predicted_prices, self.controller.monte_carlo_predicted_prices,
-                                  self.controller.lstm_predicted_prices, self.controller.arima_predicted_prices]
+                                  self.controller.arima_predicted_prices]
 
         monte_probabilities_hbox = QHBoxLayout()
 
@@ -627,7 +627,7 @@ class SingleStockPage(QWidget, Page):
             self.graph_figure = self.controller.plotMovingAverage(self.ticker, self.hold_duration, self.graph_figure)
         else:
             self.logger.info("Displaying the ARIMA graph.")
-            self.algorithms_combo.setCurrentIndex(6)
+            self.algorithms_combo.setCurrentIndex(5)
             self.algorithm_changed()
             self.graph_figure = self.controller.plotARIMA(self.ticker, self.hold_duration, self.graph_figure)
         self.graph_canvas.draw()
@@ -657,7 +657,7 @@ class SingleStockPage(QWidget, Page):
                 self.results_table.item(0, 1).setText(
                     f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}"
                     f" +/- {self.controller.bayesian_confidences[self.hold_duration][self.ticker][0]:.2f}")
-            elif algorithm_index == 5:
+            elif algorithm_index == 4:
                 self.arima_graph_radio.setChecked(True)
                 self.results_table.item(0, 1).setText(
                     f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}"
@@ -724,7 +724,7 @@ class SingleStockPage(QWidget, Page):
 
                 if algorithm_index == 2:
                     str_result += f" +/- {abs(self.controller.bayesian_confidences[self.hold_duration][self.ticker][1]):.2f}"
-                elif algorithm_index == 5:
+                elif algorithm_index == 4:
                     str_result += f" +/- {abs(self.controller.arima_confidences[self.hold_duration][self.ticker][1]):.2f}"
 
                 self.results_table.item(1, 1).setText(str_result)

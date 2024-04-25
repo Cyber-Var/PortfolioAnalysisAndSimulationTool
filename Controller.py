@@ -29,7 +29,7 @@ import logging
 
 class Controller:
 
-    algorithms = ["linear_regression", "random_forest", "bayesian", "monte_carlo", "lstm", "arima"]
+    algorithms = ["linear_regression", "random_forest", "bayesian", "monte_carlo", "arima"]
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s',
@@ -88,7 +88,7 @@ class Controller:
         self.montes = {"1d": {}, "1w": {}, "1m": {}}
         self.monte_plot_labels = {"1d": {}, "1w": {}, "1m": {}}
         self.monte_probabilities = {"1d": {}, "1w": {}, "1m": {}}
-        self.lstm_results = {"1d": {}, "1w": {}, "1m": {}}
+        # self.lstm_results = {"1d": {}, "1w": {}, "1m": {}}
         self.arima_results = {"1d": {}, "1w": {}, "1m": {}}
         self.arimas = {"1d": {}, "1w": {}, "1m": {}}
         self.arima_confidences = {"1d": {}, "1w": {}, "1m": {}}
@@ -97,7 +97,7 @@ class Controller:
         self.random_forest_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
         self.bayesian_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
         self.monte_carlo_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
-        self.lstm_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
+        # self.lstm_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
         self.arima_predicted_prices = {"1d": {}, "1w": {}, "1m": {}}
 
         self.predicted_prices = {
@@ -105,7 +105,7 @@ class Controller:
             "random_forest": self.random_forest_predicted_prices,
             "bayesian": self.bayesian_predicted_prices,
             "monte_carlo": self.monte_carlo_predicted_prices,
-            "lstm": self.lstm_predicted_prices,
+            # "lstm": self.lstm_predicted_prices,
             "arima": self.arima_predicted_prices,
         }
 
@@ -124,7 +124,7 @@ class Controller:
             "random_forest": self.random_forest_results,
             "bayesian": self.bayesian_results,
             "monte_carlo": self.monte_carlo_results,
-            "lstm": self.lstm_results,
+            # "lstm": self.lstm_results,
             "arima": self.arima_results,
         }
 
@@ -132,7 +132,7 @@ class Controller:
         self.random_forest_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
         self.bayesian_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
         self.monte_carlo_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
-        self.lstm_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
+        # self.lstm_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
         self.arima_evaluation = {hold_duration: {ticker: None for ticker in ["AAPL", "TSLA", "AMD"]} for hold_duration in ["1d", "1w", "1m"]}
 
         self.evaluations = {
@@ -140,7 +140,7 @@ class Controller:
             "random_forest": self.random_forest_evaluation,
             "bayesian": self.bayesian_evaluation,
             "monte_carlo": self.monte_carlo_evaluation,
-            "lstm": self.lstm_evaluation,
+            # "lstm": self.lstm_evaluation,
             "arima": self.arima_evaluation,
         }
         self.eval_tickers = ["AAPL", "TSLA", "AMD"]
@@ -203,6 +203,10 @@ class Controller:
             if ticker in self.arima_confidences[hold_dur].keys():
                 del self.arima_confidences[hold_dur][ticker]
 
+        for hold_dur in self.arima_confidences.keys():
+            if ticker in self.monte_carlo_results[hold_dur].keys():
+                del self.monte_carlo_results[hold_dur][ticker]
+
     def update_stock_info(self, ticker, num_shares, investment, is_long, algorithm_indices, only_change_sign):
         self.tickers_and_investments[ticker] = investment
         self.tickers_and_long_or_short[ticker] = is_long
@@ -229,8 +233,6 @@ class Controller:
         elif algorithm_index == 3:
             return self.run_monte_carlo(ticker, hold_duration, evaluate)
         elif algorithm_index == 4:
-            return self.run_lstm(ticker, hold_duration, evaluate)
-        elif algorithm_index == 5:
             return self.run_arima(ticker, hold_duration, evaluate)
 
     def run_linear_regression(self, ticker, hold_duration, evaluate=False):
@@ -496,6 +498,8 @@ class Controller:
         total_negatives = 0
         total_negatives2 = 0
         total_investments = 0
+        
+        print(self.monte_carlo_results)
 
         for ticker in self.monte_carlo_results[hold_duration].keys():
             monte_result = self.monte_carlo_results[hold_duration][ticker]
@@ -655,66 +659,37 @@ class Controller:
         return self.read_rankings_from_file()
 
     def update_ranking(self):
-        self.add_ticker("AAPL", 1000, None, True)
-        self.add_ticker("TSLA", 2000, None, True)
-        self.add_ticker("AMD", 1000, None, False)
+        should_remove = []
+        for ticker in ["AAPL", "TSLA", "AMD"]:
+            if ticker not in self.tickers_and_investments.keys():
+                should_remove.append(ticker)
+                self.add_ticker(ticker, 1, None, True)
 
-        for algorithm_index in range(6):
+        for algorithm_index in range(5):
             for ticker in self.eval_tickers:
                 self.run_algorithm(ticker, algorithm_index, "1d", True)
                 self.run_algorithm(ticker, algorithm_index, "1w", True)
                 self.run_algorithm(ticker, algorithm_index, "1m", True)
 
-        # print(self.evaluations)
-
-        # Sum the MSE, MAE, MAPE and R^2 scores of each algorithm, separately for daily, weekly and monthly predictions:
-
-        sums_mse = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
-                      self.evaluations.keys()}
-        sums_mae = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
-                      self.evaluations.keys()}
         sums_mape = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
-                      self.evaluations.keys()}
-        sums_r2 = {algorithm: {duration: 0 for duration in ["1d", "1w", "1m"]} for algorithm in
                       self.evaluations.keys()}
 
         for algorithm in self.algorithms:
             for hold_dur in self.evaluations[algorithm].keys():
                 for ticker in self.evaluations[algorithm][hold_dur].keys():
-                    evals = self.evaluations[algorithm][hold_dur][ticker]
-                    sums_mse[algorithm][hold_dur] += evals[0]
-                    sums_mae[algorithm][hold_dur] += evals[1]
-                    sums_mape[algorithm][hold_dur] += evals[2]
-                    sums_r2[algorithm][hold_dur] -= evals[3]
-        # print(sums_mse)
-        # print(sums_mae)
-        # print(sums_mape)
-        # print(sums_r2)
+                    mape = self.evaluations[algorithm][hold_dur][ticker]
+                    sums_mape[algorithm][hold_dur] += mape
 
-        # Rank the algorithms based on MSE, MAE, MAPE and R^2 separately:
-        rankings_mse = {}
-        rankings_mae = {}
+        print(sums_mape)
+
+        # Rank the algorithms based on MAPE error metric:
         rankings_mape = {}
-        rankings_r2 = {}
         new_index = random.randint(0, 1)
         for duration in ["1d", "1w", "1m"]:
-            rankings_mse[duration] = sorted([(alg, sums_mse[alg][duration]) for alg in sums_mse], key=lambda x: x[1])
-            rankings_mae[duration] = sorted([(alg, sums_mae[alg][duration]) for alg in sums_mae], key=lambda x: x[1])
             rankings_mape[duration] = sorted([(alg, sums_mape[alg][duration]) for alg in sums_mape], key=lambda x: x[1])
-            rankings_r2[duration] = sorted([(alg, sums_r2[alg][duration]) for alg in sums_r2], key=lambda x: x[1])
+        print(rankings_mape)
 
-        # print("MSE rankings:")
-        # print(rankings_mse)
-        # print("MAE rankings:")
-        # print(rankings_mae)
-        # print("MAPE rankings:")
-        # print(rankings_mape)
-        # print("R^2 rankings:")
-        # print(rankings_r2)
-
-        # Combine the separate rankings based on MSE, MAE, MAPE and R^2 into one final ranking:
-
-        all_rankings = {"MSE": rankings_mse, "MAE": rankings_mae, "MAPE": rankings_mape, "R^2": rankings_r2}
+        all_rankings = {"MAPE": rankings_mape}
 
         final_rankings = {"1d": {algorithm: 0 for algorithm in self.algorithms},
                           "1w": {algorithm: 0 for algorithm in self.algorithms},
@@ -737,6 +712,9 @@ class Controller:
         final_rankings["1m"][new_index] = self.algorithms[4]
 
         print(final_rankings)
+
+        for ticker in should_remove:
+            self.remove_ticker(ticker)
         return final_rankings
 
     def write_rankings_to_file(self, rankings):

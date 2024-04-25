@@ -118,7 +118,7 @@ class MainWindow(QMainWindow):
 
     def set_up_controller(self):
         self.logger.info(f'Reading previously saved user activity from file')
-        set_algorithms = [False, False, False, False, False, False]
+        set_algorithms = [False, False, False, False, False]
         try:
             with (open(self.user_activity_file_name, "r") as f):
                 last_date = f.readline().strip()
@@ -152,7 +152,7 @@ class MainWindow(QMainWindow):
                         for index in range(len(alg_results[i])):
                             if alg_results[i][index] != "":
                                 set_algorithms[index] = True
-                                if index == 3 or index == 5 or should_update:
+                                if index == 3 or index == 4 or should_update:
                                     self.controller.run_algorithm(ticker, index, hold_dur)
                                 else:
                                     alg_name = self.controller.algorithms_with_indices[index]
@@ -165,7 +165,7 @@ class MainWindow(QMainWindow):
 
             return set_algorithms, hold_duration
         except Exception as e:
-            # traceback.print_exc()
+            traceback.print_exc()
             self.logger.error(f"User activity failed to be read. {e}")
             self.show_error_window("Error occurred when loading the portfolio.", "Some stocks might not be displayed.",
                                    "Please check your Internet connection.")

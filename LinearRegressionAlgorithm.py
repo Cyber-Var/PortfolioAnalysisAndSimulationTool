@@ -24,9 +24,6 @@ class LinearRegressionAlgorithm(Regression):
             predictions = self.makePrediction(all_X_trains[i], all_y_trains[i], all_X_tests[i])
             all_predictions.extend(predictions)
 
-        print(len(all_predictions))
-        print(len(all_y_tests))
-
         return self.calculateEvalMetrics(all_predictions, all_y_tests)
 
     def predict_price(self):

@@ -8,8 +8,9 @@ from UI.MainWindow import MainWindow
 
 # from Controller import Controller
 # controller = Controller()
-# controller.add_ticker("AAPL", 2, None, True)
-# controller.run_linear_regression("AAPL", "1m", True)
+# controller.add_ticker("AAPL", 1, None, True)
+# controller.handle_ranking(True)
+# controller.run_arima("AAPL", "1w", True)
 
 
 app = QApplication(sys.argv)

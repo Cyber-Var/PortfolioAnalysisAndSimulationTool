@@ -1,5 +1,6 @@
 import os
 import re
+import traceback
 from base64 import b64encode
 from io import BytesIO
 
@@ -42,8 +43,8 @@ class PortfolioPage(QWidget, Page):
         self.algorithm_3 = None
         self.algorithm_4 = None
         self.algorithm_5 = None
-        self.algorithm_6 = None
-        self.algorithms = [False] * 6
+        # self.algorithm_6 = None
+        self.algorithms = [False] * 5
 
         self.outer_ranking_vbox = QVBoxLayout()
         self.outer_ranking_vbox.setContentsMargins(70, 30, 0, 0)
@@ -86,7 +87,7 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_random_forest = None
         self.portfolio_bayesian = None
         self.portfolio_monte_carlo = None
-        self.portfolio_lstm = None
+        # self.portfolio_lstm = None
         self.portfolio_arima = None
         self.portfolio_volatility = None
         self.portfolio_volatility_category = None
@@ -103,7 +104,7 @@ class PortfolioPage(QWidget, Page):
         self.random_forest_col_name = None
         self.bayesian_col_name = None
         self.monte_carlo_col_name = None
-        self.lstm_col_name = None
+        # self.lstm_col_name = None
         self.arima_col_name = None
         self.volatility_col_name = None
         self.sharpe_ratio_col_name = None
@@ -183,9 +184,9 @@ class PortfolioPage(QWidget, Page):
         self.monte_carlo_col_name = self.create_column_names_labels("Monte Carlo\nSimulation")
         self.monte_carlo_col_name.setFixedSize(210, 50)
         self.monte_carlo_col_name.hide()
-        self.lstm_col_name = self.create_column_names_labels("LSTM")
-        self.lstm_col_name.setFixedSize(80, 50)
-        self.lstm_col_name.hide()
+        # self.lstm_col_name = self.create_column_names_labels("LSTM")
+        # self.lstm_col_name.setFixedSize(80, 50)
+        # self.lstm_col_name.hide()
         self.arima_col_name = self.create_column_names_labels("ARIMA")
         self.arima_col_name.setFixedSize(120, 50)
         self.arima_col_name.hide()
@@ -204,7 +205,7 @@ class PortfolioPage(QWidget, Page):
                           self.volatility_col_name,
                           self.sharpe_ratio_col_name, self.VaR_col_name, self.more_info_col_name, self.edit_col_name]
         self.result_col_names = [self.lin_reg_col_name, self.random_forest_col_name, self.bayesian_col_name,
-                                 self.monte_carlo_col_name, self.lstm_col_name, self.arima_col_name]
+                                 self.monte_carlo_col_name, self.arima_col_name]
 
         for col_name_label in self.col_names:
             col_name_label.hide()
@@ -216,7 +217,7 @@ class PortfolioPage(QWidget, Page):
         column_names_hbox.addWidget(self.random_forest_col_name)
         column_names_hbox.addWidget(self.bayesian_col_name)
         column_names_hbox.addWidget(self.monte_carlo_col_name)
-        column_names_hbox.addWidget(self.lstm_col_name)
+        # column_names_hbox.addWidget(self.lstm_col_name)
         column_names_hbox.addWidget(self.arima_col_name)
         column_names_hbox.addWidget(self.volatility_col_name)
         column_names_hbox.addWidget(self.sharpe_ratio_col_name)
@@ -276,15 +277,15 @@ class PortfolioPage(QWidget, Page):
         self.algorithm_2 = self.create_algorithm_checkbox("Random Forest", 1)
         self.algorithm_3 = self.create_algorithm_checkbox("Bayesian", 2)
         self.algorithm_4 = self.create_algorithm_checkbox("Monte Carlo Simulation", 3)
-        self.algorithm_5 = self.create_algorithm_checkbox("LSTM", 4)
-        self.algorithm_6 = self.create_algorithm_checkbox("ARIMA", 5)
+        # self.algorithm_5 = self.create_algorithm_checkbox("LSTM", 4)
+        self.algorithm_5 = self.create_algorithm_checkbox("ARIMA", 4)
 
         algorithms_vbox.addWidget(self.algorithm_1)
         algorithms_vbox.addWidget(self.algorithm_2)
         algorithms_vbox.addWidget(self.algorithm_3)
         algorithms_vbox.addWidget(self.algorithm_4)
         algorithms_vbox.addWidget(self.algorithm_5)
-        algorithms_vbox.addWidget(self.algorithm_6)
+        # algorithms_vbox.addWidget(self.algorithm_6)
 
         algrithms_hbox.addWidget(self.algorithms_label)
         algrithms_hbox.addLayout(algorithms_vbox)
@@ -329,8 +330,8 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_bayesian.setFixedSize(120, 70)
         self.portfolio_monte_carlo = QLabel("")
         self.portfolio_monte_carlo.setFixedSize(210, 70)
-        self.portfolio_lstm = QLabel("")
-        self.portfolio_lstm.setFixedSize(80, 70)
+        # self.portfolio_lstm = QLabel("")
+        # self.portfolio_lstm.setFixedSize(80, 70)
         self.portfolio_arima = QLabel("")
         self.portfolio_arima.setFixedSize(120, 70)
 
@@ -342,8 +343,8 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_bayesian.setStyleSheet(self.portfolio_yellow_border_style)
         self.portfolio_monte_carlo.setObjectName("resultLabel")
         self.portfolio_monte_carlo.setStyleSheet(self.portfolio_yellow_border_style)
-        self.portfolio_lstm.setObjectName("resultLabel")
-        self.portfolio_lstm.setStyleSheet(self.portfolio_yellow_border_style)
+        # self.portfolio_lstm.setObjectName("resultLabel")
+        # self.portfolio_lstm.setStyleSheet(self.portfolio_yellow_border_style)
         self.portfolio_arima.setObjectName("resultLabel")
         self.portfolio_arima.setStyleSheet(self.portfolio_yellow_border_style)
 
@@ -351,14 +352,14 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_random_forest.setFixedHeight(70)
         self.portfolio_bayesian.setFixedHeight(70)
         self.portfolio_monte_carlo.setFixedHeight(70)
-        self.portfolio_lstm.setFixedHeight(70)
+        # self.portfolio_lstm.setFixedHeight(70)
         self.portfolio_arima.setFixedHeight(70)
 
         self.portfolio_linear_regression.hide()
         self.portfolio_random_forest.hide()
         self.portfolio_bayesian.hide()
         self.portfolio_monte_carlo.hide()
-        self.portfolio_lstm.hide()
+        # self.portfolio_lstm.hide()
         self.portfolio_arima.hide()
 
         self.portfolio_vol_frame, portfolio_vol_frame_layout = self.create_frame()
@@ -411,7 +412,7 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_col_names = [self.portfolio_label, self.portfolio_amount, self.portfolio_vol_frame,
                                     self.portfolio_sharpe_frame, self.portfolio_VaR]
         self.portfolio_results = [self.portfolio_linear_regression, self.portfolio_random_forest,
-                                  self.portfolio_bayesian, self.portfolio_monte_carlo, self.portfolio_lstm,
+                                  self.portfolio_bayesian, self.portfolio_monte_carlo,
                                   self.portfolio_arima]
 
         for col_name_label in self.portfolio_col_names:
@@ -425,7 +426,7 @@ class PortfolioPage(QWidget, Page):
         portfolio_hbox.addWidget(self.portfolio_random_forest)
         portfolio_hbox.addWidget(self.portfolio_bayesian)
         portfolio_hbox.addWidget(self.portfolio_monte_carlo)
-        portfolio_hbox.addWidget(self.portfolio_lstm)
+        # portfolio_hbox.addWidget(self.portfolio_lstm)
         portfolio_hbox.addWidget(self.portfolio_arima)
         portfolio_hbox.addWidget(self.portfolio_vol_frame)
         portfolio_hbox.addWidget(self.portfolio_sharpe_frame)
@@ -517,7 +518,7 @@ class PortfolioPage(QWidget, Page):
 
                     if index == 2:
                         label_text = f"{str_result} +/- {abs(self.controller.bayesian_confidences[self.hold_duration][ticker][1]):.2f}"
-                    elif index == 5:
+                    elif index == 4:
                         label_text = f"{str_result} +/- {abs(self.controller.arima_confidences[self.hold_duration][ticker][1]):.2f}"
                     else:
                         label_text = str_result
@@ -544,6 +545,7 @@ class PortfolioPage(QWidget, Page):
                 self.result_col_names[index].show()
                 self.update_portfolio_results()
         except:
+            traceback.print_exc()
             self.main_window.show_error_window("Error occurred when updating algorithmic results.",
                                                "Please check your Internet connection.")
 
@@ -596,7 +598,7 @@ class PortfolioPage(QWidget, Page):
                     else:
                         num_result = self.controller.calculate_portfolio_result(index, self.hold_duration)
                         result, is_green = self.result_to_string(num_result)
-                    if index == 2 or index == 5:
+                    if index == 2 or index == 4:
                         confidence = self.controller.calculate_portfolio_confidence(index, self.hold_duration)
                         result += f"+/- {abs(confidence):.2f}"
 
@@ -633,6 +635,7 @@ class PortfolioPage(QWidget, Page):
 
             self.portfolio_VaR.setText(f"{portfolio_VaR:.2f}")
         except:
+            traceback.print_exc()
             self.main_window.show_error_window("Error occurred when updating algorithmic results.",
                                                "Please check your Internet connection.")
 
@@ -669,7 +672,7 @@ class PortfolioPage(QWidget, Page):
                 self.main_window.show_error_window("Error occurred when ranking algorithms.",
                                                    "Please check your Internet connection.")
 
-    widths = [60, 160, 120, 85, 80, 120, 210, 80, 120, 110, 110, 60]
+    widths = [60, 160, 120, 85, 80, 120, 210, 120, 110, 110, 60]
 
     def add_ticker(self, ticker, one_share_price, num_shares, is_long, not_initial=True):
         self.logger.info('Adding new stock to portfolio.')
@@ -683,8 +686,8 @@ class PortfolioPage(QWidget, Page):
             results_hbox = QHBoxLayout()
             results_hbox.setSpacing(3)
 
-            for i in range(12):
-                if 9 <= i <= 10:
+            for i in range(11):
+                if 8 <= i <= 9:
                     frame, frame_layout = self.create_frame()
                     label = QLabel()
                     label.setFixedSize(50, 25)
@@ -701,7 +704,7 @@ class PortfolioPage(QWidget, Page):
                     if i != 0:
                         label.setObjectName("resultLabel")
                     label.setFixedSize(self.widths[i], 50)
-                    if 3 <= i <= 8:
+                    if 3 <= i <= 7:
                         label.hide()
                     results_hbox.addWidget(label)
 
@@ -762,44 +765,44 @@ class PortfolioPage(QWidget, Page):
                     self.monte_profits_losses[self.hold_duration][ticker] = False
                 results_hbox.itemAt(6).widget().setText(monte_carlo_prediction)
                 results_hbox.itemAt(6).widget().show()
+            # if self.algorithms[4]:
+            #     self.lstm_col_name.show()
+            #     lstm_prediction = self.controller.run_lstm(ticker, self.hold_duration)
+            #     result, is_green = self.result_to_string(lstm_prediction)
+            #     if is_green:
+            #         results_hbox.itemAt(7).widget().setObjectName("greenResultLabel")
+            #     else:
+            #         results_hbox.itemAt(7).widget().setObjectName("redResultLabel")
+            #     results_hbox.itemAt(7).widget().setText(result)
+            #     results_hbox.itemAt(7).widget().show()
             if self.algorithms[4]:
-                self.lstm_col_name.show()
-                lstm_prediction = self.controller.run_lstm(ticker, self.hold_duration)
-                result, is_green = self.result_to_string(lstm_prediction)
-                if is_green:
-                    results_hbox.itemAt(7).widget().setObjectName("greenResultLabel")
-                else:
-                    results_hbox.itemAt(7).widget().setObjectName("redResultLabel")
-                results_hbox.itemAt(7).widget().setText(result)
-                results_hbox.itemAt(7).widget().show()
-            if self.algorithms[5]:
                 self.arima_col_name.show()
                 arima_prediction = self.controller.run_arima(ticker, self.hold_duration)
                 result, is_green = self.result_to_string(arima_prediction)
                 if is_green:
-                    results_hbox.itemAt(8).widget().setObjectName("greenResultLabel")
+                    results_hbox.itemAt(7).widget().setObjectName("greenResultLabel")
                 else:
-                    results_hbox.itemAt(8).widget().setObjectName("redResultLabel")
-                results_hbox.itemAt(8).widget().setText(f"{result}"
+                    results_hbox.itemAt(7).widget().setObjectName("redResultLabel")
+                results_hbox.itemAt(7).widget().setText(f"{result}"
                                                         f" +/- {abs(self.controller.arima_confidences[self.hold_duration][ticker][1]):.2f}")
-                results_hbox.itemAt(8).widget().show()
+                results_hbox.itemAt(7).widget().show()
 
             volatility, volatility_category = self.controller.get_volatility(ticker, self.hold_duration)
             # results_hbox.itemAt(9).widget().setText(f"{volatility:.2f} {volatility_category}")
-            volatility_labels = results_hbox.itemAt(9).widget().findChildren(QLabel)
+            volatility_labels = results_hbox.itemAt(8).widget().findChildren(QLabel)
             volatility_labels[0].setText(f"{volatility:.2f} ")
             volatility_labels[1].setText(volatility_category)
             volatility_labels[1].setStyleSheet(self.process_category_style(volatility_category))
 
             sharpe_ratio, sharpe_ratio_category = self.controller.get_sharpe_ratio(ticker, self.hold_duration)
             # results_hbox.itemAt(10).widget().setText(f"{sharpe_ratio:.2f} {sharpe_ratio_category}")
-            sharpe_labels = results_hbox.itemAt(10).widget().findChildren(QLabel)
+            sharpe_labels = results_hbox.itemAt(9).widget().findChildren(QLabel)
             sharpe_labels[0].setText(f"{sharpe_ratio:.2f} ")
             sharpe_labels[1].setText(sharpe_ratio_category)
             sharpe_labels[1].setStyleSheet(self.process_category_style(sharpe_ratio_category))
 
             VaR = self.controller.get_VaR(ticker, self.hold_duration, volatility)
-            results_hbox.itemAt(11).widget().setText(f"{VaR:.2f}")
+            results_hbox.itemAt(10).widget().setText(f"{VaR:.2f}")
 
             more_info_button = QPushButton("--->")
             more_info_button.setFixedSize(50, 50)
@@ -831,6 +834,7 @@ class PortfolioPage(QWidget, Page):
 
         except Exception:
             self.logger.error("Unable to add new ticker.")
+            traceback.print_exc()
             self.main_window.show_error_window("Error occurred when adding the stock to portfolio.",
                                                "Please check your Internet connection.")
 
@@ -852,36 +856,47 @@ class PortfolioPage(QWidget, Page):
             layout.setParent(None)
 
     def stock_change(self, ticker, num_shares, investment, is_long):
-        index = self.tickers.index(ticker)
-        ticker_layout = self.results_vbox.itemAt(index + 1)
-        if investment == -1:
-            self.logger.info(f"Removing stock {ticker} from portfolio.")
-            self.controller.remove_ticker(ticker)
-            if ticker_layout.layout():
-                self.delete_layout(ticker_layout.layout())
-                self.results_vbox.removeItem(ticker_layout)
-            self.tickers.remove(ticker)
-            self.update_portfolio_results()
-        else:
-            if num_shares == self.controller.tickers_and_num_shares[ticker] and \
-                    self.controller.tickers_and_long_or_short[ticker] == is_long:
-                return
-
-            self.logger.info(f"Stock {ticker} changed to: num_shares={num_shares}, is_long={is_long}.")
-
-            if is_long:
-                long_short_str = "Long"
+        try:
+            index = self.tickers.index(ticker)
+            ticker_layout = self.results_vbox.itemAt(index + 1)
+            if investment == -1:
+                self.logger.info(f"Removing stock {ticker} from portfolio.")
+                self.controller.remove_ticker(ticker)
+                if ticker_layout.layout():
+                    self.delete_layout(ticker_layout.layout())
+                    self.results_vbox.removeItem(ticker_layout)
+                self.tickers.remove(ticker)
+                self.update_portfolio_results()
             else:
-                long_short_str = "Short"
-            self.results_map[ticker].itemAt(2).widget().setText(f"${investment:.2f} {long_short_str}")
-            algorithm_indices = [index for index, value in enumerate(self.algorithms) if value]
+                if num_shares == self.controller.tickers_and_num_shares[ticker] and \
+                        self.controller.tickers_and_long_or_short[ticker] == is_long:
+                    return
 
-            only_change_sign = (num_shares == self.controller.tickers_and_num_shares[ticker] and
-                                self.controller.tickers_and_long_or_short[ticker] != is_long)
-            self.controller.update_stock_info(ticker, num_shares, investment, is_long, algorithm_indices,
-                                              only_change_sign)
-            for index in algorithm_indices:
-                self.update_algorithm_values(index)
+                self.logger.info(f"Stock {ticker} changed to: num_shares={num_shares}, is_long={is_long}.")
+
+                if is_long:
+                    long_short_str = "Long"
+                else:
+                    long_short_str = "Short"
+                self.results_map[ticker].itemAt(2).widget().setText(f"${investment:.2f} {long_short_str}")
+                algorithm_indices = [index for index, value in enumerate(self.algorithms) if value]
+
+                only_change_sign = (num_shares == self.controller.tickers_and_num_shares[ticker] and
+                                    self.controller.tickers_and_long_or_short[ticker] != is_long)
+                self.controller.update_stock_info(ticker, num_shares, investment, is_long, algorithm_indices,
+                                                  only_change_sign)
+                for index in algorithm_indices:
+                    self.update_algorithm_values(index)
+        except Exception:
+            traceback.print_exc()
+            if investment == -1:
+                self.logger.error("Unable to remove stock.")
+                self.main_window.show_error_window("Error occurred when deleting the stock from portfolio.",
+                                                   "Please check your Internet connection.")
+            else:
+                self.logger.error("Unable to edit stock.")
+                self.main_window.show_error_window("Error occurred when editing the stock in portfolio.",
+                                                   "Please check your Internet connection.")
 
 
 class AddStockPopUp(QDialog):
@@ -1409,8 +1424,7 @@ class RankingTimeWarningPopUp(QDialog):
         warning_widget.setFixedSize(500, 120)
         warning_widget.setLayout(warning_vbox)
 
-        # TODO: replace X with number (do this when I have good internet, maybe when in Dubai)
-        warning_label = QLabel("The ranking process will take approximately X minutes.")
+        warning_label = QLabel("The ranking process will take approximately 7 minutes.")
         warning_label.setObjectName("addStockLabel")
         warning_label_2 = QLabel("Do you still want to continue?")
         warning_label_2.setObjectName("addStockLabel")

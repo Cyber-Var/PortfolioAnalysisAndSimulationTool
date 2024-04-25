@@ -130,16 +130,16 @@ class Regression:
 
         result += [changes.mean()]
 
-        result += [li['Adj Close'].mean(), li['Open'].mean(), li['Close'].mean(), li['High'].mean(), li['Low'].mean(),
-                   li['Volume'].mean()]
+        # result += [li['Adj Close'].mean(), li['Open'].mean(), li['Close'].mean(), li['High'].mean(), li['Low'].mean(),
+        #            li['Volume'].mean()]
         return result
 
     def calculateEvalMetrics(self, predictions, y_test):
-        mse = mean_squared_error(y_test, predictions)
-        mae = mean_absolute_error(y_test, predictions)
+        # mse = mean_squared_error(y_test, predictions)
+        # mae = mean_absolute_error(y_test, predictions)
         mape = mean_absolute_percentage_error(y_test, predictions) * 100
-        r2 = r2_score(y_test, predictions)
-        return mse, mae, mape, r2
+        # r2 = r2_score(y_test, predictions)
+        return mape
 
     def calculate_profit_or_loss(self, predicted_price, investment_amount, confidence=False):
         current_price = self.data.iloc[-1]["Adj Close"]
