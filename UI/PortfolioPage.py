@@ -171,7 +171,7 @@ class PortfolioPage(QWidget, Page):
         self.stock_name_col_name = self.create_column_names_labels("Name")
         self.stock_name_col_name.setFixedSize(160, 50)
         self.amount_col_name = self.create_column_names_labels("Investment\nAmount")
-        self.amount_col_name.setFixedSize(120, 50)
+        self.amount_col_name.setFixedSize(3, 50)
         self.lin_reg_col_name = self.create_column_names_labels("Linear\nRegression")
         self.lin_reg_col_name.setFixedSize(85, 50)
         self.lin_reg_col_name.hide()
@@ -179,7 +179,7 @@ class PortfolioPage(QWidget, Page):
         self.random_forest_col_name.setFixedSize(80, 50)
         self.random_forest_col_name.hide()
         self.bayesian_col_name = self.create_column_names_labels("Bayesian")
-        self.bayesian_col_name.setFixedSize(120, 50)
+        self.bayesian_col_name.setFixedSize(130, 50)
         self.bayesian_col_name.hide()
         self.monte_carlo_col_name = self.create_column_names_labels("Monte Carlo\nSimulation")
         self.monte_carlo_col_name.setFixedSize(210, 50)
@@ -188,7 +188,7 @@ class PortfolioPage(QWidget, Page):
         # self.lstm_col_name.setFixedSize(80, 50)
         # self.lstm_col_name.hide()
         self.arima_col_name = self.create_column_names_labels("ARIMA")
-        self.arima_col_name.setFixedSize(120, 50)
+        self.arima_col_name.setFixedSize(130, 50)
         self.arima_col_name.hide()
         self.volatility_col_name = self.create_column_names_labels("Volatility")
         self.volatility_col_name.setFixedSize(110, 50)
@@ -320,20 +320,20 @@ class PortfolioPage(QWidget, Page):
         self.portfolio_amount = QLabel("-")
         self.portfolio_amount.setObjectName("portfolioResultLabel")
         self.portfolio_amount.setStyleSheet(self.portfolio_yellow_border_style)
-        self.portfolio_amount.setFixedSize(120, 70)
+        self.portfolio_amount.setFixedSize(130, 70)
 
         self.portfolio_linear_regression = QLabel("")
         self.portfolio_linear_regression.setFixedSize(85, 70)
         self.portfolio_random_forest = QLabel("")
         self.portfolio_random_forest.setFixedSize(80, 70)
         self.portfolio_bayesian = QLabel("")
-        self.portfolio_bayesian.setFixedSize(120, 70)
+        self.portfolio_bayesian.setFixedSize(130, 70)
         self.portfolio_monte_carlo = QLabel("")
         self.portfolio_monte_carlo.setFixedSize(210, 70)
         # self.portfolio_lstm = QLabel("")
         # self.portfolio_lstm.setFixedSize(80, 70)
         self.portfolio_arima = QLabel("")
-        self.portfolio_arima.setFixedSize(120, 70)
+        self.portfolio_arima.setFixedSize(130, 70)
 
         self.portfolio_linear_regression.setObjectName("resultLabel")
         self.portfolio_linear_regression.setStyleSheet(self.portfolio_yellow_border_style)
@@ -489,8 +489,8 @@ class PortfolioPage(QWidget, Page):
 
     def result_to_string(self, result):
         if result >= 0:
-            return f"+{result:.2f}$", True
-        return f"{result:.2f}$", False
+            return f"+${result:.2f}", True
+        return f"${result:.2f}", False
 
     def algorithms_state_changed(self, state, index):
         if state == Qt.Checked:
@@ -506,48 +506,42 @@ class PortfolioPage(QWidget, Page):
     def update_algorithm_values(self, index):
         self.logger.info('Updating the Algorithmic results')
 
-        try:
-            algorithm_name = self.controller.algorithms_with_indices[index]
-            algorithmic_results = self.controller.results[algorithm_name][self.hold_duration]
-            for ticker in self.controller.tickers_and_investments.keys():
-                label = self.results_map[ticker].itemAt(3 + index).widget()
-                if ticker not in algorithmic_results.keys():
-                    self.controller.run_algorithm(ticker, index, self.hold_duration)
-                if index != 3:
-                    str_result, is_green = self.result_to_string(algorithmic_results[ticker])
+        algorithm_name = self.controller.algorithms_with_indices[index]
+        algorithmic_results = self.controller.results[algorithm_name][self.hold_duration]
+        for ticker in self.controller.tickers_and_investments.keys():
+            label = self.results_map[ticker].itemAt(3 + index).widget()
+            if ticker not in algorithmic_results.keys():
+                self.controller.run_algorithm(ticker, index, self.hold_duration)
+            if index != 3:
+                str_result, is_green = self.result_to_string(algorithmic_results[ticker])
 
-                    if index == 2:
-                        label_text = f"{str_result} +/- {abs(self.controller.bayesian_confidences[self.hold_duration][ticker][1]):.2f}"
-                    elif index == 4:
-                        label_text = f"{str_result} +/- {abs(self.controller.arima_confidences[self.hold_duration][ticker][1]):.2f}"
-                    else:
-                        label_text = str_result
+                if index == 2:
+                    label_text = f"{str_result} +/- {self.format_number(abs(self.controller.bayesian_confidences[self.hold_duration][ticker][1]))}"
+                elif index == 4:
+                    label_text = f"{str_result} +/- {self.format_number(abs(self.controller.arima_confidences[self.hold_duration][ticker][1]))}"
                 else:
-                    label_text = algorithmic_results[ticker]
-                    growth_fall = label_text.split()[-1]
-                    is_long = self.controller.tickers_and_long_or_short[ticker]
-                    print(growth_fall)
-                    print(is_long)
-                    if (growth_fall == "growth" and is_long) or (growth_fall == "fall" and not is_long):
-                        label_text += " (profit)"
-                        is_green = True
-                        self.monte_profits_losses[self.hold_duration][ticker] = True
-                    else:
-                        label_text += " (loss)"
-                        is_green = False
-                        self.monte_profits_losses[self.hold_duration][ticker] = False
-                label.setText(label_text)
-                if is_green:
-                    self.results_map[ticker].itemAt(3 + index).widget().setStyleSheet("color: green;")
+                    label_text = str_result
+            else:
+                label_text = algorithmic_results[ticker]
+                growth_fall_split = label_text.split()
+                growth_fall = growth_fall_split[-1]
+                is_long = self.controller.tickers_and_long_or_short[ticker]
+                if (growth_fall == "growth" and is_long) or (growth_fall == "fall" and not is_long):
+                    label_text = " ".join(growth_fall_split[:-1]) + " profit"
+                    is_green = True
+                    self.monte_profits_losses[self.hold_duration][ticker] = True
                 else:
-                    self.results_map[ticker].itemAt(3 + index).widget().setStyleSheet("color: red;")
-                label.show()
-                self.result_col_names[index].show()
-                self.update_portfolio_results()
-        except:
-            traceback.print_exc()
-            self.main_window.show_error_window("Error occurred when updating algorithmic results.",
-                                               "Please check your Internet connection.")
+                    label_text = " ".join(growth_fall_split[:-1]) + " loss"
+                    is_green = False
+                    self.monte_profits_losses[self.hold_duration][ticker] = False
+            label.setText(label_text)
+            if is_green:
+                self.results_map[ticker].itemAt(3 + index).widget().setStyleSheet("color: green;")
+            else:
+                self.results_map[ticker].itemAt(3 + index).widget().setStyleSheet("color: red;")
+            label.show()
+            self.result_col_names[index].show()
+            self.update_portfolio_results()
 
     def update_portfolio_results(self):
         self.logger.info('Updating the Portfolio results')
@@ -590,17 +584,19 @@ class PortfolioPage(QWidget, Page):
                         monte_profits = list(self.monte_profits_losses[self.hold_duration].values()).count(True)
                         monte_losses = len(self.monte_profits_losses[self.hold_duration]) - monte_profits
                         if monte_profits >= monte_losses:
-                            result += " (profit)"
+                            result = " ".join(result.split()[:-1]) + " profit"
+                            # result += " (profit)"
                             is_green = True
                         else:
-                            result += " (loss)"
+                            result = " ".join(result.split()[:-1]) + " loss"
+                            # result += " (loss)"
                             is_green = False
                     else:
                         num_result = self.controller.calculate_portfolio_result(index, self.hold_duration)
                         result, is_green = self.result_to_string(num_result)
                     if index == 2 or index == 4:
                         confidence = self.controller.calculate_portfolio_confidence(index, self.hold_duration)
-                        result += f"+/- {abs(confidence):.2f}"
+                        result += f"+/- {self.format_number(abs(confidence))}"
 
                     self.portfolio_results[index].setText(result)
                     if is_green:
@@ -639,6 +635,12 @@ class PortfolioPage(QWidget, Page):
             self.main_window.show_error_window("Error occurred when updating algorithmic results.",
                                                "Please check your Internet connection.")
 
+    def format_number(self, num):
+        if abs(num) < 0.01:
+            return f"{num:.4f}"
+        else:
+            return f"{num:.2f}"
+
     def process_category_style(self, category):
         if category == "Low":
             # 76D7C4
@@ -648,13 +650,18 @@ class PortfolioPage(QWidget, Page):
         return "font-size: 12px; color: #FF5733; border: 2px solid #FF5733; border-radius: 5px;"
 
     def update_shares_results(self):
-        for index, is_chosen in enumerate(self.algorithms):
-            if is_chosen:
-                self.update_algorithm_values(index)
+        try:
+            for index, is_chosen in enumerate(self.algorithms):
+                if is_chosen:
+                    self.update_algorithm_values(index)
+        except:
+            traceback.print_exc()
+            self.main_window.show_error_window("Error occurred when updating algorithmic results.",
+                                               "Please check your Internet connection.")
 
     def show_add_stock_window(self):
         popup = AddStockPopUp(self.main_window, self.controller.get_sp500_tickers(),
-                              self.controller.get_top_50_esg_companies())
+                              self.controller.get_top_50_esg_companies(), self.controller)
         popup.valid_ticker_entered.connect(self.add_ticker)
         popup.exec_()
 
@@ -672,7 +679,7 @@ class PortfolioPage(QWidget, Page):
                 self.main_window.show_error_window("Error occurred when ranking algorithms.",
                                                    "Please check your Internet connection.")
 
-    widths = [60, 160, 120, 85, 80, 120, 210, 120, 110, 110, 60]
+    widths = [60, 160, 130, 85, 80, 130, 210, 130, 110, 110, 60]
 
     def add_ticker(self, ticker, one_share_price, num_shares, is_long, not_initial=True):
         self.logger.info('Adding new stock to portfolio.')
@@ -749,18 +756,18 @@ class PortfolioPage(QWidget, Page):
                 else:
                     results_hbox.itemAt(5).widget().setObjectName("redResultLabel")
                 results_hbox.itemAt(5).widget().setText(f"{result}"
-                                                        f" +/- {abs(self.controller.bayesian_confidences[self.hold_duration][ticker][1]):.2f}")
+                                                        f" +/- {self.format_number(abs(self.controller.bayesian_confidences[self.hold_duration][ticker][1]))}")
                 results_hbox.itemAt(5).widget().show()
             if self.algorithms[3]:
                 self.monte_carlo_col_name.show()
                 monte_carlo_prediction = self.controller.run_monte_carlo(ticker, self.hold_duration)
                 growth_fall = monte_carlo_prediction.split()
-                if (growth_fall == "growth" and is_long) or (growth_fall == "fall" and not is_long):
-                    monte_carlo_prediction += " (profit)"
+                if (growth_fall[-1] == "growth" and is_long) or (growth_fall[-1] == "fall" and not is_long):
+                    monte_carlo_prediction = " ".join(growth_fall[:-1]) + " profit"
                     results_hbox.itemAt(6).widget().setObjectName("greenResultLabel")
                     self.monte_profits_losses[self.hold_duration][ticker] = True
                 else:
-                    monte_carlo_prediction += " (loss)"
+                    monte_carlo_prediction = " ".join(growth_fall[:-1]) + " loss"
                     results_hbox.itemAt(6).widget().setObjectName("redResultLabel")
                     self.monte_profits_losses[self.hold_duration][ticker] = False
                 results_hbox.itemAt(6).widget().setText(monte_carlo_prediction)
@@ -784,7 +791,7 @@ class PortfolioPage(QWidget, Page):
                 else:
                     results_hbox.itemAt(7).widget().setObjectName("redResultLabel")
                 results_hbox.itemAt(7).widget().setText(f"{result}"
-                                                        f" +/- {abs(self.controller.arima_confidences[self.hold_duration][ticker][1]):.2f}")
+                                                        f" +/- {self.format_number(abs(self.controller.arima_confidences[self.hold_duration][ticker][1]))}")
                 results_hbox.itemAt(7).widget().show()
 
             volatility, volatility_category = self.controller.get_volatility(ticker, self.hold_duration)
@@ -859,6 +866,7 @@ class PortfolioPage(QWidget, Page):
         try:
             index = self.tickers.index(ticker)
             ticker_layout = self.results_vbox.itemAt(index + 1)
+            print(self.controller.results)
             if investment == -1:
                 self.logger.info(f"Removing stock {ticker} from portfolio.")
                 self.controller.remove_ticker(ticker)
@@ -905,11 +913,12 @@ class AddStockPopUp(QDialog):
     share_price = None
     should_validate = False
 
-    def __init__(self, main_window, sp500_companies, top_100_esg_companies):
+    def __init__(self, main_window, sp500_companies, top_100_esg_companies, controller):
         super().__init__()
         self.setWindowTitle("Add Stock to Portfolio")
 
         self.main_window = main_window
+        self.controller = controller
         self.sp500_companies = sp500_companies
         self.top_100_esg_companies = top_100_esg_companies
         self.current_list = sp500_companies
@@ -1087,7 +1096,6 @@ class AddStockPopUp(QDialog):
             elif self.by_esg_radio.isChecked():
                 self.current_list = self.top_100_esg_companies
                 newCompleterModel = QStringListModel(self.top_100_esg_companies)
-                print(len(self.top_100_esg_companies))
                 self.completer.setModel(newCompleterModel)
 
     def validate_ticker(self):
@@ -1114,12 +1122,18 @@ class AddStockPopUp(QDialog):
                 self.investment.setFocus()
                 self.investment_widget.show()
             else:
+                if price == -2:
+                    self.invalid_ticker_label.setText("This stock is already part of your portfolio")
+                else:
+                    self.invalid_ticker_label.setText("Please choose a company from list")
                 self.invalid_ticker_label.show()
         except:
             self.main_window.show_error_window("Unable to read data from the API.",
                                                "Please check your Internet connection.")
 
     def is_valid_ticker(self, ticker):
+        if ticker.split()[0] in self.controller.tickers_and_investments.keys():
+            return False, -2
         if (ticker in self.sp500_companies) or (ticker in self.top_100_esg_companies):
             ticker = ticker.split()[0]
             data = yf.Ticker(ticker)

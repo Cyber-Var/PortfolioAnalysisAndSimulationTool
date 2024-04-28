@@ -130,8 +130,8 @@ class Regression:
 
         result += [changes.mean()]
 
-        # result += [li['Adj Close'].mean(), li['Open'].mean(), li['Close'].mean(), li['High'].mean(), li['Low'].mean(),
-        #            li['Volume'].mean()]
+        result += [li['Adj Close'].mean(), li['Open'].mean(), li['Close'].mean(), li['High'].mean(), li['Low'].mean(),
+                   li['Volume'].mean()]
         return result
 
     def calculateEvalMetrics(self, predictions, y_test):

@@ -175,8 +175,11 @@ class Controller:
         del self.tickers_and_long_or_short[ticker]
         del self.tickers_and_num_shares[ticker]
 
-        if len(self.tickers_and_investments) > 0:
-            for hold_dur in self.start_dates.keys():
+        if len(self.tickers_and_investments)  == 1:
+            for hold_dur in ["1d", "1w", "1m"]:
+                self.data[hold_dur] = self.downloadData(self.start_dates[hold_dur], self.end_date)
+        elif len(self.tickers_and_investments) > 0:
+            for hold_dur in ["1d", "1w", "1m"]:
                 # self.data[hold_dur].drop(ticker, axis=1, inplace=True)
                 self.data[hold_dur].drop(columns=ticker, level=1, inplace=True)
         else:
@@ -368,7 +371,6 @@ class Controller:
 
         # The lower the rating, the more ethical and sustainable a company is.
         scores = yesg.get_historic_esg(ticker).iloc[-1]
-        print(scores)
         e_score = scores["E-Score"]
         s_score = scores["S-Score"]
         g_score = scores["G-Score"]
@@ -478,11 +480,15 @@ class Controller:
         algorithm_name = self.algorithms_with_indices[index]
         final_result = 0
         if index == 2:
-            for ticker, confidences in self.bayesian_confidences[hold_duration].items():
-                if self.results[algorithm_name][hold_duration][ticker] >= 0:
-                    final_result += abs(confidences[1])
-                else:
-                    final_result -= abs(confidences[1])
+            confidencess = self.bayesian_confidences[hold_duration].items()
+        elif index == 4:
+            confidencess = self.arima_confidences[hold_duration].items()
+
+        for ticker, confidences in confidencess:
+            if self.results[algorithm_name][hold_duration][ticker] >= 0:
+                final_result += abs(confidences[1])
+            else:
+                final_result -= abs(confidences[1])
         self.portfolio_confidences[index] = final_result
         return final_result
 
@@ -498,8 +504,6 @@ class Controller:
         total_negatives = 0
         total_negatives2 = 0
         total_investments = 0
-        
-        print(self.monte_carlo_results)
 
         for ticker in self.monte_carlo_results[hold_duration].keys():
             monte_result = self.monte_carlo_results[hold_duration][ticker]
@@ -526,7 +530,10 @@ class Controller:
 
     def downloadData(self, start, end):
         data = yf.download(list(self.tickers_and_investments.keys()), start=start, end=end)
-        return data
+        data_cleaned = data.dropna()
+        num_rows_dropped = data.shape[0] - data_cleaned.shape[0]
+        print("Dropped", num_rows_dropped)
+        return data_cleaned
 
     def getDataForTicker(self, ticker, data):
         ticker_data = pd.DataFrame()
@@ -606,7 +613,6 @@ class Controller:
                 date2 = datetime(int(last_date[2]), int(last_date[1]), int(last_date[0]))
                 _, week1, _ = date1.isocalendar()
                 _, week2, _ = date2.isocalendar()
-                # print(week1, week2)
                 return week1 != week2 or str(current_date.year) != last_date[2]
             elif self.ranking_frequency == 2:
                 return str(current_date.month) != last_date[1] or str(current_date.year) != last_date[2]
@@ -680,7 +686,7 @@ class Controller:
                     mape = self.evaluations[algorithm][hold_dur][ticker]
                     sums_mape[algorithm][hold_dur] += mape
 
-        print(sums_mape)
+        print("MAPEs", sums_mape)
 
         # Rank the algorithms based on MAPE error metric:
         rankings_mape = {}

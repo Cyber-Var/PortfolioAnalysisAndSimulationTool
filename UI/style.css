@@ -43,6 +43,15 @@ QLabel {
     margin: 20px;
 }
 
+#titleLabelManual {
+    font-size: 50px;
+    font-weight: bold;
+    color: #EF2E38;
+    padding: 20px;
+    text-align: center;
+    margin: 20px;
+}
+
 #inputLabel {
     color: white;
     font-size: 15px;

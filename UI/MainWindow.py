@@ -17,6 +17,7 @@ from UI.MenuPage import MenuPage
 from UI.PortfolioPage import PortfolioPage
 from UI.SettingsPage import SettingsPage
 from UI.SingleStockPage import SingleStockPage
+from UI.UserManualPage import UserManualPage
 
 
 class MainWindow(QMainWindow):
@@ -63,15 +64,19 @@ class MainWindow(QMainWindow):
         self.portfolio_page = PortfolioPage(self, self.controller, set_algorithms, hold_duration)
         self.single_stock_page = SingleStockPage(self, self.controller, dpi)
         self.settings_page = SettingsPage(self, self.controller)
+        self.user_manual_page = UserManualPage(self, self.controller)
 
         self.stacked_widget.addWidget(self.menu_page)
         self.stacked_widget.addWidget(self.settings_page)
+        self.stacked_widget.addWidget(self.user_manual_page)
         self.stacked_widget.addWidget(self.portfolio_page)
         self.stacked_widget.addWidget(self.single_stock_page)
 
         self.menu_page.open_portfolio_page.connect(lambda: self.changePage(self.portfolio_page))
         self.menu_page.open_settings_page.connect(self.openSettingsPage)
+        self.menu_page.open_manual_page.connect(self.openManualPage)
         self.portfolio_page.back_to_menu_page.connect(self.goBack)
+        self.user_manual_page.back_to_menu_page.connect(self.goBack)
         self.portfolio_page.open_single_stock_page.connect(self.openSingleStockPage)
         self.single_stock_page.back_to_portfolio_page.connect(self.goBack)
         self.settings_page.back_to_menu_page.connect(self.goBack)
@@ -152,7 +157,7 @@ class MainWindow(QMainWindow):
                         for index in range(len(alg_results[i])):
                             if alg_results[i][index] != "":
                                 set_algorithms[index] = True
-                                if index == 3 or index == 4 or should_update:
+                                if index == 3 or should_update:
                                     self.controller.run_algorithm(ticker, index, hold_dur)
                                 else:
                                     alg_name = self.controller.algorithms_with_indices[index]
@@ -162,6 +167,9 @@ class MainWindow(QMainWindow):
                                     if index == 2:
                                         self.controller.bayesian_confidences[hold_dur][ticker] = (
                                         float(res[2]), float(res[3]))
+                                    if index == 4:
+                                        self.controller.arima_confidences[hold_dur][ticker] = (
+                                        float(res[2]), float(res[3]))
 
             return set_algorithms, hold_duration
         except Exception as e:
@@ -170,6 +178,61 @@ class MainWindow(QMainWindow):
             self.show_error_window("Error occurred when loading the portfolio.", "Some stocks might not be displayed.",
                                    "Please check your Internet connection.")
             return set_algorithms, "1d"
+
+    # def set_up_controller(self):
+    #     self.logger.info(f'Reading previously saved user activity from file')
+    #     set_algorithms = [False, False, False, False, False]
+    #     try:
+    #         with (open(self.user_activity_file_name, "r") as f):
+    #             last_date = f.readline().strip()
+    #             if last_date != date.today().strftime("%d.%m.%Y"):
+    #                 should_update = True
+    #             else:
+    #                 should_update = False
+    #
+    #             hold_duration = f.readline().strip()
+    #             while True:
+    #                 lines = [f.readline() for _ in range(4)]
+    #
+    #                 if all(not line for line in lines):
+    #                     break
+    #
+    #                 one_stock_data = lines[0].strip().split("|")
+    #                 ticker = one_stock_data[0]
+    #                 if one_stock_data[2] == "True":
+    #                     is_long = True
+    #                 else:
+    #                     is_long = False
+    #                 self.controller.add_ticker(ticker, int(one_stock_data[1]), None, is_long)
+    #
+    #                 alg_results_1d = lines[1].strip().split("|")[:6]
+    #                 alg_results_1w = lines[2].strip().split("|")[:6]
+    #                 alg_results_1m = lines[3].strip().split("|")[:6]
+    #                 alg_results = [alg_results_1d, alg_results_1w, alg_results_1m]
+    #
+    #                 for i in range(len(self.hold_durations)):
+    #                     hold_dur = self.hold_durations[i]
+    #                     for index in range(len(alg_results[i])):
+    #                         if alg_results[i][index] != "":
+    #                             set_algorithms[index] = True
+    #                             if index == 3 or index == 4 or should_update:
+    #                                 self.controller.run_algorithm(ticker, index, hold_dur)
+    #                             else:
+    #                                 alg_name = self.controller.algorithms_with_indices[index]
+    #                                 res = alg_results[i][index].split(",")
+    #                                 self.controller.results[alg_name][hold_dur][ticker] = float(res[0])
+    #                                 self.controller.predicted_prices[alg_name][hold_dur][ticker] = float(res[1])
+    #                                 if index == 2:
+    #                                     self.controller.bayesian_confidences[hold_dur][ticker] = (
+    #                                     float(res[2]), float(res[3]))
+    #
+    #         return set_algorithms, hold_duration
+    #     except Exception as e:
+    #         traceback.print_exc()
+    #         self.logger.error(f"User activity failed to be read. {e}")
+    #         self.show_error_window("Error occurred when loading the portfolio.", "Some stocks might not be displayed.",
+    #                                "Please check your Internet connection.")
+    #         return set_algorithms, "1d"
 
     def changePage(self, page):
         self.format_page_size(page)
@@ -188,7 +251,7 @@ class MainWindow(QMainWindow):
 
     def format_page_size(self, page):
         if page == self.portfolio_page:
-            self.setGeometry(0, 0, 1425, 900)
+            self.setGeometry(0, 0, 1455, 900)
         else:
             self.setGeometry(0, 0, 1300, 900)
         self.frame_geom.moveCenter(QDesktopWidget().availableGeometry().center())
@@ -201,6 +264,11 @@ class MainWindow(QMainWindow):
     def openSettingsPage(self):
         self.settings_page.set_checked()
         self.changePage(self.settings_page)
+
+    def openManualPage(self):
+        self.user_manual_page.current_index = -1
+        self.user_manual_page.show_init()
+        self.changePage(self.user_manual_page)
 
     def show_top_esg(self):
         popup = TopESGPopUp(self)
@@ -235,13 +303,17 @@ class MainWindow(QMainWindow):
                             alg_predicted_prices = self.controller.predicted_prices[algorithm]
 
                             if ticker in alg_results[hold_dur]:
-                                if algorithm == "monte_carlo" or algorithm == "arima":
+                                if algorithm == "monte_carlo":
                                     str_result += "a|"
                                 else:
                                     str_result += str(alg_results[hold_dur][ticker]) + "," + str(
                                         alg_predicted_prices[hold_dur][ticker]) + "|"
                                     if algorithm == "bayesian":
                                         confidence = self.controller.bayesian_confidences[hold_dur][ticker]
+                                        str_result = str_result[:-1] + "," + str(confidence[0]) + "," + str(
+                                            confidence[1]) + "|"
+                                    elif algorithm == "arima":
+                                        confidence = self.controller.arima_confidences[hold_dur][ticker]
                                         str_result = str_result[:-1] + "," + str(confidence[0]) + "," + str(
                                             confidence[1]) + "|"
                             else:
@@ -252,6 +324,41 @@ class MainWindow(QMainWindow):
             self.show_error_window(f"Error occurred when saving your activity.",
                                    "Some results might not be displayed on your next visit.")
 
+    # def closeEvent(self, event):
+    #     self.logger.info(f'Saving user activity to file.')
+    #     try:
+    #         with (open(self.user_activity_file_name, 'w') as f):
+    #             today = date.today().strftime("%d.%m.%Y")
+    #             f.write(f"{today}\n")
+    #             f.write(f"{self.portfolio_page.hold_duration}\n")
+    #             for ticker in self.controller.tickers_and_investments.keys():
+    #                 f.write(f"{ticker}|{self.controller.tickers_and_num_shares[ticker]}|"
+    #                         f"{self.controller.tickers_and_long_or_short[ticker]}\n")
+    #
+    #                 for hold_dur in self.hold_durations:
+    #                     str_result = ""
+    #                     for algorithm in self.controller.results:
+    #                         alg_results = self.controller.results[algorithm]
+    #                         alg_predicted_prices = self.controller.predicted_prices[algorithm]
+    #
+    #                         if ticker in alg_results[hold_dur]:
+    #                             if algorithm == "monte_carlo" or algorithm == "arima":
+    #                                 str_result += "a|"
+    #                             else:
+    #                                 str_result += str(alg_results[hold_dur][ticker]) + "," + str(
+    #                                     alg_predicted_prices[hold_dur][ticker]) + "|"
+    #                                 if algorithm == "bayesian":
+    #                                     confidence = self.controller.bayesian_confidences[hold_dur][ticker]
+    #                                     str_result = str_result[:-1] + "," + str(confidence[0]) + "," + str(
+    #                                         confidence[1]) + "|"
+    #                         else:
+    #                             str_result += "|"
+    #                     f.write(f"{str_result}\n")
+    #     except IOError:
+    #         self.logger.error("Saving user activity to file failed.")
+    #         self.show_error_window(f"Error occurred when saving your activity.",
+    #                                "Some results might not be displayed on your next visit.")
+    #
 
 class TopESGPopUp(QDialog):
 

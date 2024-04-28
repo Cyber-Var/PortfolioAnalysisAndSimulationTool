@@ -61,9 +61,11 @@ class ARIMAAlgorithm(Regression):
 
         profit_loss_amount = super().calculate_profit_or_loss(prediction, self.investment_amount)
         profit_loss_confidence = (confidence_interval[0] / prediction) * profit_loss_amount * 0.1
-        profit_loss_confidence += profit_loss_amount * 0.1
+        # profit_loss_confidence += profit_loss_amount * 0.1
         print(f"Predicted profit/loss: {profit_loss_amount} +/- {profit_loss_confidence} pounds.")
-        return profit_loss_amount, predicted_price, confidence * 0.1, profit_loss_confidence
+        # return profit_loss_amount, predicted_price, confidence * 0.1, profit_loss_confidence
+
+        return profit_loss_amount, predicted_price, confidence, profit_loss_confidence
 
     def setup_model(self, data):
         arima_model = ARIMA(data["Adj Close"], order=self.arima_order, enforce_stationarity=False).fit()
@@ -144,6 +146,15 @@ class ARIMAAlgorithm(Regression):
         ax = figure.add_subplot(111)
 
         ax.plot(historical_dates, historical_prices, color='blue', label='Historical Adj Close')
+
+        print(future_dates)
+        print(y_axis)
+        if len(future_dates) > len(y_axis):
+            # future_dates = future_dates[1:]
+            middle_index = len(y_axis) // 2
+            y_axis = np.insert(y_axis, middle_index + 1, y_axis[middle_index])
+        elif len(y_axis) > len(future_dates):
+            y_axis = y_axis[1:]
         ax.plot(future_dates, y_axis, color='red', label='ARIMA Forecast')
 
         ax.set_title('ARIMA Stock Price Prediction')

@@ -632,6 +632,12 @@ class SingleStockPage(QWidget, Page):
             self.graph_figure = self.controller.plotARIMA(self.ticker, self.hold_duration, self.graph_figure)
         self.graph_canvas.draw()
 
+    def format_number(self, num):
+        if abs(num) < 0.01:
+            return f"{num:.4f}"
+        else:
+            return f"{num:.2f}"
+
     def algorithm_changed(self):
         self.play_action_sound()
         algorithm_entered = self.algorithms_combo.currentText()
@@ -656,12 +662,14 @@ class SingleStockPage(QWidget, Page):
             if algorithm_index == 2:
                 self.results_table.item(0, 1).setText(
                     f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}"
-                    f" +/- {self.controller.bayesian_confidences[self.hold_duration][self.ticker][0]:.2f}")
+                    f" +/- {self.format_number(abs(self.controller.bayesian_confidences[self.hold_duration][self.ticker][0]))}")
             elif algorithm_index == 4:
+                if self.ticker not in self.controller.arimas[self.hold_duration]:
+                    self.controller.run_arima(self.ticker, self.hold_duration)
                 self.arima_graph_radio.setChecked(True)
                 self.results_table.item(0, 1).setText(
                     f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}"
-                    f" +/- {self.controller.arima_confidences[self.hold_duration][self.ticker][0]:.2f}")
+                    f" +/- {self.format_number(abs(self.controller.arima_confidences[self.hold_duration][self.ticker][0]))}")
             else:
                 self.results_table.item(0, 1).setText(
                     f"${self.algorithm_predicted_prices[algorithm_index][self.hold_duration][self.ticker]:.2f}")
@@ -677,10 +685,12 @@ class SingleStockPage(QWidget, Page):
                 last_word = monte_result_splitted[-1]
 
                 if (last_word == "growth" and self.is_long) or (last_word == "fall" and not self.is_long):
-                    self.results_table.item(1, 1).setText(monte_result + " (profit)")
+                    self.results_table.item(1, 1).setText(" ".join(monte_result_splitted[:-1]) + " profit")
+                    # label_text = " ".join(monte_result_splitted[:-1]) + " (profit)"
                     self.results_table.item(1, 1).setForeground(QBrush(self.color_green))
                 else:
-                    self.results_table.item(1, 1).setText(monte_result + " (loss)")
+                    # self.results_table.item(1, 1).setText(monte_result + " (loss)")
+                    self.results_table.item(1, 1).setText(" ".join(monte_result_splitted[:-1]) + " loss")
                     self.results_table.item(1, 1).setForeground(QBrush(self.color_red))
 
                 self.results_table.item(1, 0).setText("Prediction")
@@ -723,9 +733,9 @@ class SingleStockPage(QWidget, Page):
                     self.results_table.item(1, 1).setForeground(QBrush(self.color_red))
 
                 if algorithm_index == 2:
-                    str_result += f" +/- {abs(self.controller.bayesian_confidences[self.hold_duration][self.ticker][1]):.2f}"
+                    str_result += f" +/- {self.format_number(abs(self.controller.bayesian_confidences[self.hold_duration][self.ticker][1]))}"
                 elif algorithm_index == 4:
-                    str_result += f" +/- {abs(self.controller.arima_confidences[self.hold_duration][self.ticker][1]):.2f}"
+                    str_result += f" +/- {self.format_number(abs(self.controller.arima_confidences[self.hold_duration][self.ticker][1]))}"
 
                 self.results_table.item(1, 1).setText(str_result)
 

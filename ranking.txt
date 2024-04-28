@@ -1,4 +1,4 @@
-24 4 2024 2
+26 4 2024 2
 monte_carlo,bayesian,linear_regression,arima,random_forest
-arima,linear_regression,bayesian,monte_carlo,random_forest
-arima,linear_regression,bayesian,random_forest,monte_carlo
+arima,bayesian,linear_regression,monte_carlo,random_forest
+random_forest,arima,linear_regression,bayesian,monte_carlo
