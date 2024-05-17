@@ -1,0 +1,96 @@
+1d, AAPL, 25.02.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 5.412396821770142
+Best RMSE parameters: (False,)       RMSE = 2.3264558499507664
+Best MAE parameters: (False,)       MAE = 1.7392514760474114
+Best MAPE parameters: (False,)       MAPE = 0.9857351430945491
+Best R^2 parameters: (False,)       R^2 = 0.9639601443674224 
+
+1w, AAPL, 26.02.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (True,)       MSE = 42.426379913324965
+Best RMSE parameters: (True,)       RMSE = 6.513553554959456
+Best MAE parameters: (True,)       MAE = 5.393204101809308
+Best MAPE parameters: (True,)       MAPE = 3.059523147815724
+Best R^2 parameters: (True,)       R^2 = 0.7174928675458518 
+
+1m, AAPL, 26.02.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 170.64607254525984
+Best RMSE parameters: (False,)       RMSE = 13.06315706654635
+Best MAE parameters: (False,)       MAE = 11.477976541802047
+Best MAPE parameters: (False,)       MAPE = 6.609430567588302
+Best R^2 parameters: (False,)       R^2 = -0.1362914469208072 
+
+1d, TSLA, 04.03.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 49.39786716527215
+Best RMSE parameters: (False,)       RMSE = 7.028361627383166
+Best MAE parameters: (False,)       MAE = 5.238380199007595
+Best MAPE parameters: (False,)       MAPE = 2.352767582137067
+Best R^2 parameters: (False,)       R^2 = 0.9580135645542949 
+
+1w, TSLA, 04.03.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 260.7074840420931
+Best RMSE parameters: (False,)       RMSE = 16.146438741781207
+Best MAE parameters: (False,)       MAE = 12.867347990244001
+Best MAPE parameters: (False,)       MAPE = 5.844770969435033
+Best R^2 parameters: (False,)       R^2 = 0.7784078832326399 
+
+1m, TSLA, 04.03.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 1250.1009927938137
+Best RMSE parameters: (False,)       RMSE = 35.35676728426701
+Best MAE parameters: (False,)       MAE = 29.11254385674803
+Best MAPE parameters: (False,)       MAPE = 13.874308664792256
+Best R^2 parameters: (False,)       R^2 = -0.0625415153844755 
+
+1d, MSFT, 04.03.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (True,)       MSE = 25.041816361170333
+Best RMSE parameters: (True,)       RMSE = 5.004179888969853
+Best MAE parameters: (True,)       MAE = 3.9279252913092333
+Best MAPE parameters: (True,)       MAPE = 1.184344217819597
+Best R^2 parameters: (True,)       R^2 = 0.9841784725713953 
+
+1w, MSFT, 04.03.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 177.24024481210134
+Best RMSE parameters: (False,)       RMSE = 13.31316058688174
+Best MAE parameters: (False,)       MAE = 10.408588126902401
+Best MAPE parameters: (False,)       MAPE = 3.221222491419451
+Best R^2 parameters: (False,)       R^2 = 0.8880188564826967 
+
+1m, MSFT, 04.03.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (True,)       MSE = 405.6604953782811
+Best RMSE parameters: (True,)       RMSE = 20.14101525192514
+Best MAE parameters: (False,)       MAE = 16.64009076661141
+Best MAPE parameters: (False,)       MAPE = 5.102275479232406
+Best R^2 parameters: (True,)       R^2 = 0.7437019552744257 
+
+1d, QQQ, 04.03.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 15.728884989439054
+Best RMSE parameters: (False,)       RMSE = 3.965965833115441
+Best MAE parameters: (False,)       MAE = 3.1259089877966124
+Best MAPE parameters: (False,)       MAPE = 0.8592484819283513
+Best R^2 parameters: (False,)       R^2 = 0.9886803106130545 
+
+1w, QQQ, 04.03.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 98.29359246421384
+Best RMSE parameters: (False,)       RMSE = 9.914312505878248
+Best MAE parameters: (False,)       MAE = 8.21035349206129
+Best MAPE parameters: (False,)       MAPE = 2.287060228691741
+Best R^2 parameters: (False,)       R^2 = 0.9292605302955723 
+
+1m, QQQ, 04.03.24
+Best parameters for the Linear Regression model:
+Best MSE parameters: (False,)       MSE = 508.1648870158745
+Best RMSE parameters: (False,)       RMSE = 22.542512881572776
+Best MAE parameters: (False,)       MAE = 19.58290055833024
+Best MAPE parameters: (False,)       MAPE = 5.423919382819236
+Best R^2 parameters: (False,)       R^2 = 0.6342863103748229 
+

@@ -1,0 +1,101 @@
+index;ticker;stock_name;industry
+1;MSFT;Microsoft Corporation;Computer Software - Desktop
+2;AMAT;Applied Materials, Inc.;Electronics - Semiconductor Equipment
+3;WWD;Woodward, Inc.;Aerospace/Defense
+4;VRSK;Verisk Analytics, Inc.;Commercial Services - Market Research
+5;MA;Mastercard Incorporated;Finance - Credit Card/Payment Processing
+6;CAT;Caterpillar Inc.;Machinery - Construction/Mining
+7;MPC;Marathon Petroleum Corporation;Oil & Gas - Refining/Marketing
+8;NVDA;NVIDIA Corporation;Electronics - Semiconductor Mfg
+9;DOV;Dover Corporation;Machinery - General Industrial
+10;MSI;Motorola Solutions, Inc.;Telecom - Consumer Products
+11;BG;Bunge Global SA;Agricultural Operations
+12;SHW;The Sherwin-Williams Company;Chemicals - Paints
+13;DELL;Dell Technologies Inc.;Computer Hardware - Peripherals
+14;ADBE;Adobe Inc.;Computer Software - Desktop
+15;MDLZ;Mondelez International, Inc.;Food - Confectionary
+16;CHD;Church & Dwight Co., Inc.;Soap & Cleaning Preparations
+17;META;Meta Platforms, Inc.;Internet - Content
+18;APD;Air Products and Chemicals, Inc.;Chemicals - Specialty
+19;IT;Gartner, Inc.;Commercial Services - Market Research
+20;AJG;Arthur J. Gallagher & Co.;Insurance - Brokers
+21;LRCX;Lam Research Corporation;Electronics - Semiconductor Equipment
+22;TJX;The TJX Companies, Inc.;Retail - Apparel/Shoes Accessories
+23;OC;Owens Corning;Building - Construction Products MSC
+24;JBL;Jabil Inc.;Electronics - Contract Mfg
+25;GOOGL;Alphabet Inc.;Internet - Content
+26;DECK;Deckers Outdoor Corporation;Apparel - Shoes & Related Mfg
+27;ANET;Arista Networks, Inc.;Computer - Networking
+28;ON;ON Semiconductor Corporation;Electronics - Semiconductor Equipment
+29;TTEK;Tetra Tech, Inc.;Pollution Control
+30;MAR.;Marriott International, Inc.;Leisure - Lodging
+31;LLY;Eli Lilly and Company;Medical - Diversified
+32;J;Jacobs Solutions Inc.;Building - Heavy Construction
+33;V;Visa Inc.;Finance - Credit Card/Payment Processing
+34;CMC;Commercial Metals Company;Metals - Processing & Fabrication
+35;FSS;Federal Signal Corporation;Security/Safety
+36;FTNT;Fortinet, Inc.;Computer Software - Security
+37;ZTS;Zoetis Inc.;Medical - Ethical Drugs
+38;CDNS;Cadence Design Systems, Inc.;Computer Software - Design
+39;CLH;Clean Harbors, Inc.;Pollution Control
+40;WDAY;Workday, Inc.;Computer Software - Enterprise
+41;MCHP;Microchip Technology Incorporated;Electronics - Semiconductor Mfg
+42;CSGP;CoStar Group, Inc.;Commercial Services - Market Research
+43;CMG;Chipotle Mexican Grill, Inc.;Retail - Restaurants
+44;PLD;Prologis, Inc.;Finance - Property REITs
+45;HUBS;HubSpot, Inc.;Computer Software - Specialty Enterprise
+46;BKNG;Booking Holdings Inc.;Leisure - Travel Booking
+47;WTS;Watts Water Technologies, Inc.;Building - Construction Products/MSC
+48;APPF;AppFolio, Inc.;Computer Software - Specialty Enterprise
+49;AMH;American Homes 4 Rent;Finance - Property REITs
+50;IRM;Iron Mountain Incorporated;Commercial Services - Document Management
+51;PH;Parker-Hannifin;Machinery - General Industrial
+52;TMHC;Taylor Morrison;Building - Residential/Commercial
+53;ROK;Rockwell Automation;Electrical Power - Equipment
+54;MLM;Martin Marietta Materials;Building Materials - Cement/Concrete
+55;COST;Costco Wholesale;Retail - Major Discount Chains
+56;CTASCintas;Commercial Services - Outsourcing
+57;PAYX;Paychex;Commercial Services - Outsourcing
+58;INTU;Intuit;Computer Software - Financial
+59;BAH;Booz Allen Hamilton;Commercial Services - Consulting
+60;VMC;Vulcan Materials;Building Materials - Cement/Concrete
+61;IDXX;Idexx Laboratories;Medical - Systems/Equipment
+62;TREX;Trex;Building - Construction Products/MSC
+63;CEIX;Consol Energy;Energy - Coal
+64;FICO;Fair Isaac;Computer Software - Financial
+65;TPX;Tempur Sealy International;Household Office Furniture
+66;SYK;Stryker;Medical - Products
+67;VEEV;Veeva Systems;Computer Software - Medical
+68;MSA;MSA Safety;Security/Safety
+69;GGG;Graco;Machinery - General Industrial
+70;REGN;Regeneron Pharmaceuticals;Medical - Biotech
+71;MORN;Morningstar;Commercial Services - Market Research
+72;ITW;Illinois Tool Works;Machinery - General Industrial
+73;EME;Emcor;Building - Maintenance & Services
+74;SPGI;S&P Global;Commercial Services - Market Research
+75;MHO;M/I Homes;Building - Residential/Commercial
+76;LAD;Lithia Motors;Retail - Wholesale Auto
+77;KBH;KB Home;Building - Residential/Commercial
+78;ACM;Aecom Technology;Building - Heavy Construction
+79;RJF;Raymond James Financial;Financial - Investment Bank/Brokers
+80;VRTX;Vertex Pharmaceuticals;Medical - Biotech
+81;TEX;Terex;Machinery - Construction/Mining
+82;CASH;Pathward Financial;Financial - Savings & Loan
+83;PAYC;Paycom Software;Computer Software - Enterprise
+84;EXTR;Extreme Networks;Computer - Networking
+85;URI;United Rentals;Commercial Services - Leasing
+86;ATI;ATI;Steel - Specialty Alloys
+87;CASY;Casey's Retail;Retail - SPR/Mini markets
+88;WMT;Walmart;Retail - Major Discount Chains
+89;ITT;ITT;Machinery - General Industrial
+90;RBC;RBC Bearings;Metals - Processing & Fabrication
+91;HRI;Herc Holdings;Commercial Services - Leasing
+92;HLI;Houlihan Lokey;Financial - Investment Bank/Brokers
+93;LII;Lennox International;Building - A/C & Heating Products
+94;HWKN;Hawkins;Chemicals - Basic
+95;PCAR;Paccar;Trucks & Parts - Heavy Duty
+96;BZH;Beazer Homes;Building - Residential/Commercial
+97;IPAR;Inter Parfums;Cosmetics/Personal Care
+98;AVGO;Broadcom;Electronics - Semiconductor Mfg
+99;GPOR;Gulfport Energy;Oil & Gas - US Exploration & Discovery
+100;KAI;Kadant;Machinery - General Industrial
