@@ -33,6 +33,6 @@ The tool is a desktop application that fetches real-time price data through Yaho
 The app includes a User Manual page that provides detailed instructions on how to use the application and explanations of the underlying algorithms.
 
 <div style="display: flex; justify-content: space-between;">
-  <img width="425" alt="Screenshot 2025-04-06 at 12 59 06" src="https://github.com/user-attachments/assets/e228160e-6015-4f44-93dd-13fa1739c5b1" />
-  <img width="425" alt="Screenshot 2025-04-06 at 13 03 46" src="https://github.com/user-attachments/assets/befc0e5a-6953-449e-942d-6eca33bd77a6" />
+  <img width="400" alt="Screenshot 2025-04-06 at 12 59 06" src="https://github.com/user-attachments/assets/e228160e-6015-4f44-93dd-13fa1739c5b1" />
+  <img width="400" alt="Screenshot 2025-04-06 at 13 03 46" src="https://github.com/user-attachments/assets/befc0e5a-6953-449e-942d-6eca33bd77a6" />
 </div>
